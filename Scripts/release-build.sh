@@ -54,7 +54,7 @@ for BIN in "$APP/Contents/MacOS/$DISPLAY_NAME" "$APP/Contents/Helpers/ClipboardT
 done
 ./Scripts/verify-signature.sh "$APP"
 REQUIREMENT="anchor apple generic and certificate leaf[subject.OU] = \"$APPLE_TEAM_ID\" and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists"
-codesign --verify --deep --strict -R "$REQUIREMENT" "$APP"
+codesign --verify --deep --strict -R "=$REQUIREMENT" "$APP"
 notarize() {
     xcrun notarytool submit "$1" --key "$PRIVATE_DIR/AuthKey.p8" --key-id "$NOTARY_KEY_ID" \
         --issuer "$NOTARY_ISSUER_ID" --wait --timeout 30m --output-format json > "$PRIVATE_DIR/result.json"
