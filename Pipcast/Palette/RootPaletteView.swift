@@ -52,7 +52,8 @@ struct RootPaletteView: View {
             return LauncherScreen(
                 appIndex: appIndex, favorites: favorites, visibility: visibility,
                 currencyRates: currencyRates, core: core, vm: vm, running: selectionIsRunning,
-                meeting: core.calendarCoordinator.cardedMeeting, now: meetingClock.now,
+                meeting: core.calendarCoordinator.cardedMeeting,
+                whatsNew: core.changelogCoordinator.pinnedRelease, now: meetingClock.now,
                 openActions: openActions, openArgumentOptions: openArgumentOptions,
                 scrollToFollow: { scroll = ScrollIntent(kind: .follow) })
         case .uninstall:
@@ -212,7 +213,7 @@ struct RootPaletteView: View {
             items: [
                 PopoverMenuItem(
                     title: CommandID.whatsNew.name, systemImage: CommandID.whatsNew.sfSymbol,
-                    showsBadge: core.changelog.hasNews
+                    showsBadge: core.changelogCoordinator.unreadRelease != nil
                 ) {
                     core.changelogCoordinator.showChangelog()
                 },
@@ -926,7 +927,7 @@ struct RootPaletteView: View {
     }
 
     private var appMenuButton: some View {
-        MenuCircleButton(showsBadge: core.changelog.hasNews) {
+        MenuCircleButton(showsBadge: core.changelogCoordinator.unreadRelease != nil) {
             if openMenu == .app { closeMenus() } else { open(.app, highlighting: 0) }
         }
     }

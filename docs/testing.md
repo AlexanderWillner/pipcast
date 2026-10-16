@@ -886,6 +886,10 @@ Opt into installed English spelling service checks with
   updated to and a dot marks the palette's menu button and its What's New row. Clicking the HUD, the
   row or the What's New command opens the screen, and the dot is gone; relaunching shows neither. A
   fresh install shows neither.
+- The same update pins a What's New card atop the empty launcher; a due meeting's join card keeps
+  the slot until it passes. ↵ opens What's New; ⌘K → Dismiss clears it unopened. With General → Show What's New after
+  updates off, no card appears while the HUD and the dot still do; turning it back on before reading
+  brings the card back.
 - General → Automatically check for updates defaults on; turn it off and relaunch: it stays off,
   no background check or update prompt occurs, and Check for Updates still works. Re-enable it:
   checks resume. Settings search for "updates" reveals the toggle; settings.json edits and a backup

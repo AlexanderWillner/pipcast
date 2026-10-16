@@ -84,6 +84,15 @@ GitHub releases page.
   busy (`canInterruptUser`) or the message pill is in use — a Quick Action's progress and Cancel
   share it — retrying for two minutes before leaving it to the next launch. Opening What's New
   is what clears the dot, recorded as `lastSeen`.
+- **An unread update also leads the empty launcher.** `WhatsNewCard` takes the lead-card slot
+  (`LauncherScreen.Row.whatsNew`) with the release's headline, shaped like the meeting card; ↵ opens
+  What's New, and ⌘K adds View on GitHub and Dismiss, which marks the notes read unopened. A due
+  meeting keeps the slot: it is the one that cannot wait.
+- **The setting gates the card alone.** General → Show What's New after updates
+  (`showsWhatsNewAfterUpdates`, `general.showWhatsNewAfterUpdates` in settings.json, carried by
+  backups) defaults on. The card reads `ChangelogCoordinator.pinnedRelease`, which is
+  `unreadRelease` behind that switch; the HUD and the dot read `unreadRelease` and show either way.
+- **View on GitHub from the card counts as reading it**, like opening What's New; Dismiss does too.
 - **The HUD and the menu row open What's New; only the command toggles it.** `showChangelog` uses
   `showPalette`, so a second click never closes the screen it just opened; `toggleChangelog` keeps
   the launcher command's hotkey behaving like every other screen's.
