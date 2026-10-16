@@ -557,7 +557,7 @@
   --color-fd-card-foreground: var(--tc-fg);
   --color-fd-border: var(--tc-border);
   --color-fd-primary: var(--pc-brand-readable);
-  --color-fd-primary-foreground: #ffffff;
+  --color-fd-primary-foreground: var(--tc-canvas);
   --color-fd-secondary: var(--tc-well);
   --color-fd-secondary-foreground: var(--tc-fg);
   --color-fd-accent: var(--tc-well);
