@@ -22,7 +22,7 @@ app = 'Pipcast' if channel == 'stable' else 'Pipcast Beta'
 tap = 'mSarheed/homebrew-pipcast'
 tap_env = dict(os.environ, GH_TOKEN=os.environ['HOMEBREW_TAP_TOKEN'])
 def tap_api(path, body=None):
-    args = ['gh', 'api', 'repos/' + tap + '/' + path]
+    args = ['gh', 'api', 'repos/' + tap + ('/' + path if path else '')]
     if body is not None:
         args += ['--method', 'PUT', '--input', '-']
     return json.loads(subprocess.check_output(args, input=json.dumps(body).encode() if body else None, env=tap_env))
