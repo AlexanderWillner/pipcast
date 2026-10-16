@@ -1179,7 +1179,7 @@ struct ExtensionTests {
               ].join(",");
               // Bitwarden derives its session hash and caches the vault through exactly these calls.
               const encrypter = crypto.createCipheriv("aes-256-cbc", "k".repeat(32), "i".repeat(16));
-              const encrypted = Buffer.concat([encrypter.update("hello tinycast"), encrypter.final()]);
+              const encrypted = Buffer.concat([encrypter.update("hello pipcast"), encrypter.final()]);
               const decrypter = crypto.createDecipheriv("aes-256-cbc", "k".repeat(32), Buffer.from("i".repeat(16)));
               const ecb = crypto.createCipheriv("aes-128-ecb", Buffer.alloc(16, 1), null).setAutoPadding(false);
               const cipherShim = [
@@ -1272,8 +1272,8 @@ struct ExtensionTests {
             ExtensionAccessoriesView_labelForTest(
                 screen.items.first?.node.array("accessories").dropFirst(4).first)
                 == "afe6c5530785b6cc6b1c6453384731bd,f7ce0b653d2d72a4,5d11c49af18b4b3e482508362bd2c857,"
-                + "eb7b227687302ff167fef6a04d9f99f3,"
-                + "hello tinycast,17d614f379a9359077e95577fd31c20a,ERR_OSSL_BAD_DECRYPT,"
+                + "3c4a5b56eaa97126082a3bfb6028e56f,"
+                + "hello pipcast,17d614f379a9359077e95577fd31c20a,ERR_OSSL_BAD_DECRYPT,"
                 + "ERR_CRYPTO_INVALID_KEYLEN,ERR_CRYPTO_INVALID_DIGEST,6cba6dd1d44f53a3",
             String(describing: screen.items.first?.node.array("accessories").dropFirst(4).first))
         check(
@@ -1511,7 +1511,7 @@ struct ExtensionTests {
     @MainActor
     static func nodeContractChecks() async {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-archive-\(UUID().uuidString)")
+            .appendingPathComponent("pipcast-archive-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let (runtime, host, recorder) = makeRuntime()
@@ -1799,7 +1799,7 @@ struct ExtensionTests {
     @MainActor
     static func swiftHelperChecks() async {
         let helper = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-helper-\(UUID().uuidString)")
+            .appendingPathComponent("pipcast-helper-\(UUID().uuidString)")
         try? Data("#!/bin/sh\necho '{\"hex\":\"#FF0000\"}'\n".utf8).write(to: helper)
         defer { try? FileManager.default.removeItem(at: helper) }
 
@@ -1845,7 +1845,7 @@ struct ExtensionTests {
     @MainActor
     static func processKillChecks() async {
         let marker = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-rang-\(UUID().uuidString)")
+            .appendingPathComponent("pipcast-rang-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: marker) }
 
         let (runtime, _, recorder) = makeRuntime()
@@ -1889,7 +1889,7 @@ struct ExtensionTests {
 
     /// `zlib` is the one node shim with no JS-side implementation to lean on.
     static func zlibChecks() {
-        let payload = Data(String(repeating: "tinycast extensions ", count: 64).utf8)
+        let payload = Data(String(repeating: "pipcast extensions ", count: 64).utf8)
         do {
             check("gzip round-trips", try Zlib.gunzip(Zlib.gzip(payload)) == payload)
             check("zlib round-trips", try Zlib.inflate(Zlib.deflate(payload)) == payload)

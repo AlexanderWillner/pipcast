@@ -1,6 +1,6 @@
 // Standalone test for clipboard capture and paste, compiling the real sources rather than copies.
 // Every case drives `NSPasteboard.withUniqueName()`: writing to `.general` would land in the
-// reader's own running Tinycast as a genuine copy.
+// reader's own running Pipcast as a genuine copy.
 import AppKit
 
 @main
@@ -120,7 +120,7 @@ struct PasteboardTests {
 
     /// An app that stages a temp file beside better inline content must keep the inline content.
     static func volatileAndMissingFilesFallThrough() {
-        let temp = URL(fileURLWithPath: "/private/tmp/tinycast-volatile-\(UUID().uuidString).png")
+        let temp = URL(fileURLWithPath: "/private/tmp/pipcast-volatile-\(UUID().uuidString).png")
         try? Data("x".utf8).write(to: temp)
         defer { try? FileManager.default.removeItem(at: temp) }
         let pb = board()
@@ -336,7 +336,7 @@ struct PasteboardTests {
 
     static func withScratch(_ body: (URL) -> Void) {
         let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-pasteboard-test-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("pipcast-pasteboard-test-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
         body(dir)

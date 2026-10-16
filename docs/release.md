@@ -26,13 +26,12 @@ Repository Actions secrets:
 Enter credentials through GitHub's Actions secret settings or `gh secret set` using
 protected file/stdin input. Never commit or paste private keys into issue or chat text.
 
-The workflow does not deploy a website or send announcements. Existing unrelated upstream
-workflow files are unchanged.
+The workflow does not deploy a website or send announcements. No website deployment workflow is included.
 
-The tap contains no installable cask until the first successful release. Afterward:
+The beta is available now; stable becomes available after its first manual release:
 
 ```sh
-brew install --cask mSarheed/pipcast/pipcast
+brew install --cask mSarheed/pipcast/pipcast@beta
 ```
 
 The cask declares `auto_updates true`; the in-app updater continues to offer new releases.

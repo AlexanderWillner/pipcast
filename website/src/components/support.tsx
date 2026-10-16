@@ -29,9 +29,9 @@ export function Support() {
         {supportHero.intro}
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button href={site.support} size="lg">
+        <Button href={site.community.issues} size="lg">
           <SupportIcon size={18} />
-          Support Tinycast
+          Share feedback
         </Button>
         <Button href={site.repo} variant="ghost" size="lg">
           <GitHubLogo size={16} />

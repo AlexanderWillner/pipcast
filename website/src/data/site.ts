@@ -3,24 +3,21 @@
 
 // The page title and meta description, shared by the layout and /llms.txt. Google truncates a
 // description near 160 characters, so `summary` is written to land under it rather than be cut.
-export const pageTitle = "Tinycast: a free, native launcher for macOS";
+export const pageTitle = "Pipcast: a free, native launcher for macOS";
 export const summary =
   "A free, open source macOS launcher with app search, clipboard history, snippets, custom commands, window management, your own AI keys and Raycast extensions.";
 
 export const site = {
-  name: "Tinycast",
-  repo: "https://github.com/abue-ammar/tinycast",
-  url: "https://tinycast.dev",
-  // The R2 bucket behind cdn.tinycast.dev. Anything over Workers' 25 MiB
-  // per-asset cap lives here instead of `public/` — see website/README.md.
-  cdn: "https://cdn.tinycast.dev",
+  name: "Pipcast",
+  repo: "https://github.com/mSarheed/pipcast",
+  url: process.env.SITE_URL ?? "http://localhost:3000",
   // Shown only until the build-time release lookup resolves, and if it fails.
-  fallbackVersion: "v0.9.7",
+  fallbackVersion: "v0.1.0-beta.3",
   platform: "macOS 26+",
   license: "AGPL-3.0",
-  licenseUrl: "https://github.com/abue-ammar/tinycast/blob/main/LICENSE",
+  licenseUrl: "https://github.com/mSarheed/pipcast/blob/main/LICENSE",
   community: {
-    discord: "https://discord.gg/v2Eeb4QQy3",
+    issues: "https://github.com/mSarheed/pipcast/issues",
   },
   support: "/support",
 } as const;
@@ -44,9 +41,9 @@ export const nav = [
 
 // The hero's two lines. Every other channel lives in docs/install.md, which is
 // where both install CTAs point.
-export const brewTrustCommand = "brew trust --tap abue-ammar/tinycast";
+export const brewTrustCommand = "brew trust --tap mSarheed/pipcast";
 export const brewInstallCommand =
-  "brew install --cask abue-ammar/tinycast/tinycast";
+  "brew install --cask mSarheed/pipcast/pipcast@beta";
 
 // The logo wall under the hero, in render order. The track starts at the first
 // entry with the left edge under the mask, so the two least-known names lead

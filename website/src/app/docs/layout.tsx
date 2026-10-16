@@ -2,7 +2,6 @@ import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
 import { DocsProvider } from "../../components/docs-provider";
 import {
-  DiscordLogo,
   GitHubLogo,
   Logo,
   SupportIcon,
@@ -44,10 +43,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           },
           {
             type: "icon",
-            text: "Discord",
-            label: "Join the Discord",
-            url: site.community.discord,
-            icon: <DiscordLogo size={16} />,
+            text: "Issues",
+            label: "Report an issue",
+            url: site.community.issues,
+            icon: <GitHubLogo size={16} />,
             external: true,
           },
         ]}

@@ -6,9 +6,9 @@ no appcast: the release feed the website already reads is the feed the app reads
 
 ## Invariants
 
-- **Tinycast installs its own updates, and Homebrew stays out of the way.** Both casks declare
+- **Pipcast installs its own updates, and Homebrew stays out of the way.** Both casks declare
   `auto_updates true`, which is Homebrew's own flag for an app that manages its own version. `brew
-  update && brew upgrade` therefore skips Tinycast entirely — it is never reported outdated, never
+  update && brew upgrade` therefore skips Pipcast entirely — it is never reported outdated, never
   re-downloaded, and a self-updated copy is never trashed or rolled back. `brew install`, `brew
   uninstall` and `brew list` keep working unchanged.
 - **The archive is a zip, never the DMG.** A zip expands with `ditto`; a DMG would have to be mounted,
@@ -18,9 +18,9 @@ no appcast: the release feed the website already reads is the feed the app reads
   `-Universal-` one. Intel takes the universal zip and is offered *nothing* if it is missing, since a
   thin build would install and then refuse to launch; Apple silicon prefers the thin zip and falls
   back to universal.
-- **Nobody ever runs `xattr`.** An archive Tinycast fetched itself is not quarantined — macOS sets
+- **Nobody ever runs `xattr`.** An archive Pipcast fetched itself is not quarantined — macOS sets
   that flag for sandboxed downloaders and for apps that opt in with `LSFileQuarantineEnabled`, and
-  Tinycast is neither. `Quarantine` checks anyway through `getxattr`/`removexattr` rather than the
+  Pipcast is neither. `Quarantine` checks anyway through `getxattr`/`removexattr` rather than the
   `xattr` tool, and an app that still carries the flag is refused rather than installed.
 - **Updates require the configured Apple Developer team.** The nested code signature must
   validate against Apple's Developer ID chain and the Team ID embedded in the running app.
@@ -48,7 +48,7 @@ no appcast: the release feed the website already reads is the feed the app reads
   The preference travels through settings backups and `general.automaticallyCheckForUpdates` in
   settings.json; release metadata and skipped versions stay in the feature's own cache file.
 - **The window shows the changelog and nothing else.** CI writes install instructions below
-  `<!-- tinycast:install -->`, and `ReleaseNotes.summary` — the single reader of that marker, called
+  `<!-- pipcast:install -->`, and `ReleaseNotes.summary` — the single reader of that marker, called
   where the feed is parsed so the cache holds the cut text too — drops them. An app that installs its
   own updates has no use for a Homebrew command, and a body published before the marker existed has
   none, so it comes back whole.
@@ -108,7 +108,7 @@ One route, whatever the install came from:
 1. Stream the zip into `~/Library/Caches/<bundle-id>/Updates/`, with real byte progress and a Cancel
    that actually aborts the transfer.
 2. `ditto -x -k` it into a staging folder, and take whatever `.app` lands there — the bundle is named
-   for its channel, so it is `Tinycast Beta.app` on beta.
+   for its channel, so it is `Pipcast Beta.app` on beta.
 3. Check quarantine natively; clear it if somehow present, and refuse the update if it survives.
 4. Verify the bundle id, the version, and that the code signature is valid and proves the bundle is
    ours — by matching the configured Developer ID team.

@@ -125,7 +125,7 @@ struct AIProviderTests {
         switchedOffRoutesLeaveTheDefault()
         installedOverridesPersistAndResolve()
         aFailedKeychainReadIsNeverSavedOver()
-        aLaunchInheritsTheReadersVariablesNotTinycastsOwn()
+        aLaunchInheritsTheReadersVariablesNotPipcastsOwn()
         subscriptionSelectionsReconcile()
         onDeviceSelectionsRoundTripAndLead()
         conversationSettingsPersistAndDecide()
@@ -1634,7 +1634,7 @@ struct AIProviderTests {
             "a launch that cannot read the values starts without them")
     }
 
-    static func aLaunchInheritsTheReadersVariablesNotTinycastsOwn() {
+    static func aLaunchInheritsTheReadersVariablesNotPipcastsOwn() {
         let launch = InstalledAILaunch(
             environment: [
                 "PATH": "/reader/bin", "HTTPS_PROXY": "proxy", "NO_COLOR": "0",
@@ -1908,20 +1908,20 @@ struct AIProviderTests {
                 && arguments.contains("mcp_servers.files.enabled=false"),
             "every one of the reader's own servers is disabled by name, one named like ours too")
         expect(
-            arguments.contains("mcp_servers.tinycast-files.enabled=true")
+            arguments.contains("mcp_servers.pipcast-files.enabled=true")
                 && !arguments.contains {
                     $0.hasPrefix("mcp_servers.files.") && !$0.hasSuffix("=false")
                 },
             "since Pipcast's go by names of their own, which no table of the reader's merges into")
         expect(
-            arguments.contains(#"mcp_servers.tinycast-files.command="/bin/sh""#)
+            arguments.contains(#"mcp_servers.pipcast-files.command="/bin/sh""#)
                 && arguments.contains(Self.renamingArguments),
             "a local server with variables arrives through a shell that renames them, then runs it")
         expect(
             arguments.contains(Self.forwardedVariables),
             "whose environment is named rather than carried: Codex forwards only what is listed")
         expect(
-            arguments.contains(#"mcp_servers.tinycast-linear.bearer_token_env_var="TC_MCP_1_0""#),
+            arguments.contains(#"mcp_servers.pipcast-linear.bearer_token_env_var="TC_MCP_1_0""#),
             "an OAuth endpoint lends its token through the variable Codex reads it from")
         expect(
             arguments.contains(Self.headerMapOverride),
@@ -1946,7 +1946,7 @@ struct AIProviderTests {
                 "https://open.example/mcp", headerName: "Authorization", headerValue: ""))
         let openArguments = CodexMCPLaunch.arguments(servers: [open], disabling: [])
         expect(
-            openArguments.contains(#"mcp_servers.tinycast-open.url="https://open.example/mcp""#)
+            openArguments.contains(#"mcp_servers.pipcast-open.url="https://open.example/mcp""#)
                 && !openArguments.contains { $0.contains("bearer_token") || $0.contains("headers") }
                 && CodexMCPLaunch.environment(servers: [open]) == [:],
             "a server that needs no credential goes to Codex with no header and no variable")
@@ -1959,7 +1959,7 @@ struct AIProviderTests {
                         path: #"/tmp/we"ird\bin"#, arguments: [], environment: [:]))
             ], disabling: [])
         expect(
-            quoted.contains(#"mcp_servers.tinycast-odd.command="/tmp/we\"ird\\bin""#),
+            quoted.contains(#"mcp_servers.pipcast-odd.command="/tmp/we\"ird\\bin""#),
             "a path with a quote in it is still one TOML string")
 
         expect(
@@ -1973,17 +1973,17 @@ struct AIProviderTests {
                     transport: .command(path: "/bin/echo", arguments: ["a\r\nb"], environment: [:]))
             ], disabling: [])
         expect(
-            crlf.contains(#"mcp_servers.tinycast-lines.args=["a\u000D\u000Ab"]"#),
+            crlf.contains(#"mcp_servers.pipcast-lines.args=["a\u000D\u000Ab"]"#),
             "so an argument carrying a Windows line ending still leaves Codex's config loadable")
 
         expect(
-            CodexMCPLaunch.handle(ofServer: "tinycast-files") == "files"
+            CodexMCPLaunch.handle(ofServer: "pipcast-files") == "files"
                 && CodexMCPLaunch.handle(ofServer: "files") == nil
-                && CodexMCPLaunch.handle(ofServer: "tinycast-") == nil,
+                && CodexMCPLaunch.handle(ofServer: "pipcast-") == nil,
             "a name Codex reports maps back to a handle only when it is one of Pipcast's")
         expect(
-            CodexMCPLaunch.takenName(servers: [stdio], foreignNames: ["tinycast-files"])
-                == "tinycast-files"
+            CodexMCPLaunch.takenName(servers: [stdio], foreignNames: ["pipcast-files"])
+                == "pipcast-files"
                 && CodexMCPLaunch.takenName(servers: [stdio], foreignNames: ["files"]) == nil,
             "and a reader's server already named like an armed one of ours is caught before launch")
 
@@ -2025,8 +2025,8 @@ struct AIProviderTests {
                 path: "/usr/bin/true", arguments: [], environment: ["NOT-A-NAME": "hidden"]))
         let oddArguments = CodexMCPLaunch.arguments(servers: [odd], disabling: [])
         expect(
-            oddArguments.contains(#"mcp_servers.tinycast-odd.command="/usr/bin/true""#)
-                && oddArguments.contains("mcp_servers.tinycast-odd." + "env" + "_vars=[]"),
+            oddArguments.contains(#"mcp_servers.pipcast-odd.command="/usr/bin/true""#)
+                && oddArguments.contains("mcp_servers.pipcast-odd." + "env" + "_vars=[]"),
             "a name the shell cannot export is not forwarded, and the server launches directly")
         expect(
             CodexMCPLaunch.environment(servers: [odd]) == [:],
@@ -2120,15 +2120,15 @@ struct AIProviderTests {
     }
 
     private static let renamingArguments =
-        #"mcp_servers.tinycast-files.args=["-c","set -- \"$TC_MCP_0_0\" \"$@\"; "#
+        #"mcp_servers.pipcast-files.args=["-c","set -- \"$TC_MCP_0_0\" \"$@\"; "#
         + #"unset TC_MCP_0_0; export API_KEY=\"${1}\"; shift 1; "#
-        + #"exec \"$@\"","tinycast-mcp","/usr/local/bin/node","server.js","--root=/tmp"]"#
+        + #"exec \"$@\"","pipcast-mcp","/usr/local/bin/node","server.js","--root=/tmp"]"#
 
     /// Spelled through a joined literal so no shell hook mistakes the key for a dotfile.
     private static let forwardedVariables =
-        "mcp_servers.tinycast-files." + "env" + #"_vars=["TC_MCP_0_0"]"#
+        "mcp_servers.pipcast-files." + "env" + #"_vars=["TC_MCP_0_0"]"#
     private static let headerMapOverride =
-        "mcp_servers.tinycast-notes." + "env" + #"_http_headers={"X-Api-Key"="TC_MCP_2_0"}"#
+        "mcp_servers.pipcast-notes." + "env" + #"_http_headers={"X-Api-Key"="TC_MCP_2_0"}"#
 
     /// The file is the only place Claude's secrets go, and the tool name is what routes back.
     static func claudeConfigurationCarriesServersAndRoutesToolNames() {
@@ -2263,7 +2263,7 @@ struct AIProviderTests {
         "tool_name":"mcp__files__read","input":{"path":"/tmp"}}}
         """
 
-    /// The consent channel is the SDK's undocumented one; this is all of it Tinycast speaks.
+    /// The consent channel is the SDK's undocumented one; this is all of it Pipcast speaks.
     static func claudeControlFramesAnswerOneTool() {
         let frame =
             (try? JSONSerialization.jsonObject(with: Data(Self.canUseToolFrame.utf8)))

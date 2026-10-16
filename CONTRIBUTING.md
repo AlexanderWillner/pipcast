@@ -1,7 +1,7 @@
-# Contributing to Tinycast
+# Contributing to Pipcast
 
-Check existing [issues](https://github.com/abue-ammar/tinycast/issues) and
-[pull requests](https://github.com/abue-ammar/tinycast/pulls) first.
+Check existing [issues](https://github.com/mSarheed/pipcast/issues) and
+[pull requests](https://github.com/mSarheed/pipcast/pulls) first.
 
 > **Don't hurry your code. Make sure it works well and is well designed. Don't worry about timing.**
 
@@ -12,7 +12,7 @@ Check existing [issues](https://github.com/abue-ammar/tinycast/issues) and
   after the palette closes.
 - **Design.** New UI must look like it shipped with the app — spacing, type, radii and motion from the
   existing tokens ([`docs/ui.md`](docs/ui.md)). If you genuinely need a new one, justify it in the PR.
-- **No bloat.** Tinycast stays small on purpose — quality over quantity. A clean patch still gets
+- **No bloat.** Pipcast stays small on purpose — quality over quantity. A clean patch still gets
   declined if the feature isn't worth its weight, so open an issue and settle that before you build.
 - **Never break the Non-negotiables** in [`AGENTS.md`](AGENTS.md).
 
@@ -20,7 +20,7 @@ Check existing [issues](https://github.com/abue-ammar/tinycast/issues) and
 
 - macOS 26+, Xcode 26. Do the one-time signing setup
   ([`docs/signing.md`](docs/signing.md) §1).
-- `open Tinycast.xcodeproj` → ⌘R. Debug builds are their own channel (`Tinycast Dev.app`).
+- `open Pipcast.xcodeproj` → ⌘R. Debug builds are their own channel (`Pipcast Dev.app`).
 - After editing `project.yml`: `xcodegen generate`, commit the result. No SwiftPM.
 - Details: [`docs/development.md`](docs/development.md). Architecture:
   [`docs/architecture.md`](docs/architecture.md). Start at [`docs/`](docs/README.md).
@@ -42,9 +42,9 @@ Check existing [issues](https://github.com/abue-ammar/tinycast/issues) and
 - Anything in [`docs/`](docs/) your change makes wrong is fixed.
 - **Read your own diff top to bottom before you open the PR.** Most review comments are things the
   author would have caught on a second pass.
-- You agree to the
-  [Contributor License and Feedback Agreement](CONTRIBUTOR_LICENSE_AND_FEEDBACK_AGREEMENT.md).
-  Opening a PR is your acceptance.
+- Contributions to Pipcast are under the repository’s AGPL-3.0-or-later license.
+  The original Tinycast contributor agreement is retained as historical provenance; it is not
+  a new agreement with the Pipcast maintainer.
 
 ## Pull requests
 
@@ -71,7 +71,7 @@ Two things that are only about contributing, and so are not in those docs:
 
 ## Bugs
 
-macOS version, Tinycast version + channel, steps, expected vs actual. A recording beats a paragraph.
+macOS version, Pipcast version + channel, steps, expected vs actual. A recording beats a paragraph.
 
 ## Security
 

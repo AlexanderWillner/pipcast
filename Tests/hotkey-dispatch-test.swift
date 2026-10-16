@@ -19,7 +19,7 @@ struct HotKeyDispatchTest {
     }
 
     static func dispatch(includesShift: Bool) {
-        let domain = "tinycast.hotkey-dispatch-test.\(UUID())"
+        let domain = "pipcast.hotkey-dispatch-test.\(UUID())"
         let defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
         let manager = HotKeyManager(defaults: defaults)

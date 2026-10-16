@@ -1,51 +1,18 @@
-import { useId, type SVGProps } from "react";
+import { type SVGProps } from "react";
 
 type BrandIconProps = { size?: number } & SVGProps<SVGSVGElement>;
 
-// The Tinycast mark — the lightning-Z from the app icon, filled with the brand
+// The Pipcast mark — the lightning-Z from the app icon, filled with the brand
 // violet gradient. Single flat path (the app icon's blurred layers are dropped).
-export function Logo({ size = 22, ...props }: BrandIconProps) {
-  // Per-instance, because the nav and the footer both render a Logo and a
-  // duplicate gradient id makes the second one inherit the first's fill.
-  const gradientId = useId();
-
+export function Logo({ size = 24, ...props }: BrandIconProps) {
   return (
-    <svg
-      width={size}
-      height={(size * 46) / 48}
-      viewBox="0 0 48 46"
-      fill="none"
-      aria-hidden="true"
-      {...props}
-    >
-      <defs>
-        <linearGradient
-          id={gradientId}
-          x1="5"
-          y1="2"
-          x2="19"
-          y2="22"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#a875ff" />
-          <stop offset="0.6" stopColor="#863bff" />
-          <stop offset="1" stopColor="#7e14ff" />
-        </linearGradient>
-      </defs>
-      <g transform="translate(0 -1) scale(2)">
-        <path
-          // The trailing colour is an SVG fallback, used when the gradient
-          // reference cannot resolve — which happens wherever a host renders
-          // the same title element into two slots and both get one id.
-          fill={`url(#${gradientId}) #863bff`}
-          d="M18.82,9.18A2,2,0,0,0,17,8H15.19l1.33-3.26a2,2,0,0,0-.19-1.84A2.06,2.06,0,0,0,14.62,2H10.28A2,2,0,0,0,8.37,3.27l-3.23,8a2,2,0,0,0,.2,1.83,2.06,2.06,0,0,0,1.71.9H9.81L8,20.74a1,1,0,0,0,.5,1.15A1.12,1.12,0,0,0,9,22a1,1,0,0,0,.76-.35l8.8-10.37A2,2,0,0,0,18.82,9.18Z"
-        />
-      </g>
+    <svg width={size} height={size} viewBox="234 230 556 540" fill="none" aria-hidden="true" {...props}>
+      <path d="M604 306H326C304 306 288 322 288 344V678C288 700 304 716 326 716H674C696 716 712 700 712 678V420" stroke="currentColor" strokeWidth="60" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="662" y="254" width="104" height="104" rx="22" fill="#5488CA" />
     </svg>
   );
 }
 
-// Brand logos lucide doesn't ship (it dropped brand icons), kept as flat paths.
 export function AppleLogo({ size = 16, ...props }: BrandIconProps) {
   return (
     <svg

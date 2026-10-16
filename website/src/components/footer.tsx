@@ -9,7 +9,7 @@ const links = [
   { label: "Install", href: "/docs/install" },
   { label: "Changelog", href: "/changelog" },
   { label: "GitHub", href: site.repo },
-  { label: "Discord", href: site.community.discord },
+  { label: "Issues", href: site.community.issues },
   { label: "Support", href: site.support },
 ];
 

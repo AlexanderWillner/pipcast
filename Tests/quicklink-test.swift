@@ -8,7 +8,7 @@ struct QuicklinkTests {
     static var passes = 0
 
     /// Injected everywhere a path is resolved, so no assertion depends on the machine.
-    static let home = "/Users/tinycast-harness"
+    static let home = "/Users/pipcast-harness"
 
     static func main() {
         destinationDetection()
@@ -593,7 +593,7 @@ struct QuicklinkTests {
 
     static func scratchDirectory() -> URL {
         let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-quicklink-test-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("pipcast-quicklink-test-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
