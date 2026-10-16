@@ -19,6 +19,7 @@
    Light is the bare :root so an unstyled first paint is never a dark flash.
    Dark is applied by next-themes via .dark on <html>. */
 :root {
+  --pc-brand-readable: #356aa8;
   --tc-canvas: #ffffff;
   --tc-surface: #ffffff;
   --tc-well: #f1f2f4;
@@ -51,11 +52,12 @@
 
   /* Keycaps carry the brand tint rather than the surface ramp, so a shortcut
      is findable when skimming a wall of prose. */
-  --tc-kbd-fg: #5b12bd;
+  --tc-kbd-fg: #356aa8;
   --tc-kbd-bg: rgb(84 136 202 / 0.12);
 }
 
 .dark {
+  --pc-brand-readable: #8ab4e8;
   --tc-canvas: #040506;
   --tc-surface: #07080a;
   --tc-well: #111214;
@@ -87,8 +89,8 @@
     rgb(255 255 255 / 0.14) 0px 0px 0px 1px, rgb(0 0 0 / 0.4) 0px 4px 40px 8px,
     rgb(0 0 0 / 0.8) 0px 0px 0px 0.5px;
 
-  --tc-kbd-fg: #d9c6ff;
-  --tc-kbd-bg: rgb(168 117 255 / 0.2);
+  --tc-kbd-fg: #8ab4e8;
+  --tc-kbd-bg: rgb(84 136 202 / 0.2);
 }
 
 @theme inline {
@@ -110,9 +112,9 @@
   --color-tint: rgb(var(--tc-tint));
 
   /* Pipcast brand — blue pip from the app icon, cyan as its counter-tone.
-     Literal in both themes: they carry identity, not elevation. */
+     The readable accent adapts to the theme; the logo blue stays fixed. */
   --color-brand: #5488ca;
-  --color-brand-bright: #8ab4e8;
+  --color-brand-bright: var(--pc-brand-readable);
   --color-brand-deep: #356aa8;
   --color-cyan: #47bfff;
 
@@ -545,6 +547,7 @@
    marketing page are one design rather than two that happen to sit together. */
 :root,
 .dark {
+  --pc-brand-readable: #8ab4e8;
   --color-fd-background: var(--tc-canvas);
   --color-fd-foreground: var(--tc-fg);
   --color-fd-muted: var(--tc-well);
@@ -554,7 +557,7 @@
   --color-fd-card: var(--tc-surface);
   --color-fd-card-foreground: var(--tc-fg);
   --color-fd-border: var(--tc-border);
-  --color-fd-primary: var(--color-brand);
+  --color-fd-primary: var(--pc-brand-readable);
   --color-fd-primary-foreground: #ffffff;
   --color-fd-secondary: var(--tc-well);
   --color-fd-secondary-foreground: var(--tc-fg);

@@ -141,7 +141,7 @@ function AiChatPreview() {
           <Paperclip size={11} aria-hidden="true" />
           notes.pdf
         </span>
-        <span className="rounded-2xl rounded-br-md bg-brand px-3 py-1.5 text-caption text-white">
+        <span className="rounded-2xl rounded-br-md bg-brand-deep px-3 py-1.5 text-caption text-white">
           Summarize this
         </span>
       </div>
@@ -169,7 +169,7 @@ function QuickActionsPreview() {
             key={action}
             className={cn(
               "rounded-full px-2.5 py-1 text-caption font-medium",
-              i === 0 ? "bg-brand text-white" : "bg-tint/8 text-fg-muted",
+              i === 0 ? "bg-brand-deep text-white" : "bg-tint/8 text-fg-muted",
             )}
           >
             {action}

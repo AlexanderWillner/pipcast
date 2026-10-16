@@ -4,7 +4,7 @@ import { DocsProvider } from "../../components/docs-provider";
 import {
   GitHubLogo,
   Logo,
-  SupportIcon,
+  FeedbackIcon,
 } from "../../components/ui/icon";
 import { site } from "../../data/site";
 import { source } from "../../lib/source";
@@ -23,8 +23,8 @@ export default function Layout({ children }: { children: ReactNode }) {
             type: "button",
             text: (
               <span className="flex items-center gap-1.5">
-                <SupportIcon size={15} />
-                Support
+                <FeedbackIcon size={15} />
+                Feedback
               </span>
             ),
             url: site.support,

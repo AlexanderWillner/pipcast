@@ -116,7 +116,7 @@ struct AboutView: View {
                 Spacer(minLength: Theme.Spacing.lg)
                 Button("Share Feedback…") { core.supportCoordinator.showSupport() }
                     .buttonStyle(.borderedProminent)
-                    .tint(Theme.Colors.brand)
+                    .tint(Theme.Colors.brandAction)
             }
             .padding(.vertical, Theme.Spacing.xs)
         }

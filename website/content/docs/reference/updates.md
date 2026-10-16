@@ -58,10 +58,10 @@ back a copy that updated itself.
 
 `brew install`, `brew uninstall` and `brew list` work as usual.
 
-## Supporting Pipcast
+## Sharing feedback
 
-Pipcast is free and open source. **Support Pipcast**, in the launcher, the menu bar and
-**Settings → About**, opens a small window with a link to support the project.
+Pipcast is free and open source. **Share Feedback**, in the launcher, the menu bar and
+**Settings → About**, opens a small window with a link to report issues and suggest improvements.
 
 About once a month, this window may open by itself, but never on the day you install Pipcast and
 never while you're busy. To stop it, clear the reminder checkbox in the window.

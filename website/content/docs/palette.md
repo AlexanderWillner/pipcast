@@ -150,6 +150,6 @@ AI Chat has its own setting for reopening a conversation. See
 ## The menu bar
 
 The Pipcast menu bar icon has **Open Pipcast**, **Clipboard History**, **Settings…**,
-**Check for Updates…**, **Support Pipcast…** and **Quit Pipcast**.
+**Check for Updates…**, **Share Feedback…** and **Quit Pipcast**.
 
 **Settings → General → Show in menu bar** hides the icon. Your shortcuts still work without it.

@@ -1,7 +1,7 @@
 import { site } from "../data/site";
 import { supportHero } from "../data/support";
 import { Button } from "./ui/button";
-import { GitHubLogo, Logo, SupportIcon } from "./ui/icon";
+import { GitHubLogo, Logo, FeedbackIcon } from "./ui/icon";
 
 // The mark alone on a brand glow, so the page ends on the brand.
 function GlowingMark() {
@@ -30,7 +30,7 @@ export function Support() {
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button href={site.community.issues} size="lg">
-          <SupportIcon size={18} />
+          <FeedbackIcon size={18} />
           Share feedback
         </Button>
         <Button href={site.repo} variant="ghost" size="lg">

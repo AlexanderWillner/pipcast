@@ -110,7 +110,7 @@ private struct SupportActionButton: View {
             .frame(height: Self.height)
             .background(
                 Capsule()
-                    .fill(Theme.Colors.brand)
+                    .fill(Theme.Colors.brandAction)
                     .brightness(hovered ? 0.08 : 0)
             )
             .contentShape(Capsule())

@@ -13,7 +13,7 @@ later, and no other format. Check your Raycast version in **Raycast → Settings
 export.
 
 **Raycast v1.x exports aren't supported.** Support for that format was removed in
-**Pipcast v0.10.5**, along with the Raycast X beta format. If your file won't open, export it again
+**Tinycast v0.10.5**, along with the Raycast X beta format. If your file won't open, export it again
 from a current version of Raycast.
 
 ## Steps

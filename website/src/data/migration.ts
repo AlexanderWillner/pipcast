@@ -10,7 +10,7 @@ export const migration = {
   // that will not work, and finding that out mid-import is the bad outcome.
   requirement: {
     title: "Raycast v2.0 and newer only",
-    body: "Pipcast reads .rayconfig files from Raycast v2.0 and later. Support for Raycast v1.x files was removed in Pipcast v0.10.5.",
+    body: "Pipcast reads .rayconfig files from Raycast v2.0 and later. Support for Raycast v1.x files was removed in Tinycast v0.10.5.",
   },
   steps: [
     {

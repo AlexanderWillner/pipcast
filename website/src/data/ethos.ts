@@ -33,6 +33,6 @@ export const ethosPillars: EthosPillar[] = [
   {
     icon: "free",
     title: "Free",
-    body: "Every feature is free, and there is no Pro tier. Optional tips pay the running costs.",
+    body: "Every feature is free, and there is no Pro tier. There are no paid features or donation checkout.",
   },
 ];

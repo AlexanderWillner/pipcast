@@ -24,7 +24,7 @@ and only appear while the feature is on. The rest are in **Settings → Commands
 | [Window Management](/docs/features/window-layouts) | Create Window Layout · Create Layout from Current Windows · Switch Room · Create Room                                                                                                              |
 | [Quicklinks](/docs/launcher/quicklinks)            | Create Quicklink · Search Quicklinks · Import Quicklinks · Export Quicklinks                                                                                                                       |
 | [Snippets](/docs/features/snippets)                | Search Snippets · Create Snippet                                                                                                                                                                   |
-| Commands                                           | Calculator History · [Open Camera](/docs/features/camera) · Export Backup · Import Backup · Import from Raycast · Check for Updates · Settings · About Pipcast · Support Pipcast · Quit Pipcast |
+| Commands                                           | Calculator History · [Open Camera](/docs/features/camera) · Export Backup · Import Backup · Import from Raycast · Check for Updates · Settings · About Pipcast · Share Feedback · Quit Pipcast |
 
 Two more commands only appear for what you type: **Open in Browser** and **Run Shell Command**. See
 [Fallbacks](/docs/launcher/fallbacks).

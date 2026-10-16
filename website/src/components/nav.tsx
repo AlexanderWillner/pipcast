@@ -1,7 +1,7 @@
 import { BookOpen, Star } from "lucide-react";
 import { nav, site } from "../data/site";
 import { starCount } from "../lib/version";
-import { GitHubLogo, Logo, SupportIcon } from "./ui/icon";
+import { GitHubLogo, Logo, FeedbackIcon } from "./ui/icon";
 import { Link } from "./ui/link";
 import { ThemeSwitch } from "./ui/theme-toggle";
 
@@ -42,12 +42,12 @@ export async function Nav() {
         <div className="ml-auto flex items-center gap-1">
           <Link
             href={site.support}
-            aria-label="Support Pipcast"
-            title="Support Pipcast"
+            aria-label="Share Feedback"
+            title="Share Feedback"
             className="flex h-8 items-center gap-1.5 rounded-full px-2 text-small text-fg-muted transition-colors hover:bg-tint/5 hover:text-fg sm:px-2.5"
           >
-            <SupportIcon size={17} className="text-brand-bright" />
-            <span className="hidden sm:inline">Support</span>
+            <FeedbackIcon size={17} className="text-brand-bright" />
+            <span className="hidden sm:inline">Feedback</span>
           </Link>
           <Link
             href="/docs"

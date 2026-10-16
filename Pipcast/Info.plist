@@ -35,7 +35,8 @@
 			</array>
 		</dict>
 	</array>
-	<!-- Backups are imported through the app; omit CFBundleDocumentTypes to prevent accidental opens. -->
+	<!-- The backup identifier is fixed so Dev, beta and stable builds can read each other’s backups.
+	     Import through the app; omit CFBundleDocumentTypes to prevent accidental opens. -->
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

@@ -167,7 +167,7 @@ the Zed app: rule 3 only protects an exact title past three characters.
 
 `settings` is the case these were measured against. Apple declares `Settings` in System Settings'
 `CFBundleAlternateNames`, so it is an exact alternate title and wins rule 3; the command is named
-`Pipcast Settings`, like About, Quit and Support Pipcast, so nothing ties it there.
+`Pipcast Settings`, like About, Quit and Share Feedback, so nothing ties it there.
 
 ## One fold, everywhere
 

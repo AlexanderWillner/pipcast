@@ -1,4 +1,4 @@
-// Run from website/ after npm ci; uses Next's installed image renderer.
+// After npm ci in website/, run node Scripts/render-social-image.mjs from the repo root.
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 const require = createRequire(new URL('../website/package.json', import.meta.url));

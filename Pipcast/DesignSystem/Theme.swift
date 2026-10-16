@@ -471,6 +471,8 @@ enum Theme {
         static let checkerDark = Color(nsColor: .srgbInk(0, alpha: 0.22))
         /// The blue pip in the app mark.
         static let brand = Color(red: 84 / 255, green: 136 / 255, blue: 202 / 255)
+        /// Deeper blue keeps white button labels readable.
+        static let brandAction = Color(red: 53 / 255, green: 106 / 255, blue: 168 / 255)
         /// The palette's drop guides while dragging, and once a release would snap it home.
         static let dropGuide = ramp(dark: 0.35, light: 0.35)
         static let dropGuideArmed = Color.blue

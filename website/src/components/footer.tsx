@@ -10,7 +10,7 @@ const links = [
   { label: "Changelog", href: "/changelog" },
   { label: "GitHub", href: site.repo },
   { label: "Issues", href: site.community.issues },
-  { label: "Support", href: site.support },
+  { label: "Feedback", href: site.support },
   { label: "Based on Tinycast", href: "https://github.com/abue-ammar/tinycast" },
 ];
 
