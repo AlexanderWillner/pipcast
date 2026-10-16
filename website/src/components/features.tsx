@@ -72,7 +72,7 @@ export function Features() {
                   <Icon
                     size={13}
                     strokeWidth={2}
-                    className="text-violet-bright"
+                    className="text-brand-bright"
                     aria-hidden="true"
                   />
                   {title}

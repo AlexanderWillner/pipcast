@@ -18,11 +18,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         // screen leaves a dead margin to the left of the sidebar. Full width
         // collapses that margin so the sidebar sits against the edge.
         containerProps={{ style: { "--fd-layout-width": "100%" } as never }}
-        // `type: "icon"` is what places these in the sidebar's bottom bar
-        // beside the theme switch. Passing `githubUrl` instead would put
-        // GitHub there but leave Discord with nowhere to go.
         links={[
-          // A button, not an icon: a 16pt glyph would hide it beside GitHub and Discord.
           {
             type: "button",
             text: (

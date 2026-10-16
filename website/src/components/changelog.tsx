@@ -31,7 +31,7 @@ function RailDot({ highlighted = false }: { highlighted?: boolean }) {
       className={cn(
         "absolute -left-[5px] top-4 hidden size-[9px] rounded-full ring-4 md:block",
         highlighted
-          ? "bg-violet ring-violet/20"
+          ? "bg-brand ring-brand/20"
           : "bg-border-strong ring-canvas",
       )}
     />
@@ -186,13 +186,13 @@ function ReleaseEntry({
           <h2 className="whitespace-nowrap text-heading tabular-nums">
             <a
               href={`#${release.tag}`}
-              className="transition-colors hover:text-violet-bright"
+              className="transition-colors hover:text-brand-bright"
             >
               {release.version}
             </a>
           </h2>
           {latest && (
-            <span className="rounded-full bg-violet/15 px-2 py-0.5 font-mono text-micro uppercase text-violet-bright">
+            <span className="rounded-full bg-brand/15 px-2 py-0.5 font-mono text-micro uppercase text-brand-bright">
               {changelogCopy.latest}
             </span>
           )}
@@ -299,7 +299,7 @@ function EarlierReleases({ releases }: { releases: StableRelease[] }) {
 function Intro() {
   return (
     <header className="rise max-w-2xl">
-      <p className="font-mono text-eyebrow uppercase text-violet-bright">
+      <p className="font-mono text-eyebrow uppercase text-brand-bright">
         {changelogHero.eyebrow}
       </p>
       <h1 className="mt-4 text-display text-fg">{changelogHero.title}</h1>

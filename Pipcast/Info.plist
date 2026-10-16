@@ -35,6 +35,7 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Backups are imported through the app; omit CFBundleDocumentTypes to prevent accidental opens. -->
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

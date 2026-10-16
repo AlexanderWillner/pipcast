@@ -8,6 +8,7 @@ Requires macOS 26 or later.
 
 Pipcast is an independent fork of [Tinycast](https://github.com/abue-ammar/tinycast),
 created by Abue Ammar and contributors. It is not an official Tinycast release.
+Modified by mSarheed on 2026-10-16. Pipcast modifications copyright © 2026 mSarheed.
 Original copyright and third-party notices are preserved in [LICENSE](LICENSE) and
 [NOTICE.md](NOTICE.md). Pipcast remains licensed under AGPL-3.0-or-later.
 

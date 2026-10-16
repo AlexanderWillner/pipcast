@@ -57,8 +57,10 @@ final class InstalledAIManager {
         for file in files {
             let name = file.lastPathComponent
             guard
-                (name.hasPrefix("pipcast-mcp-") && name.hasSuffix(".json"))
-                    || (name.hasPrefix("pipcast-prompt-") && name.hasSuffix(".txt")),
+                ((name.hasPrefix("pipcast-mcp-") || name.hasPrefix("tinycast-mcp-"))
+                    && name.hasSuffix(".json"))
+                    || ((name.hasPrefix("pipcast-prompt-") || name.hasPrefix("tinycast-prompt-"))
+                        && name.hasSuffix(".txt")),
                 let modified = try? file.resourceValues(forKeys: [.contentModificationDateKey])
                     .contentModificationDate,
                 modified < launch

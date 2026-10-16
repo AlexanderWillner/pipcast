@@ -17,6 +17,29 @@ struct BackupArchiveTest {
         }
     }
 
+    static func declaredBackupTypes() {
+        let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        do {
+            let data = try Data(contentsOf: repo.appendingPathComponent("Pipcast/Info.plist"))
+            let plist = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+            let source = try String(
+                contentsOf: repo.appendingPathComponent("Pipcast/Features/Backup/Service/BackupActions.swift"),
+                encoding: .utf8)
+            for (key, constructor, identifier, ext) in [
+                ("UTExportedTypeDeclarations", "exportedAs", "io.github.msarheed.pipcast.backup", "pipcast"),
+                ("UTImportedTypeDeclarations", "importedAs", "com.tinycast.backup", "tinycast")
+            ] {
+                let declarations = plist?[key] as? [[String: Any]] ?? []
+                let declaration = declarations.first { $0["UTTypeIdentifier"] as? String == identifier }
+                let tags = declaration?["UTTypeTagSpecification"] as? [String: Any]
+                check("\(ext) extension is registered", (tags?["public.filename-extension"] as? [String]) == [ext])
+                check("\(ext) picker matches its declaration", source.contains("UTType(\(constructor): \"\(identifier)\")"))
+            }
+        } catch {
+            check("backup type declarations are readable: \(error)", false)
+        }
+    }
+
     /// UUID-suffixed, per docs/testing.md: harnesses run in parallel against the real system.
     static func scratch() -> URL {
         let url = FileManager.default.temporaryDirectory
@@ -29,6 +52,7 @@ struct BackupArchiveTest {
         let root = scratch()
         defer { try? FileManager.default.removeItem(at: root) }
 
+        declaredBackupTypes()
         roundTrip(in: root)
         clipboardLines(in: root)
         noAbsolutePathsEscape(in: root)

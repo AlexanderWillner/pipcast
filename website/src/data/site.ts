@@ -41,28 +41,5 @@ export const nav = [
 
 // The hero's two lines. Every other channel lives in docs/install.md, which is
 // where both install CTAs point.
-export const brewTrustCommand = "brew trust --tap mSarheed/pipcast";
 export const brewInstallCommand =
   "brew install --cask mSarheed/pipcast/pipcast@beta";
-
-// The logo wall under the hero, in render order. The track starts at the first
-// entry with the left edge under the mask, so the two least-known names lead
-// and the ones worth reading land mid-viewport on load.
-export const companies = [
-  "voidzero",
-  "bytedance",
-  "apple",
-  "google",
-  "microsoft",
-  "openai",
-  "anthropic",
-  "stripe",
-  "cloudflare",
-  "github",
-  "samsung",
-  "alibaba",
-  "oracle",
-  "redhat",
-] as const;
-
-export type Company = (typeof companies)[number];

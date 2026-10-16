@@ -95,7 +95,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .checkForUpdates: return "Check for Updates"
         case .settings: return "Pipcast Settings"
         case .about: return "About Pipcast"
-        case .support: return "Support Pipcast"
+        case .support: return "Pipcast Feedback"
         case .quit: return "Quit Pipcast"
         }
     }

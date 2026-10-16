@@ -278,7 +278,7 @@ struct UpdatesTests {
 
     // MARK: - ReleaseNotes
 
-    /// A body as `Scripts/release-notes.sh` composes it.
+    /// A body as `Scripts/publish-release.py` composes it.
     static let composedBody = """
         ## What's Changed
         * Adjust top padding in **UpdateWindowView** by @abue-ammar in #304

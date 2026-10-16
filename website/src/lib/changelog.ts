@@ -1,6 +1,6 @@
 import { readRepoJson, repoApiUrl } from "./github";
 
-// Scripts/release-notes.sh puts the install text below this line; only the half above is notes.
+// Scripts/publish-release.py puts the install text below this line; only the half above is notes.
 const INSTALL_MARKER = /<!-- (?:pipcast|tinycast):install -->/;
 // The updater's own rule: anything else (a beta, a one-off build) is not a stable release.
 const STABLE_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;

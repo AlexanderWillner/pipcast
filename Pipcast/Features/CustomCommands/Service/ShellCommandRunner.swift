@@ -102,7 +102,7 @@ enum ShellCommandRunner {
         process.arguments = launch.arguments
         process.currentDirectoryURL = URL(fileURLWithPath: launch.directory)
         // Lets a shell config skip slow sections when Pipcast is the caller.
-        process.environment = ProcessInfo.processInfo.environment.merging(["PIPCAST": "1"]) { _, new in
+        process.environment = ProcessInfo.processInfo.environment.merging(["PIPCAST": "1", "TINYCAST": "1"]) { _, new in
             new
         }
         // Load-bearing: a config that prompts reads EOF and moves on, never hanging.
@@ -147,6 +147,7 @@ enum ShellCommandRunner {
 
         var environment = ProcessInfo.processInfo.environment
         environment["PIPCAST"] = "1"
+        environment["TINYCAST"] = "1"
         // A terminal makes tools colour output, so ask for colour the window can draw.
         environment["TERM"] = "xterm-256color"
 

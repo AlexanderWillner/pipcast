@@ -55,7 +55,7 @@ export const demoSections: DemoSection[] = [
         title: "Obsidian",
         kind: "Application",
         icon: "gem",
-        tint: "linear-gradient(160deg, #a875ff, #5b12bd)",
+        tint: "linear-gradient(160deg, #8ab4e8, #5b12bd)",
       },
       {
         title: "Spotify",

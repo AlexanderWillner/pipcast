@@ -11,7 +11,7 @@ final class SupportCoordinator {
     /// Environment injection and activity reads only — never for state this type owns.
     private unowned let core: AppCore
     private lazy var window = AppWindowController(
-        title: "Support Pipcast", contentSize: SupportWindowView.initialSize,
+        title: "Pipcast Feedback", contentSize: SupportWindowView.initialSize,
         activation: core.activationPolicy)
 
     init(store: SupportReminderStore, core: AppCore) {

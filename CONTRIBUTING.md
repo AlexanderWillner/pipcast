@@ -42,9 +42,9 @@ Check existing [issues](https://github.com/mSarheed/pipcast/issues) and
 - Anything in [`docs/`](docs/) your change makes wrong is fixed.
 - **Read your own diff top to bottom before you open the PR.** Most review comments are things the
   author would have caught on a second pass.
-- Contributions to Pipcast are under the repository’s AGPL-3.0-or-later license.
-  The original Tinycast contributor agreement is retained as historical provenance; it is not
-  a new agreement with the Pipcast maintainer.
+- You agree to the
+  [Contributor License and Feedback Agreement](CONTRIBUTOR_LICENSE_AND_FEEDBACK_AGREEMENT.md).
+  Opening a PR is your acceptance.
 
 ## Pull requests
 

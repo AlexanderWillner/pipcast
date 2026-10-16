@@ -31,7 +31,7 @@ export function Keyboard() {
         Every other key, one table per screen, is in{" "}
         <Link
           href="/docs/reference/shortcuts"
-          className="text-fg underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-violet-bright"
+          className="text-fg underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-brand-bright"
         >
           Keyboard shortcuts
         </Link>

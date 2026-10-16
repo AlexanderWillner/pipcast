@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "The Pipcast command palette open over a macOS desktop, showing fuzzy app search.",
+        alt: "Pipcast logo — a free, native macOS launcher",
       },
     ],
   },

@@ -219,7 +219,7 @@ struct RootPaletteView: View {
                 PopoverMenuItem(title: "About Pipcast", systemImage: "info.circle") {
                     core.settingsCoordinator.showAbout()
                 },
-                PopoverMenuItem(title: "Support Pipcast", systemImage: "heart") {
+                PopoverMenuItem(title: "Pipcast Feedback", systemImage: "heart") {
                     core.supportCoordinator.showSupport()
                 },
                 PopoverMenuItem(title: "Settings", systemImage: "gearshape", shortcut: "⌘,") {

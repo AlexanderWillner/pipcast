@@ -7,7 +7,7 @@ export function CommandLine({ command }: { command: string }) {
     <div className="flex items-center gap-3 rounded-xl border border-border bg-well py-1.5 pl-3.5 pr-1.5">
       <span
         aria-hidden="true"
-        className="select-none font-mono text-small text-violet-bright"
+        className="select-none font-mono text-small text-brand-bright"
       >
         $
       </span>

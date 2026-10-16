@@ -381,3 +381,6 @@ An import warns before it applies, the same as a backup carrying custom commands
 one `CustomCommandStore.add(contentsOf:)` — one persist and one launcher rebuild for the whole folder
 rather than one per script. A name already in the library is skipped and counted, so re-importing a
 folder after adding one script to it adds only that script.
+
+`PIPCAST=1` marks shells launched by Pipcast. `TINYCAST=1` is also exported for shell
+guards documented in earlier beta builds, so existing startup files keep skipping interactive setup.

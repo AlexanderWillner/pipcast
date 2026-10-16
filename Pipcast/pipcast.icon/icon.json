@@ -4,8 +4,40 @@
     {
       "layers": [
         {
-          "image-name": "pipcast.svg",
-          "name": "Pipcast"
+          "image-name": "frame.svg",
+          "name": "Frame",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.90000,0.90000,0.90000,1.00000"
+              }
+            },
+            {
+              "appearance": "tinted",
+              "value": {
+                "solid": "gray:0.90000,1.00000"
+              }
+            }
+          ]
+        },
+        {
+          "image-name": "pip.svg",
+          "name": "Pip",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "tinted",
+              "value": {
+                "solid": "gray:0.90000,1.00000"
+              }
+            }
+          ]
         }
       ],
       "shadow": {

@@ -655,7 +655,7 @@ enum SettingsSearchCatalog {
             group: .aboutLinks, "Links",
             keywords: ["github", "source", "issues", "website"]),
         .init(
-            .aboutLinks, "Support",
-            keywords: ["donate", "sponsor", "funding"])
+            .aboutLinks, "Feedback",
+            keywords: ["contribute", "report", "suggest", "support"])
     ]
 }

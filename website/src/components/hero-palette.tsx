@@ -105,7 +105,7 @@ export function HeroPalette() {
         />
         <span className="flex min-w-0 flex-1 items-center text-demo-query text-(--glass-fg)">
           <span className="truncate">{demoQuery}</span>
-          <span className="demo-caret ml-px h-[1.1em] w-0.5 shrink-0 rounded-full bg-violet-bright" />
+          <span className="demo-caret ml-px h-[1.1em] w-0.5 shrink-0 rounded-full bg-brand-bright" />
         </span>
       </div>
 

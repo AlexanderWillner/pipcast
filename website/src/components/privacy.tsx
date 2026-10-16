@@ -16,7 +16,7 @@ function SwitchGlyph({ isOn }: { isOn: boolean }) {
       aria-hidden="true"
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 rounded-full",
-        isOn ? "bg-violet" : "bg-tint/15",
+        isOn ? "bg-brand" : "bg-tint/15",
       )}
     >
       <span
@@ -38,7 +38,7 @@ function SwitchCard({ icon, name, note, isOn }: DefaultSwitch) {
           className={cn(
             "flex size-9 items-center justify-center rounded-lg",
             isOn
-              ? "bg-violet/15 text-violet-bright"
+              ? "bg-brand/15 text-brand-bright"
               : "bg-tint/5 text-fg-muted",
           )}
         >
@@ -93,7 +93,7 @@ export function Privacy() {
         <p className="flex gap-3 px-3 pb-2 pt-4 text-small text-fg-muted">
           <ShieldCheck
             size={16}
-            className="mt-0.5 shrink-0 text-violet-bright"
+            className="mt-0.5 shrink-0 text-brand-bright"
             aria-hidden="true"
           />
           {permissionNote}

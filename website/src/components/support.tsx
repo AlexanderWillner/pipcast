@@ -3,7 +3,7 @@ import { supportHero } from "../data/support";
 import { Button } from "./ui/button";
 import { GitHubLogo, Logo, SupportIcon } from "./ui/icon";
 
-// The mark alone on a violet glow, so the page ends on the brand.
+// The mark alone on a brand glow, so the page ends on the brand.
 function GlowingMark() {
   return (
     <span className="relative mx-auto flex size-28 items-center justify-center sm:size-32">

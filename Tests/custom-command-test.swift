@@ -358,8 +358,8 @@ struct CustomCommandTests {
         let inHome = await ShellCommandRunner.run("test \"$PWD\" = \"$HOME\"")
         check("commands start in the user's home directory", inHome.succeeded)
 
-        let marker = await ShellCommandRunner.run("test \"$PIPCAST\" = 1")
-        check("the PIPCAST marker is exported so a shell config can detect us", marker.succeeded)
+        let marker = await ShellCommandRunner.run("test \"$PIPCAST\" = 1 && test \"$TINYCAST\" = 1")
+        check("the current and legacy shell guards are exported", marker.succeeded)
 
         let failed = await ShellCommandRunner.run("printf 'expected failure' >&2; exit 7")
         check(

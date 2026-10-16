@@ -106,15 +106,15 @@ struct AboutView: View {
                             .foregroundStyle(Theme.Colors.brand)
                     )
                 VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
-                    SettingsRowTitle(.aboutLinks, "Support")
+                    SettingsRowTitle(.aboutLinks, "Feedback")
                         .font(.body.weight(.medium))
-                    Text("Free and open source, funded out of pocket.")
+                    Text("Free and open source. Help improve Pipcast.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: Theme.Spacing.lg)
-                Button("Support…") { core.supportCoordinator.showSupport() }
+                Button("Share Feedback…") { core.supportCoordinator.showSupport() }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.Colors.brand)
             }

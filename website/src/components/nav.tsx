@@ -46,7 +46,7 @@ export async function Nav() {
             title="Support Pipcast"
             className="flex h-8 items-center gap-1.5 rounded-full px-2 text-small text-fg-muted transition-colors hover:bg-tint/5 hover:text-fg sm:px-2.5"
           >
-            <SupportIcon size={17} className="text-violet-bright" />
+            <SupportIcon size={17} className="text-brand-bright" />
             <span className="hidden sm:inline">Support</span>
           </Link>
           <Link

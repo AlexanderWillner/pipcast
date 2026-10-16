@@ -22,7 +22,7 @@ export function Ethos() {
         <blockquote className="mx-auto max-w-3xl text-center">
           <p className="text-quote text-balance font-serif text-fg">
             &ldquo;{ethos.quote}{" "}
-            <em className="italic text-violet">{ethos.emphasis}</em>&rdquo;
+            <em className="italic text-brand">{ethos.emphasis}</em>&rdquo;
           </p>
           <footer className="mt-4 text-small text-fg-subtle">
             {ethos.attribution}

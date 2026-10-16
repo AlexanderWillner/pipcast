@@ -40,7 +40,7 @@ export function CopyButton({
       )}
     >
       {hasCopied ? (
-        <Check size={13} strokeWidth={2.4} className="text-violet-bright" />
+        <Check size={13} strokeWidth={2.4} className="text-brand-bright" />
       ) : (
         <Copy size={13} strokeWidth={2} />
       )}

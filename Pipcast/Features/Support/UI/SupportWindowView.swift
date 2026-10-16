@@ -50,7 +50,7 @@ struct SupportWindowView: View {
                 .frame(width: Self.iconSize, height: Self.iconSize)
                 .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
             VStack(spacing: Theme.Spacing.sm) {
-                Text("Support \(Bundle.main.appDisplayName)")
+                Text("\(Bundle.main.appDisplayName) Feedback")
                     .font(.title2.weight(.semibold))
                 Text("Free and open source.")
                     .font(.callout)
@@ -64,7 +64,7 @@ struct SupportWindowView: View {
 
     private var action: some View {
         VStack(spacing: Theme.Spacing.lg) {
-            SupportActionButton(title: "Support \(Bundle.main.appDisplayName)", icon: "heart") {
+            SupportActionButton(title: "\(Bundle.main.appDisplayName) Feedback", icon: "heart") {
                 support.openFeedback()
             }
             Text("Share feedback, report bugs, or contribute on GitHub.")
@@ -76,7 +76,7 @@ struct SupportWindowView: View {
     // MARK: - Reminder
 
     private func reminder(isOn: Binding<Bool>) -> some View {
-        Toggle("Remind me occasionally", isOn: isOn)
+        Toggle("Remind me to share feedback", isOn: isOn)
             .toggleStyle(.checkbox)
             .font(.callout)
             .foregroundStyle(Theme.Colors.textSecondary)
