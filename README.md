@@ -11,11 +11,13 @@ Stable builds use `io.github.msarheed.pipcast.app`; Debug builds add `.dev`.
 The optional settings file is `~/.config/pipcast/settings.json` (`pipcast-dev` for Debug).
 Existing Tinycast settings are not migrated automatically. The project and scheme retain `Tinycast`.
 
-Updates now read this repository's releases and require the installed Pipcast certificate.
-Builds use `Pipcast Self-Signed`; see [signing](docs/signing.md) to create the certificate.
-Release automation, support links, and artwork remain upstream's. Release automation has
-not yet been adapted for distributing Pipcast. The original documentation below,
-including installation and support links, describes Tinycast.
+Updates read this repository's releases and accept Developer ID signatures from the
+Apple team configured at build time. Public releases are signed and notarized through the
+manual [release workflow](docs/release.md). [Signing setup](docs/signing.md) is required first.
+Homebrew distribution uses [mSarheed/homebrew-pipcast](https://github.com/mSarheed/homebrew-pipcast);
+the first cask is created by the first successful release. No Pipcast release is published yet.
+Support links and artwork remain upstream's. The original documentation below, including
+its installation and support links, describes Tinycast.
 
 ---
 

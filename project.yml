@@ -22,6 +22,8 @@ settings:
       TINYCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app.dev
       DICTATION_EXECUTABLE_NAME: Pipcast Dev Dictation
     Release:
+      CODE_SIGN_IDENTITY: "Developer ID Application"
+      OTHER_CODE_SIGN_FLAGS: "--timestamp"
       DICTATION_EXECUTABLE_NAME: Pipcast Dictation
       # Release-only: library validation refuses Debug's `.debug.dylib`, whose team never matches.
       ENABLE_HARDENED_RUNTIME: YES

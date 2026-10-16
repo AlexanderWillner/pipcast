@@ -3,8 +3,8 @@
 Pipcast builds as `Pipcast.app` or `Pipcast Dev.app`, with bundle identifiers
 `io.github.msarheed.pipcast.app` and `.app.dev`. Its settings mirror uses
 `~/.config/pipcast/settings.json` or `~/.config/pipcast-dev/settings.json`.
-The project and scheme are still `Tinycast`. Signing uses Pipcast's own identity (see signing.md); release automation
-has not been adapted for Pipcast.
+The project and scheme are still `Tinycast`. Debug uses the local Pipcast identity; Release uses Developer ID (see signing.md).
+Public packaging is handled by the manual workflow described in release.md.
 
 The local loop: set up, build, run, regenerate. Shipping a build is [release.md](release.md);
 verifying a change is [testing.md](testing.md).

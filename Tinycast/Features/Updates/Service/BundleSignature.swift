@@ -1,38 +1,33 @@
 import Foundation
 import Security
 
-/// Updates must have a valid nested seal and the running app's signing certificate.
+/// Release updates must belong to the configured Apple Developer team.
 enum BundleSignature {
-    static func isTrusted(_ bundleURL: URL) -> Bool {
-        var staticCode: SecStaticCode?
-        guard SecStaticCodeCreateWithPath(bundleURL as CFURL, [], &staticCode) == errSecSuccess,
-            let staticCode
-        else { return false }
-        // An unsealed bundle can claim any identity, and a nested helper is where one hides.
-        let flags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSCheckNestedCode)
-        guard SecStaticCodeCheckValidity(staticCode, flags, nil) == errSecSuccess else { return false }
-        guard let running = runningLeaf(), let candidate = leaf(of: staticCode) else { return false }
-        return running == candidate
-    }
-
-    private static func runningLeaf() -> Data? {
-        var code: SecCode?
-        guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return nil }
-        var staticCode: SecStaticCode?
-        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode else {
+    static func requirement(teamID: String?) -> String? {
+        guard let teamID, teamID.count == 10,
+            teamID.range(of: "^[A-Z0-9]{10}$", options: .regularExpression) != nil else {
             return nil
         }
-        return leaf(of: staticCode)
+        return """
+            anchor apple generic \
+            and certificate leaf[subject.OU] = "\(teamID)" \
+            and certificate 1[field.1.2.840.113635.100.6.2.6] exists \
+            and certificate leaf[field.1.2.840.113635.100.6.1.13] exists
+            """
     }
 
-    private static func leaf(of code: SecStaticCode) -> Data? {
-        var information: CFDictionary?
-        let flags = SecCSFlags(rawValue: kSecCSSigningInformation)
-        guard SecCodeCopySigningInformation(code, flags, &information) == errSecSuccess,
-            let dictionary = information as? [String: Any],
-            let certificates = dictionary[kSecCodeInfoCertificates as String] as? [SecCertificate],
-            let leaf = certificates.first
-        else { return nil }
-        return SecCertificateCopyData(leaf) as Data
+    static func isTrusted(_ bundleURL: URL) -> Bool {
+        let teamID = Bundle.main.object(forInfoDictionaryKey: "PipcastUpdateTeamID") as? String
+        guard let text = requirement(teamID: teamID) else { return false }
+        var requirement: SecRequirement?
+        guard SecRequirementCreateWithString(text as CFString, [], &requirement) == errSecSuccess,
+            let requirement
+        else { return false }
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(bundleURL as CFURL, [], &code) == errSecSuccess,
+            let code
+        else { return false }
+        let flags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSCheckNestedCode)
+        return SecStaticCodeCheckValidity(code, flags, requirement) == errSecSuccess
     }
 }

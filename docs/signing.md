@@ -1,30 +1,23 @@
 # Pipcast signing
 
-Pipcast builds use a dedicated code-signing identity named `Pipcast Self-Signed`.
-Create it once on the development Mac using Keychain Access → Certificate Assistant →
-Create a Certificate: name `Pipcast Self-Signed`, identity type Self Signed Root,
-certificate type Code Signing. Keep the certificate and its private key securely backed up.
-The repository configures the identity name; it does not contain or create a certificate.
+Public Release builds use **Developer ID Application**, with hardened runtime and a secure
+timestamp. Debug builds retain the local `Pipcast Self-Signed` identity and never self-update.
 
-The same certificate must sign the initially installed app and subsequent updates.
-The updater verifies the nested code signature and compares the candidate's leaf certificate
-with the running app's certificate. The bundle identifier and version must also match.
-Tinycast's developer team is not trusted. Ad-hoc or unsigned builds cannot satisfy this policy.
+Create or export your Developer ID Application certificate using your Apple Developer
+account and Keychain Access on the development Mac. A certificate without its corresponding
+private key cannot sign an app. Export only this identity as a password-protected `.p12`.
+The release credentials are listed in [release.md](release.md). No private key belongs in git.
 
-Verify that the identity is available before building:
+The release workflow injects `DEVELOPMENT_TEAM` from `APPLE_TEAM_ID`; the app embeds it as
+`PipcastUpdateTeamID`. Update signatures must chain to Apple's Developer ID authority and
+name that team. Missing or malformed team IDs fail closed. Bundle ID, version, and nested
+signature validation remain mandatory. Certificate renewals under the same team are accepted;
+a transfer to a different team requires an explicit migration. Self-signed releases are not accepted.
 
-```sh
-security find-identity -v -p codesigning
-```
+The workflow notarizes and staples both the app and DMG. This is outside Mac App Store
+distribution; no App Store listing is required. First installation still receives the normal
+macOS downloaded-app confirmation. No Gatekeeper bypass or quarantine stripping is needed.
 
-Debug and Release builds share the signing identity but have separate bundle identifiers.
-Release builds retain hardened runtime; Debug builds retain the upstream Debug settings.
-
-The existing release workflow has not yet been adapted for Pipcast. Before using it,
-configure it to use this identity and export only this certificate and its private key
-as a password-protected PKCS#12 file for the release runner. Never commit that file,
-its password, or a private key to the repository.
-
-Losing or replacing the certificate prevents existing installations from accepting new
-updates automatically. A certificate change requires a planned migration or manual reinstall.
-Self-signing does not provide Apple notarization or remove Gatekeeper's first-install checks.
+Verify an installed development identity with `security find-identity -v -p codesigning`.
+For local Release builds, provide your `DEVELOPMENT_TEAM` and Developer ID identity. For
+public packaging use the manual Release workflow so notarization and stapling are included.

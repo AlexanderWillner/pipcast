@@ -25,6 +25,7 @@ struct UpdatesTests {
         picksTheZipThisMacCanRun()
         rejectsUnusableFeeds()
         offersOnlyWhatIsWorthInstalling()
+        pinsDeveloperTeam()
         rejectsUnsignedUpdates()
         keepsOnlyTheChangelog()
         laysOutTheChangelog()
@@ -291,6 +292,20 @@ struct UpdatesTests {
         **Channel:** beta · **Version:** 0.9.13-beta.61
         Built from 419a5b4. [Full changelog](https://example.invalid/compare)
         """
+
+    static func pinsDeveloperTeam() {
+        expect(BundleSignature.requirement(teamID: nil) == nil, "missing team fails closed")
+        expect(BundleSignature.requirement(teamID: "") == nil, "empty team fails closed")
+        expect(BundleSignature.requirement(teamID: "bad\"team") == nil, "invalid team fails closed")
+        let text = BundleSignature.requirement(teamID: "ABCDE12345")!
+        var requirement: SecRequirement?
+        expect(
+            SecRequirementCreateWithString(text as CFString, [], &requirement) == errSecSuccess,
+            "Developer ID requirement compiles")
+        expect(text.contains("ABCDE12345"), "requirement pins the configured team")
+        expect(text.hasPrefix("anchor apple generic"), "requirement demands Apple's trust chain")
+        expect(text.contains("100.6.1.13"), "requirement demands Developer ID Application")
+    }
 
     static func rejectsUnsignedUpdates() {
         let missing = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

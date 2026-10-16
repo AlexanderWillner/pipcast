@@ -22,9 +22,9 @@ no appcast: the release feed the website already reads is the feed the app reads
   that flag for sandboxed downloaders and for apps that opt in with `LSFileQuarantineEnabled`, and
   Tinycast is neither. `Quarantine` checks anyway through `getxattr`/`removexattr` rather than the
   `xattr` tool, and an app that still carries the flag is refused rather than installed.
-- **Updates require the installed app's certificate.** The code signature must validate,
-  including nested helpers, and the candidate must carry the byte-identical leaf certificate
-  of the running app. Tinycast's developer identity is not trusted.
+- **Updates require the configured Apple Developer team.** The nested code signature must
+  validate against Apple's Developer ID chain and the Team ID embedded in the running app.
+  Renewed Developer ID Application certificates under the same team are accepted.
 - **A build only ever updates within its own channel.** The channels are separate bundle ids installed
   side by side; crossing would mean installing a different app. `io.github.msarheed.pipcast.app.dev` never updates
   at all, and does not advertise the command.
@@ -111,7 +111,7 @@ One route, whatever the install came from:
    for its channel, so it is `Tinycast Beta.app` on beta.
 3. Check quarantine natively; clear it if somehow present, and refuse the update if it survives.
 4. Verify the bundle id, the version, and that the code signature is valid and proves the bundle is
-   ours — by matching the running app's leaf certificate.
+   ours — by matching the configured Developer ID team.
 5. `FileManager.replaceItemAt`. The staging folder is on the same volume as `/Applications`, which is
    what lets this be atomic. A non-writable `/Applications` is reported, not worked around; there is
    no privileged helper.
@@ -123,27 +123,6 @@ setting, clipboard entry, note or snippet is affected by an update, by `brew upg
 
 ## Releasing into it
 
-The release workflow below is still upstream configuration and must be adapted before
-publishing Pipcast. The updater now reads only `mSarheed/pipcast`; it requires correctly
-signed Pipcast bundles using the stable or beta identifiers listed above.
-
-`.github/workflows/release.yml` publishes two assets from one build: the DMG people download by hand
-and the cask installs, and `Tinycast-<version>.zip` for the updater. A stable run adds a
-`Tinycast-Universal-<version>` pair from its `universal` job, uploaded second so the thin zip stays
-first in the asset list — builds predating architecture-aware selection take whichever comes first.
-The zip is made with
-
-```sh
-ditto -c -k --keepParent --sequesterRsrc "$APP" "dist/$ZIP_FILE"
-```
-
-which is the only zip that leaves the code signature verifiable — plain `zip` drops symlinks and
-breaks the seal, and the signature check above would then reject every update.
-
-The body it publishes is composed by `Scripts/release-notes.sh`: GitHub's generated changelog first,
-then `<!-- tinycast:install -->`, then the install text. Anything a release wants the update window to
-show has to go above that marker — see [release.md](../release.md#release-notes).
-
-**The casks must declare `auto_updates true`** in `abue-ammar/homebrew-tinycast`. Without it Homebrew
-compares its Caskroom receipt against the cask version, sees a self-updated app as outdated forever,
-and re-installs over it on the next `brew upgrade`.
+See [release.md](../release.md). The manual workflow signs, notarizes, and staples Pipcast
+before publishing arm64 and universal DMGs and ZIPs. It updates the Pipcast Homebrew tap
+after publication. The ZIP is made with `ditto` to preserve the signature and symlinks.
