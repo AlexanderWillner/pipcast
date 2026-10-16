@@ -530,7 +530,7 @@ enum SettingsSearchCatalog {
             pane: .calendar,
             keywords: ["meetings", "events", "zoom", "join", "schedule"]),
         .init(
-            .calendarCalendar, "Join meetings from Tinycast",
+            .calendarCalendar, "Join meetings from Pipcast",
             keywords: ["zoom", "meet", "teams", "permission"]),
         .init(
             .calendarCalendar, "Upcoming meetings in launcher",

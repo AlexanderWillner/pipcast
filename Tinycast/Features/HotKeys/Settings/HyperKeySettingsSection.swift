@@ -68,7 +68,7 @@ struct HyperKeySettingsSection: View {
                 Toggle(isOn: $settings.hyperKeySecureInputCompatibility) {
                     SettingsRowTitle(.generalHyperKey, "Secure Input Compatibility")
                     Text(
-                        "Tinycast's Hyper shortcuts also work in password fields and secure terminals, "
+                        "Pipcast's Hyper shortcuts also work in password fields and secure terminals, "
                             + "where Right Control (⌃) with the same key triggers them. "
                             + "While on, Right Control (⌃) acts as the Hyper Key too.")
                 }

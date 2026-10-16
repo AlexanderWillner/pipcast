@@ -103,7 +103,7 @@ extension InstalledAIKind {
     /// A trailing `*` deny drops every tool from the request, not just refuses the call.
     private static let openCodeConfiguration = """
         {"share":"disabled","snapshots":false,"agents":{"\(openCodeAgent)":{"system":\
-        "You are generating text inside Tinycast. Use only the conversation in this request.",\
+        "You are generating text inside Pipcast. Use only the conversation in this request.",\
         "permissions":[{"action":"*","resource":"*","effect":"deny"}]}}}
         """
 }

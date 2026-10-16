@@ -66,7 +66,7 @@ final class DictationCoordinator {
             let granted = await AVCaptureDevice.requestAccess(for: .audio)
             guard !Task.isCancelled else { return }
             guard granted else {
-                showMessage("Allow Tinycast to use the microphone in System Settings", .danger)
+                showMessage("Allow Pipcast to use the microphone in System Settings", .danger)
                 return
             }
             settings.dictationEnabled = true

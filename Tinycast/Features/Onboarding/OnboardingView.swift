@@ -87,7 +87,7 @@ struct OnboardingView: View {
 
     private var title: String {
         switch step {
-        case 0: "Welcome to Tinycast"
+        case 0: "Welcome to Pipcast"
         case 1: "Enable Pasting"
         case 2: "Import from Raycast"
         default: "You're all set"
@@ -97,7 +97,7 @@ struct OnboardingView: View {
     private var subtitle: Text {
         switch step {
         case 0: Text("Set a shortcut to summon the launcher from anywhere.")
-        case 1: Text("Let Tinycast paste items back into the app you were using.")
+        case 1: Text("Let Pipcast paste items back into the app you were using.")
         case 2: Text("Bring your shortcuts, favorites, and clipboard history along.")
         default: readyMessage
         }
@@ -121,9 +121,9 @@ struct OnboardingView: View {
 
     private var readyMessage: Text {
         if let caps = hotKeys.binding(for: .togglePalette)?.keycaps {
-            return Text("Press \(KeyCapChip.inlineText(caps)) anytime to start using Tinycast.")
+            return Text("Press \(KeyCapChip.inlineText(caps)) anytime to start using Pipcast.")
         }
-        return Text("Tinycast is ready. Set a shortcut in Settings to summon it.")
+        return Text("Pipcast is ready. Set a shortcut in Settings to summon it.")
     }
 
     // MARK: - Step content
@@ -144,7 +144,7 @@ struct OnboardingView: View {
             OnboardingCard {
                 OnboardingRow(
                     title: "App Launcher",
-                    subtitle: "Press this shortcut to open Tinycast.",
+                    subtitle: "Press this shortcut to open Pipcast.",
                     systemImage: "magnifyingglass", tint: .blue
                 ) {
                     ShortcutRecorder(action: .togglePalette)
@@ -152,7 +152,7 @@ struct OnboardingView: View {
                 OnboardingDivider()
                 OnboardingRow(
                     title: "Launch at login",
-                    subtitle: "Start Tinycast automatically when you log in.",
+                    subtitle: "Start Pipcast automatically when you log in.",
                     systemImage: "power", tint: .green
                 ) {
                     Toggle("", isOn: $settings.launchAtLogin)

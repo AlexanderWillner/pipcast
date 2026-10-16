@@ -77,7 +77,7 @@ struct AboutView: View {
                 .font(.caption)
             }
 
-            Text("A tiny, native macOS launcher.")
+            Text("An independent fork of Tinycast by Abue Ammar and contributors.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -123,7 +123,7 @@ struct AboutView: View {
     }
 
     private var footer: some View {
-        Text("© 2026 Abue Ammar · Released under AGPL-3.0")
+        Text("© 2026 Abue Ammar · Released under AGPL-3.0-or-later")
             .font(.caption2)
             .foregroundStyle(.tertiary)
     }

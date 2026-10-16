@@ -10,7 +10,7 @@ struct CalendarSettingsView: View {
         Form {
             FeatureSwitchSection(
                 anchor: .calendarCalendar,
-                enableTitle: "Join meetings from Tinycast",
+                enableTitle: "Join meetings from Pipcast",
                 enableSubtitle:
                     "Reads \(settings.calendarSpan.possessivePhrase) events for join links. "
                     + "Nothing leaves this Mac.",
@@ -92,7 +92,7 @@ struct CalendarSettingsView: View {
                     }
                 } label: {
                     SettingsRowTitle(.calendarMenuBar, "Calendar in Menu Bar")
-                    Text("Separate from the Tinycast icon.")
+                    Text("Separate from the Pipcast icon.")
                 }
                 Picker(selection: $settings.calendarSpan) {
                     ForEach(MeetingSpan.allCases) { span in

@@ -96,10 +96,10 @@ struct ExtensionTests {
     static func runtimeURL() -> URL {
         let candidates = [
             URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                .appendingPathComponent("Tinycast/Resources/RaycastRuntime.generated.js"),
+                .appendingPathComponent("Pipcast/Resources/RaycastRuntime.generated.js"),
             URL(fileURLWithPath: #filePath)
                 .deletingLastPathComponent().deletingLastPathComponent()
-                .appendingPathComponent("Tinycast/Resources/RaycastRuntime.generated.js")
+                .appendingPathComponent("Pipcast/Resources/RaycastRuntime.generated.js")
         ]
         return candidates.first { FileManager.default.fileExists(atPath: $0.path) } ?? candidates[0]
     }
@@ -889,8 +889,8 @@ struct ExtensionTests {
             String(describing: canonical?.extensionCandidates))
 
         let tiny = ExtensionDeepLink.parse(
-            url: URL(string: "tinycast://extensions/linear/linear/create-issue")!)
-        check("deeplink mirrors raycast:// as tinycast://", tiny == canonical)
+            url: URL(string: "pipcast://extensions/linear/linear/create-issue")!)
+        check("deeplink mirrors raycast:// as pipcast://", tiny == canonical)
 
         let bare = ExtensionDeepLink.parse(url: URL(string: "raycast://extensions/demo/search")!)
         check(
@@ -905,9 +905,9 @@ struct ExtensionTests {
             ExtensionDeepLink.route(url: installURL) == install)
         check("store Install is never parsed as a command", ExtensionDeepLink.parse(url: installURL) == nil)
         check(
-            "store Install accepts the Tinycast scheme",
+            "store Install accepts the Pipcast scheme",
             ExtensionDeepLink.route(
-                url: URL(string: "tinycast://extensions/linear/linear?source=webstore")!) == install)
+                url: URL(string: "pipcast://extensions/linear/linear?source=webstore")!) == install)
         check(
             "store Install accepts the path-based scheme",
             ExtensionDeepLink.route(
@@ -1161,7 +1161,7 @@ struct ExtensionTests {
                 try { callback(); return "none"; } catch (error) { return error.code; }
               };
               const filePaths = [
-                fileURLToPath("file:///Applications/Tinycast%20Beta.app"),
+                fileURLToPath("file:///Applications/Pipcast%20Beta.app"),
                 fileURLToPath(pathToFileURL("/tmp/a#b.png")),
                 pathToFileURL("/tmp/My Image.png").href,
                 errorCode(() => fileURLToPath("file:///tmp/a%2Fb")),
@@ -1262,7 +1262,7 @@ struct ExtensionTests {
             "fileURLToPath decodes a path and rejects an unusable URL",
             ExtensionAccessoriesView_labelForTest(
                 screen.items.first?.node.array("accessories").dropFirst(2).first)
-                == "/Applications/Tinycast Beta.app\n/tmp/a#b.png\n"
+                == "/Applications/Pipcast Beta.app\n/tmp/a#b.png\n"
                 + "file:///tmp/My%20Image.png\n"
                 + "ERR_INVALID_FILE_URL_PATH\nERR_INVALID_FILE_URL_HOST\n"
                 + "ERR_INVALID_URL_SCHEME",
@@ -1880,7 +1880,7 @@ struct ExtensionTests {
             "a killed exec child never runs the rest of its script",
             !FileManager.default.fileExists(atPath: marker.path))
         check(
-            "exec returns a live pid and process.kill guards Tinycast itself",
+            "exec returns a live pid and process.kill guards Pipcast itself",
             recorder.trees.last?.activeRoot?.string("markdown")
                 == "true,failed,false,EPERM,ESRCH,ERR_UNKNOWN_SIGNAL",
             recorder.trees.last?.activeRoot?.string("markdown") ?? "no tree")

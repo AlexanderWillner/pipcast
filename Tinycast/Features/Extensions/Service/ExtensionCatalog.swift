@@ -91,7 +91,7 @@ enum ExtensionCatalog {
         let base =
             FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first ?? FileManager.default.homeDirectoryForCurrentUser
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.tinycast.app"
+        let bundleID = Bundle.main.bundleIdentifier ?? "io.github.msarheed.pipcast.app"
         return base.appendingPathComponent(bundleID, isDirectory: true)
     }
 
@@ -186,7 +186,7 @@ enum ExtensionCatalog {
                     "\(url.lastPathComponent) doesn't contain a Raycast extension (no package.json with commands)."
             case .noBuiltCommands(let name):
                 return
-                    "\(name) has no built command bundles. Tinycast installs prebuilt extensions — run `ray build` in the extension folder first, or import one from an installed Raycast."
+                    "\(name) has no built command bundles. Pipcast installs prebuilt extensions — run `ray build` in the extension folder first, or import one from an installed Raycast."
             case .wrongPlatform(let name):
                 return "\(name) doesn't support macOS."
             case .copyFailed(let reason):

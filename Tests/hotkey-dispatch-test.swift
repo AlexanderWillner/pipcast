@@ -66,7 +66,7 @@ struct HotKeyDispatchTest {
         shared.onKeyDown(CGEventFlags.maskControl.rawValue | 1)
         shared.onKeyUp?()
         check(
-            "Left Control retains its ordinary Tinycast binding",
+            "Left Control retains its ordinary Pipcast binding",
             palette == 1 && presses == 3 && releases == 3)
         shared.onKeyDown(CGEventFlags.maskControl.rawValue | 0x2000)
         shared.onKeyUp?()

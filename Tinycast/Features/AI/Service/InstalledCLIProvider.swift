@@ -151,7 +151,7 @@ private final class InstalledCLITurnRunner {
         } catch {
             continuation.finish(
                 throwing: AIProviderError.unavailable(
-                    "Tinycast could not prepare its private AI workspace."))
+                    "Pipcast could not prepare its private AI workspace."))
             return
         }
 
@@ -170,7 +170,7 @@ private final class InstalledCLITurnRunner {
                 activeServers = []
                 continuation.finish(
                     throwing: AIProviderError.unavailable(
-                        "Tinycast could not write its private MCP configuration."))
+                        "Pipcast could not write its private MCP configuration."))
                 return
             }
             configURL = url
@@ -185,7 +185,7 @@ private final class InstalledCLITurnRunner {
                 try? FileManager.default.removeItem(at: url)
                 continuation.finish(
                     throwing: AIProviderError.unavailable(
-                        "Tinycast could not write its private AI prompt."))
+                        "Pipcast could not write its private AI prompt."))
                 return
             }
             grokPrompt = url
@@ -198,7 +198,7 @@ private final class InstalledCLITurnRunner {
             } catch {
                 continuation.finish(
                     throwing: AIProviderError.unavailable(
-                        "Tinycast could not write its private image attachments."))
+                        "Pipcast could not write its private image attachments."))
                 return
             }
             files += attachments
@@ -272,7 +272,7 @@ private final class InstalledCLITurnRunner {
         }
         // Framed as JSON, so a picture rides beside the text as a content block.
         guard let line = ClaudeControlProtocol.userMessage(prompt, images: images) else {
-            fail("Tinycast could not frame the request for " + kind.title + ".")
+            fail("Pipcast could not frame the request for " + kind.title + ".")
             return
         }
         // A tool loop answers on the same pipe, so an armed turn keeps stdin open for it.
@@ -375,7 +375,7 @@ private final class InstalledCLITurnRunner {
                 "--agent", InstalledAIKind.openCodeAgent,
                 "--model", effort.map { model + "#" + $0 } ?? model,
                 // A set title spares the turn a second model call to name its session.
-                "--title", "Tinycast"
+                "--title", "Pipcast"
             ] + attachments.flatMap { ["--file", $0.path] }
         case .grok:
             var result = [
@@ -473,7 +473,7 @@ private final class InstalledCLITurnRunner {
             return
         }
         if let id = frame.unsupportedRequestID {
-            let refusal = "Tinycast does not answer this request."
+            let refusal = "Pipcast does not answer this request."
             if let line = ClaudeControlProtocol.error(to: id, message: refusal) {
                 write(line, closing: false)
             }

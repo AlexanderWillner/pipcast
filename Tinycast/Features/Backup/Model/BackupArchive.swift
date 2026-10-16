@@ -12,7 +12,7 @@ enum BackupArchive {
         var errorDescription: String? {
             switch self {
             case .cannotWrite: return "Couldn't write the backup file."
-            case .cannotRead: return "This file isn't a Tinycast backup, or it's damaged."
+            case .cannotRead: return "This file isn't a Pipcast backup, or it's damaged."
             }
         }
     }

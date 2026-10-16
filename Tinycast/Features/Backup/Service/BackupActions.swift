@@ -56,7 +56,7 @@ enum BackupActions {
     ) async throws
         -> BackupComposer.Result
     {
-        guard let destination = chooseSaveLocation(named: "Tinycast", type: .tinycastBackup) else {
+        guard let destination = chooseSaveLocation(named: "Pipcast", type: .tinycastBackup) else {
             throw CancellationError()
         }
         let plan = BackupComposer.plan(categories, from: core)
@@ -256,7 +256,7 @@ enum BackupActions {
         "Turn on Snippets in Settings to use their keywords."
 
     /// Not everything an import applies settles in the running app, so say to relaunch.
-    private static let restartAfterImportText = "Quit and reopen Tinycast to finish."
+    private static let restartAfterImportText = "Quit and reopen Pipcast to finish."
 
     static func raycastText(_ outcome: RaycastOutcome) -> String {
         var parts: [String] = []

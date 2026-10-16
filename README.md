@@ -1,3 +1,22 @@
+# Pipcast
+
+Pipcast is an independent fork of [Tinycast](https://github.com/abue-ammar/tinycast),
+created by Abue Ammar and contributors. It is not an official Tinycast release.
+The original [AGPL-3.0-or-later license](LICENSE), copyright, and [third-party notices](NOTICE.md)
+are preserved.
+
+Modifications on 2026-10-16: renamed the app to Pipcast, assigned separate app and settings
+identities, and added fork attribution. Pipcast modifications copyright (C) 2026 mSarheed.
+Stable builds use `io.github.msarheed.pipcast.app`; Debug builds add `.dev`.
+The optional settings file is `~/.config/pipcast/settings.json` (`pipcast-dev` for Debug).
+Existing Tinycast settings are not migrated automatically. The project and scheme retain `Tinycast`.
+
+Release automation, update sources, signing configuration, support links, and artwork are still
+upstream's. They have not been adapted for distributing Pipcast. The original documentation below,
+including installation and support links, describes Tinycast.
+
+---
+
 # Tinycast
 
 **A tiny, fully native macOS launcher. One hotkey, everything you reach for all day, under 100 MB of

@@ -197,7 +197,7 @@ final class QuicklinkCoordinator {
         core.showMessage(
             Permissions.isAccessibilityTrusted()
                 ? "Couldn’t get the selected text"
-                : "Allow Tinycast to use Accessibility in System Settings",
+                : "Allow Pipcast to use Accessibility in System Settings",
             tone: .danger)
     }
 
@@ -413,7 +413,7 @@ final class QuicklinkCoordinator {
                 symbol: Quicklink.sfSymbol, tone: .neutral)
             return
         }
-        guard let url = BackupActions.chooseSaveLocation(named: "Tinycast-Quicklinks") else {
+        guard let url = BackupActions.chooseSaveLocation(named: "Pipcast-Quicklinks") else {
             return
         }
         do {

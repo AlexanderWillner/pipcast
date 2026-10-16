@@ -34,7 +34,7 @@ struct ExtensionDeepLink: Sendable, Equatable {
 
     static func claims(_ url: URL) -> Bool {
         guard let scheme = url.scheme?.lowercased() else { return false }
-        return ["raycast", "tinycast", "com.raycast", "raycastinternal"].contains(scheme)
+        return ["raycast", "pipcast", "com.raycast", "raycastinternal"].contains(scheme)
     }
 
     static func parse(url: URL) -> ExtensionDeepLink? {

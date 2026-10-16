@@ -338,7 +338,7 @@ struct AIProvidersPanel: View {
                 EmptyView()
             } label: {
                 Label("Turned off", systemImage: "pause.circle")
-                Text("Tinycast leaves it alone, and its models stay out of every model picker.")
+                Text("Pipcast leaves it alone, and its models stay out of every model picker.")
             }
         } footer: {
             if let footer {
@@ -425,7 +425,7 @@ struct AIProvidersPanel: View {
                 .fixedSize()
             } label: {
                 Text("Not installed")
-                Text("Tinycast could not find the \(kind.command) command.")
+                Text("Pipcast could not find the \(kind.command) command.")
             }
         case .failed(let message):
             failedRow(message, retry: { installedAI.refresh(kind: kind) })

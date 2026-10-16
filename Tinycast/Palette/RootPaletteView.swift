@@ -216,7 +216,7 @@ struct RootPaletteView: View {
                         openURL(url)
                     }
                 },
-                PopoverMenuItem(title: "About Tinycast", systemImage: "info.circle") {
+                PopoverMenuItem(title: "About Pipcast", systemImage: "info.circle") {
                     core.settingsCoordinator.showAbout()
                 },
                 PopoverMenuItem(title: "Support Tinycast", systemImage: "heart") {

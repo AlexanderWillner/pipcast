@@ -343,7 +343,7 @@ enum SystemActionRunner {
     private static func postMediaKey(_ key: Int32) throws {
         guard Permissions.ensureAccessibility() else {
             throw SystemActionFailure(
-                "Allow Tinycast to control your Mac in Accessibility settings, then try again.",
+                "Allow Pipcast to control your Mac in Accessibility settings, then try again.",
                 settings: .accessibility)
         }
         // The same route as the keyboard's media keys; 0xA/0xB are down and up.
@@ -460,7 +460,7 @@ enum SystemActionRunner {
     private static func dismissNotifications() async throws -> Int {
         guard Permissions.ensureAccessibility() else {
             throw SystemActionFailure(
-                "Allow Tinycast to control your Mac in Accessibility settings, then try again.",
+                "Allow Pipcast to control your Mac in Accessibility settings, then try again.",
                 settings: .accessibility)
         }
         guard
@@ -475,7 +475,7 @@ enum SystemActionRunner {
             guard let notification = firstNotification(in: root, depth: 0) else { return dismissed }
             guard let action = dismissAction(of: notification) else {
                 throw SystemActionFailure(
-                    "This version of Notification Center exposes no dismiss control Tinycast can use.")
+                    "This version of Notification Center exposes no dismiss control Pipcast can use.")
             }
             let result = AXUIElementPerformAction(notification, action as CFString)
             guard result == .success || result == .invalidUIElement else {
@@ -550,7 +550,7 @@ enum SystemActionRunner {
             if getPower() == requested { return requested == 1 }
         }
         throw SystemActionFailure(
-            "Bluetooth did not change state. Check Tinycast’s Bluetooth permission.",
+            "Bluetooth did not change state. Check Pipcast’s Bluetooth permission.",
             settings: .bluetooth)
     }
 
@@ -577,7 +577,7 @@ enum SystemActionRunner {
                 errorInfo[NSAppleScript.errorMessage] as? String ?? "Unknown automation error."
             if number == -1743 {
                 throw SystemActionFailure(
-                    "Allow Tinycast to control the requested app in Automation settings, then try again.",
+                    "Allow Pipcast to control the requested app in Automation settings, then try again.",
                     settings: .automation)
             }
             throw SystemActionFailure(detail)

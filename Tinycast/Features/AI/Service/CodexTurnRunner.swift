@@ -401,7 +401,7 @@ final class CodexTurnRunner {
         if request.webSearch { allowedTools.append("web search") }
         let tools =
             allowedTools.isEmpty
-            ? "Never invoke tools or access external resources. Use only the request content supplied by Tinycast."
+            ? "Never invoke tools or access external resources. Use only the request content supplied by Pipcast."
             : "The only tools you may use are \(allowedTools.joined(separator: " and "))."
         let search = request.webSearch ? Self.webSearchInstructions : Self.noWebSearchInstructions
         let safety = hasTools ? Self.toolSafetyInstructions : Self.safetyInstructions

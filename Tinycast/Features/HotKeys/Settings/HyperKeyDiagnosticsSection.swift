@@ -96,7 +96,7 @@ struct HyperKeyDiagnosticsSection: View {
     private func describe(_ secureInput: HyperKeyDiagnostics.SecureInput) -> String {
         var sentences = [
             diagnostics.secureInputCompatibilityActive
-                ? "Tinycast's Hyper shortcuts use Right Control while Secure Input is on."
+                ? "Pipcast's Hyper shortcuts use Right Control while Secure Input is on."
                 : "Key presses can't reach the Hyper Key while Secure Input is on."
         ]
         if !secureInput.likelyOwners.isEmpty {

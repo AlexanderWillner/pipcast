@@ -253,7 +253,7 @@ final class InstalledAIManager {
                 return (
                     kind,
                     InstalledAIStatus(
-                        phase: .failed("Tinycast needs OpenCode 2. Update OpenCode, then Check Again."),
+                        phase: .failed("Pipcast needs OpenCode 2. Update OpenCode, then Check Again."),
                         version: version, executable: executable)
                 )
             }

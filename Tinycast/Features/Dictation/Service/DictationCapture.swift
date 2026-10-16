@@ -12,7 +12,7 @@ final class DictationCapture {
         var errorDescription: String? {
             switch self {
             case .microphoneUnavailable: "No microphone is available."
-            case .microphoneDenied: "Allow Tinycast to use the microphone in System Settings."
+            case .microphoneDenied: "Allow Pipcast to use the microphone in System Settings."
             case .captureUnavailable: "Couldn't start recording from this microphone."
             }
         }

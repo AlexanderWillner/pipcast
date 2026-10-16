@@ -1,6 +1,6 @@
 name: Tinycast
 options:
-  bundleIdPrefix: com.tinycast
+  bundleIdPrefix: io.github.msarheed.pipcast
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
@@ -16,13 +16,13 @@ settings:
     # A stable self-signed identity keeps the Accessibility grant across rebuilds. docs/signing.md
     CODE_SIGN_IDENTITY: "Tinycast Self-Signed"
     SWIFT_STRICT_CONCURRENCY: complete
-    TINYCAST_BUNDLE_IDENTIFIER: com.tinycast.app
+    TINYCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app
   configs:
     Debug:
-      TINYCAST_BUNDLE_IDENTIFIER: com.tinycast.app.dev
-      DICTATION_EXECUTABLE_NAME: Tinycast Dev Dictation
+      TINYCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app.dev
+      DICTATION_EXECUTABLE_NAME: Pipcast Dev Dictation
     Release:
-      DICTATION_EXECUTABLE_NAME: Tinycast Dictation
+      DICTATION_EXECUTABLE_NAME: Pipcast Dictation
       # Release-only: library validation refuses Debug's `.debug.dylib`, whose team never matches.
       ENABLE_HARDENED_RUNTIME: YES
       # Strip the shipped binary (dSYM is still generated first) and drop unused code.
@@ -49,6 +49,8 @@ targets:
         type: folder
       # The MIT mark's licence asks the notice to travel with the binary, not just the repo.
       - path: NOTICE.md
+        buildPhase: resources
+      - path: LICENSE
         buildPhase: resources
     dependencies:
       - target: DictationHelper
@@ -79,6 +81,7 @@ targets:
           subpath: Contents/Helpers
     settings:
       base:
+        PRODUCT_NAME: Pipcast
         PRODUCT_BUNDLE_IDENTIFIER: "$(TINYCAST_BUNDLE_IDENTIFIER)"
         INFOPLIST_FILE: Tinycast/Info.plist
         CODE_SIGN_ENTITLEMENTS: Tinycast/Tinycast.entitlements
@@ -90,7 +93,7 @@ targets:
       configs:
         # Debug is its own channel, so a local build never corrupts the installed app's state.
         Debug:
-          PRODUCT_NAME: Tinycast Dev
+          PRODUCT_NAME: Pipcast Dev
 
   ClipboardTextHelper:
     type: tool
