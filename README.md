@@ -11,8 +11,10 @@ Stable builds use `io.github.msarheed.pipcast.app`; Debug builds add `.dev`.
 The optional settings file is `~/.config/pipcast/settings.json` (`pipcast-dev` for Debug).
 Existing Tinycast settings are not migrated automatically. The project and scheme retain `Tinycast`.
 
-Release automation, update sources, signing configuration, support links, and artwork are still
-upstream's. They have not been adapted for distributing Pipcast. The original documentation below,
+Updates now read this repository's releases and require the installed Pipcast certificate.
+Builds use `Pipcast Self-Signed`; see [signing](docs/signing.md) to create the certificate.
+Release automation, support links, and artwork remain upstream's. Release automation has
+not yet been adapted for distributing Pipcast. The original documentation below,
 including installation and support links, describes Tinycast.
 
 ---

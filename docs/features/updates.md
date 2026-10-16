@@ -1,6 +1,6 @@
 # Updates
 
-By default, Tinycast checks GitHub Releases once a day and offers the newest release for its own
+By default, Pipcast checks `mSarheed/pipcast` GitHub Releases once a day and offers the newest release for its own
 channel in a native window with its release notes, installs it and relaunches. There is no Sparkle and
 no appcast: the release feed the website already reads is the feed the app reads.
 
@@ -22,15 +22,11 @@ no appcast: the release feed the website already reads is the feed the app reads
   that flag for sandboxed downloaders and for apps that opt in with `LSFileQuarantineEnabled`, and
   Tinycast is neither. `Quarantine` checks anyway through `getxattr`/`removexattr` rather than the
   `xattr` tool, and an app that still carries the flag is refused rather than installed.
-- **The signature is the only integrity guarantee.** A downloaded bundle is trusted when its seal
-  validates, nested helper included, *and* it either satisfies the Developer ID requirement pinned in
-  `BundleSignature` or carries the byte-identical leaf certificate the running app does. The
-  requirement names the team, so a certificate renewal strands nobody; the leaf match is the path a
-  copy installed before the Developer ID switch has, and it goes away once none is left. `notarized`
-  is deliberately not in the requirement — it resolves the ticket through `syspolicyd` or the
-  network, so an offline Mac would refuse a bundle the chain already proves is ours.
+- **Updates require the installed app's certificate.** The code signature must validate,
+  including nested helpers, and the candidate must carry the byte-identical leaf certificate
+  of the running app. Tinycast's developer identity is not trusted.
 - **A build only ever updates within its own channel.** The channels are separate bundle ids installed
-  side by side; crossing would mean installing a different app. `com.tinycast.app.dev` never updates
+  side by side; crossing would mean installing a different app. `io.github.msarheed.pipcast.app.dev` never updates
   at all, and does not advertise the command.
 - **Nothing is installed unless every check passes.** Bundle id, version and signature are all checked
   on the expanded copy before `replaceItemAt` runs, and the running app survives any failure untouched.
@@ -71,8 +67,8 @@ no appcast: the release feed the website already reads is the feed the app reads
 
 | Bundle id | Channel | Takes |
 | --- | --- | --- |
-| `com.tinycast.app` | `.stable` | releases |
-| `com.tinycast.app.beta` | `.beta` | prereleases |
+| `io.github.msarheed.pipcast.app` | `.stable` | releases |
+| `io.github.msarheed.pipcast.app.beta` | `.beta` | prereleases |
 | anything else | `.development` | nothing |
 
 `AppVersion` parses `MAJOR.MINOR.PATCH` and `MAJOR.MINOR.PATCH-beta.N` with semver precedence: a
@@ -115,7 +111,7 @@ One route, whatever the install came from:
    for its channel, so it is `Tinycast Beta.app` on beta.
 3. Check quarantine natively; clear it if somehow present, and refuse the update if it survives.
 4. Verify the bundle id, the version, and that the code signature is valid and proves the bundle is
-   ours — by the pinned Developer ID requirement, or by the running app's own leaf certificate.
+   ours — by matching the running app's leaf certificate.
 5. `FileManager.replaceItemAt`. The staging folder is on the same volume as `/Applications`, which is
    what lets this be atomic. A non-writable `/Applications` is reported, not worked around; there is
    no privileged helper.
@@ -126,6 +122,10 @@ Nothing here touches `~/Library/Preferences`, `~/Library/Caches` or `Application
 setting, clipboard entry, note or snippet is affected by an update, by `brew upgrade`, or by both.
 
 ## Releasing into it
+
+The release workflow below is still upstream configuration and must be adapted before
+publishing Pipcast. The updater now reads only `mSarheed/pipcast`; it requires correctly
+signed Pipcast bundles using the stable or beta identifiers listed above.
 
 `.github/workflows/release.yml` publishes two assets from one build: the DMG people download by hand
 and the cask installs, and `Tinycast-<version>.zip` for the updater. A stable run adds a

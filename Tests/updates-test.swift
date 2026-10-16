@@ -25,7 +25,7 @@ struct UpdatesTests {
         picksTheZipThisMacCanRun()
         rejectsUnusableFeeds()
         offersOnlyWhatIsWorthInstalling()
-        pinsTheDeveloperIDRequirement()
+        rejectsUnsignedUpdates()
         keepsOnlyTheChangelog()
         laysOutTheChangelog()
         linksMentionsAndPullRequests()
@@ -100,9 +100,9 @@ struct UpdatesTests {
     // MARK: - ReleaseChannel
 
     static func derivesChannels() {
-        let stable = ReleaseChannel(bundleID: "com.tinycast.app")
-        let beta = ReleaseChannel(bundleID: "com.tinycast.app.beta")
-        let dev = ReleaseChannel(bundleID: "com.tinycast.app.dev")
+        let stable = ReleaseChannel(bundleID: "io.github.msarheed.pipcast.app")
+        let beta = ReleaseChannel(bundleID: "io.github.msarheed.pipcast.app.beta")
+        let dev = ReleaseChannel(bundleID: "io.github.msarheed.pipcast.app.dev")
 
         expect(stable == .stable, "the stable bundle id is the stable channel")
         expect(beta == .beta, "the beta bundle id is the beta channel")
@@ -292,22 +292,15 @@ struct UpdatesTests {
         Built from 419a5b4. [Full changelog](https://example.invalid/compare)
         """
 
-    /// A malformed string makes `satisfiesDeveloperID` answer false for every build, silently.
-    static func pinsTheDeveloperIDRequirement() {
-        var requirement: SecRequirement?
-        let status = SecRequirementCreateWithString(
-            BundleSignature.developerID as CFString, [], &requirement)
+    static func rejectsUnsignedUpdates() {
+        let missing = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        expect(!BundleSignature.isTrusted(missing), "a missing bundle is never trusted")
+        let executable = URL(fileURLWithPath: CommandLine.arguments[0])
+        expect(!BundleSignature.isTrusted(executable), "the unsigned test executable is not an update")
+        expect(ReleaseFeed.repository == "mSarheed/pipcast", "updates use the Pipcast repository")
         expect(
-            status == errSecSuccess && requirement != nil,
-            "the pinned Developer ID requirement still compiles")
-
-        // Without the anchor, any self-signed certificate claiming the same OU would satisfy it.
-        expect(
-            BundleSignature.developerID.hasPrefix("anchor apple generic and "),
-            "the requirement is anchored to Apple's chain, not just to a team string")
-        expect(
-            BundleSignature.developerID.contains("field.1.2.840.113635.100.6.1.13"),
-            "the requirement demands a Developer ID Application certificate specifically")
+            !ReleaseChannel(bundleID: "com.tinycast.app").updatesItself,
+            "the upstream bundle identity does not select a Pipcast release channel")
     }
 
     static func keepsOnlyTheChangelog() {

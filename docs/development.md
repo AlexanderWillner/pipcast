@@ -3,8 +3,8 @@
 Pipcast builds as `Pipcast.app` or `Pipcast Dev.app`, with bundle identifiers
 `io.github.msarheed.pipcast.app` and `.app.dev`. Its settings mirror uses
 `~/.config/pipcast/settings.json` or `~/.config/pipcast-dev/settings.json`.
-The project and scheme are still `Tinycast`. Signing and release instructions below
-remain upstream instructions; release automation has not been adapted for Pipcast.
+The project and scheme are still `Tinycast`. Signing uses Pipcast's own identity (see signing.md); release automation
+has not been adapted for Pipcast.
 
 The local loop: set up, build, run, regenerate. Shipping a build is [release.md](release.md);
 verifying a change is [testing.md](testing.md).
@@ -20,7 +20,7 @@ verifying a change is [testing.md](testing.md).
 
 ## First-time setup
 
-Create the `Tinycast Self-Signed` code-signing identity once — builds sign with it, which is what keeps
+Create the `Pipcast Self-Signed` code-signing identity once — builds sign with it, which is what keeps
 macOS from forgetting the Accessibility grant on every rebuild. Follow **[signing.md](signing.md) §1**,
 a few `openssl`/`security` commands.
 
@@ -75,7 +75,7 @@ Consequences worth knowing:
 
 - The dev build asks for Accessibility on its own the first time, and starts with **no** hotkeys bound
   and onboarding unseen. Grant and bind once; it persists across rebuilds, because the fixed build path
-  and the `Tinycast Self-Signed` identity keep the TCC grant alive.
+  and the `Pipcast Self-Signed` identity keep the TCC grant alive.
 - Don't bind the same global hotkey in both — whichever registered first wins.
 - The Hyper Key's Caps Lock remap lives on the keyboards, which are **shared, not per-bundle**:
   enable Hyper in one build at a time so their keyboard owners do not compete. An identical mapping
