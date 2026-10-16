@@ -305,7 +305,7 @@ struct MCPTests {
             "a server with no command is nothing a CLI could start")
     }
 
-    /// Codex and Claude start their own copy of a local server; Tinycast's would be the second.
+    /// Codex and Claude start their own copy of a local server; Pipcast's would be the second.
     static func onlyOneCopyOfALocalServerRuns() {
         let local = MCPServer(
             name: "Files", slug: "files",
@@ -314,13 +314,13 @@ struct MCPTests {
             name: "Linear", slug: "linear",
             transport: .http(url: "https://mcp.linear.app/mcp", headerName: "Authorization"))
         expect(
-            local.runsInTinycast(whileCLIRouteSelected: false),
+            local.runsInPipcast(whileCLIRouteSelected: false),
             "on an API route Pipcast runs a local server, since it is the one calling it")
         expect(
-            !local.runsInTinycast(whileCLIRouteSelected: true),
+            !local.runsInPipcast(whileCLIRouteSelected: true),
             "on Codex or Claude it leaves the local server to the CLI's own copy")
         expect(
-            remote.runsInTinycast(whileCLIRouteSelected: true),
+            remote.runsInPipcast(whileCLIRouteSelected: true),
             "while a remote one stays connected: a session, no process, and a live status row")
     }
 }

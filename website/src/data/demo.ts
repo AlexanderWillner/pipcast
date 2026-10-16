@@ -1,5 +1,5 @@
 // The hero's recreated palette. Labels copy the real app's strings (the action
-// bar, section titles, placeholders), and every row names Tinycast's own
+// bar, section titles, placeholders), and every row names Pipcast's own
 // things or generic apps, so nothing here pretends to be someone's data.
 
 export type DemoRowIcon =
@@ -55,7 +55,7 @@ export const demoSections: DemoSection[] = [
         title: "Obsidian",
         kind: "Application",
         icon: "gem",
-        tint: "linear-gradient(160deg, #a875ff, #5b12bd)",
+        tint: "linear-gradient(160deg, #8ab4e8, #5b12bd)",
       },
       {
         title: "Spotify",

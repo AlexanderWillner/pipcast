@@ -1255,7 +1255,7 @@ struct NotesTests {
 
     private static func temporaryRoot(_ name: String) -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(
-            "tinycast-notes-\(name)-\(UUID().uuidString)", isDirectory: true)
+            "pipcast-notes-\(name)-\(UUID().uuidString)", isDirectory: true)
     }
 
     private static func require<T>(_ value: T?) throws -> T {

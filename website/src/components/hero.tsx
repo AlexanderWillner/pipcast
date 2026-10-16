@@ -1,5 +1,5 @@
 import { ArrowRight, Download } from "lucide-react";
-import { brewInstallCommand, brewTrustCommand, hero, site } from "../data/site";
+import { brewInstallCommand, hero, site } from "../data/site";
 import { latestVersion } from "../lib/version";
 import { HeroPalette } from "./hero-palette";
 import { Button } from "./ui/button";
@@ -20,7 +20,7 @@ export async function Hero() {
         className="pointer-events-none absolute -top-40 right-[-10%] h-[520px] w-[720px] rounded-full opacity-35 blur-3xl"
         style={{
           background:
-            "radial-gradient(closest-side, color-mix(in srgb, var(--color-violet) 55%, transparent), transparent)",
+            "radial-gradient(closest-side, color-mix(in srgb, var(--color-brand) 55%, transparent), transparent)",
         }}
       />
 
@@ -29,7 +29,7 @@ export async function Hero() {
           <p className="rise inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 font-mono text-micro uppercase text-fg-muted">
             <span
               aria-hidden="true"
-              className="size-1.5 rounded-full bg-violet"
+              className="size-1.5 rounded-full bg-brand"
             />
             {version} · {site.platform} · Apple silicon &amp; Intel
           </p>
@@ -42,7 +42,7 @@ export async function Hero() {
               <span key={line} className="block">
                 {line}
                 {index === hero.headlineLines.length - 1 && (
-                  <span aria-hidden="true" className="text-violet">
+                  <span aria-hidden="true" className="text-brand">
                     _
                   </span>
                 )}
@@ -61,7 +61,6 @@ export async function Hero() {
             className="rise mt-8 max-w-xl space-y-2"
             style={{ animationDelay: "180ms" }}
           >
-            <CommandLine command={brewTrustCommand} />
             <CommandLine command={brewInstallCommand} />
           </div>
 
@@ -70,7 +69,7 @@ export async function Hero() {
             style={{ animationDelay: "240ms" }}
           >
             <Button
-              href={`${site.repo}/releases/latest`}
+              href={`${site.repo}/releases`}
               variant="action"
               size="md"
             >
@@ -78,10 +77,10 @@ export async function Hero() {
               Download for Mac
             </Button>
             <Link
-              href="/#gallery"
+              href="/#features"
               className="inline-flex items-center gap-1.5 text-small text-fg-muted transition-colors hover:text-fg"
             >
-              See it in action
+              Explore features
               <ArrowRight size={14} />
             </Link>
           </div>

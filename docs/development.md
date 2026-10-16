@@ -3,7 +3,7 @@
 Pipcast builds as `Pipcast.app` or `Pipcast Dev.app`, with bundle identifiers
 `io.github.msarheed.pipcast.app` and `.app.dev`. Its settings mirror uses
 `~/.config/pipcast/settings.json` or `~/.config/pipcast-dev/settings.json`.
-The project and scheme are still `Tinycast`. Debug uses the local Pipcast identity; Release uses Developer ID (see signing.md).
+The project and scheme are `Pipcast`. Debug uses the local Pipcast identity; Release uses Developer ID (see signing.md).
 Public packaging is handled by the manual workflow described in release.md.
 
 The local loop: set up, build, run, regenerate. Shipping a build is [release.md](release.md);
@@ -30,20 +30,20 @@ the section below is a note for anyone who wants it, not a step.
 ## Build & run
 
 ```sh
-open Tinycast.xcodeproj    # then ⌘R
+open Pipcast.xcodeproj    # then ⌘R
 ```
 
 Or from the command line:
 
 ```sh
-xcodebuild -project Tinycast.xcodeproj -scheme Tinycast -configuration Debug build
+xcodebuild -project Pipcast.xcodeproj -scheme Pipcast -configuration Debug build
 ```
 
 `xcodebuild` uses whatever `xcode-select` points at; if that's the Command Line Tools rather than
 Xcode, prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (the SwiftUI
 `@State`/`@FocusState` macros need Xcode's macOS platform).
 
-`Tinycast.xcodeproj` is committed and generated from `project.yml` via XcodeGen — after changing
+`Pipcast.xcodeproj` is committed and generated from `project.yml` via XcodeGen — after changing
 project settings in `project.yml`, run `xcodegen generate` and commit the result. There is no
 `Package.swift`, and `Bundle.module` must never be used.
 
@@ -51,19 +51,19 @@ The app target builds and embeds `ClipboardTextHelper` under `Contents/Helpers`,
 Build the app scheme to include it; copying only the main executable omits OCR support. The helper's
 executable name stays fixed even when release builds override the app's product name for a channel.
 
-Dictation similarly embeds its Swift/Core ML helper, named `Tinycast Dev Dictation` in Debug and
-`Tinycast Dictation` in Release, in an accessory `.app` bundle without a bundled icon. Model weights
+Dictation similarly embeds its Swift/Core ML helper, named `Pipcast Dev Dictation` in Debug and
+`Pipcast Dictation` in Release, in an accessory `.app` bundle without a bundled icon. Model weights
 download on demand; none are app resources.
 
 ### The dev channel
 
-Debug builds are a separate channel: **`Tinycast Dev.app`**, bundle id `com.tinycast.app.dev`. Every
+Debug builds are a separate channel: **`Pipcast Dev.app`**, bundle id `io.github.msarheed.pipcast.app.dev`. Every
 persisted thing is keyed by bundle id — `~/Library/Preferences/<id>.plist` (settings and hotkey
 bindings), `~/Library/Application Support/<id>/` (the onboarding marker, Notes, snippets, quicklinks,
 clipboard history, calculator history, launch ranking and frequent emoji; Notes and snippets unless
 a folder is chosen),
 `~/Library/Caches/<id>/` (exchange rates, the update check, staged downloads), the opt-in
-`~/.config/tinycast-dev/settings.json` (`tinycast` on stable), the `SMAppService`
+`~/.config/pipcast-dev/settings.json` (`pipcast` on stable), the `SMAppService`
 login item, and the Accessibility / Input Monitoring (TCC) grants — so a local build can neither read
 nor clobber an installed app's state, and both run side by side.
 
@@ -92,14 +92,14 @@ and the flag database:
 
 ```sh
 brew install xcode-build-server
-xcodebuild -project Tinycast.xcodeproj -scheme Tinycast -configuration Debug \
-    -derivedDataPath build/DerivedData build 2>&1 | tee /tmp/tinycast-build.log
-./Scripts/sync-lsp.sh /tmp/tinycast-build.log
+xcodebuild -project Pipcast.xcodeproj -scheme Pipcast -configuration Debug \
+    -derivedDataPath build/DerivedData build 2>&1 | tee /tmp/pipcast-build.log
+./Scripts/sync-lsp.sh /tmp/pipcast-build.log
 ```
 
 Both files are git-ignored because they embed absolute paths, and `sourcekit-lsp` looks for
 `buildServer.json` at the workspace root by name, so it cannot live in a subfolder. After this the
-**Build Tinycast.app (debug)** task (⌘⇧B) and **F5** re-run the script on every build, so new and
+**Build Pipcast.app (debug)** task (⌘⇧B) and **F5** re-run the script on every build, so new and
 renamed files keep resolving.
 
 **Do not run `xcode-build-server config`.** It writes `kind: xcode`, and in that mode the server ignores
@@ -149,7 +149,7 @@ The comment policy in [standards.md](standards.md#comments) is deliberately not 
 ## Formatting
 
 ```sh
-./Scripts/format.sh            # format Tinycast/ and Tests/ in place
+./Scripts/format.sh            # format Pipcast/ and Tests/ in place
 ./Scripts/format.sh --check    # report what would change, write nothing (exit 1 if any)
 ```
 
@@ -179,16 +179,28 @@ Xcode's re-indent (⌃I), as it always has been. Two consequences worth knowing:
 Errors block, warnings do not. No CI runs this script; CodeRabbit runs SwiftLint on each PR but not
 the settings-search check, so run it locally before you open one.
 
+## Brand assets
+
+`docs/branding/pipcast-logo.svg` is the original vector artwork. The app uses
+`Pipcast/pipcast.icon`: separate frame and pip layers with native dark and tinted appearances.
+The frame is a filled outline so Icon Composer does not close an open stroke across the gap.
+`MenuBarIcon.imageset` is a monochrome template with spacing adjusted for an 18-point menu item.
+
+The website uses `Logo` in `website/src/components/ui/icon.tsx`, plus `public/favicon.svg`.
+After changing the canonical logo, regenerate the social image with
+`node Scripts/render-social-image.mjs` (requires `npm ci` in `website` first).
+Preview the app icon in all Icon Composer appearances when changing its layers.
+
 ## Generated data
 
 Three Swift files are emitted by scripts and must never be hand-edited. Each downloads its source, so
 run them online, then commit the result:
 
 ```sh
-node Scripts/gen-emoji.js            # -> Tinycast/Features/Emoji/Model/EmojiData.generated.swift
-                                     #    + Tinycast/Resources/EmojiKeywords/<language>.txt
-node Scripts/gen-currencies.js       # -> Tinycast/Features/Calculator/Model/CurrencyData.generated.swift
-node Scripts/gen-countries.js        # -> Tinycast/Features/Calculator/Model/CountryZoneData.generated.swift
+node Scripts/gen-emoji.js            # -> Pipcast/Features/Emoji/Model/EmojiData.generated.swift
+                                     #    + Pipcast/Resources/EmojiKeywords/<language>.txt
+node Scripts/gen-currencies.js       # -> Pipcast/Features/Calculator/Model/CurrencyData.generated.swift
+node Scripts/gen-countries.js        # -> Pipcast/Features/Calculator/Model/CountryZoneData.generated.swift
 ```
 
 `gen-emoji.js` also writes one CLDR keyword pack per language in its `KEYWORD_LOCALES`; adding a

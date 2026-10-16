@@ -42,11 +42,11 @@ security list-keychains -d user -s "$KEYCHAIN" "$HOME/Library/Keychains/login.ke
 IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" | awk -v team="($APPLE_TEAM_ID)" '/Developer ID Application:/ && index($0, team) {print $2; exit}')"
 test -n "$IDENTITY" || { echo 'No matching Developer ID Application identity' >&2; exit 1; }
 rm "$PRIVATE_DIR/identity.p12"
-xcodebuild -project Tinycast.xcodeproj -scheme Tinycast -configuration Release \
+xcodebuild -project Pipcast.xcodeproj -scheme Pipcast -configuration Release \
     -derivedDataPath "$RUNNER_TEMP/DerivedData" ARCHS="$ARCHS" ONLY_ACTIVE_ARCH=NO \
     CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$IDENTITY" DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
     OTHER_CODE_SIGN_FLAGS="--timestamp" PRODUCT_NAME="$DISPLAY_NAME" \
-    TINYCAST_BUNDLE_IDENTIFIER="$BUNDLE_ID" MARKETING_VERSION="$VERSION" \
+    PIPCAST_BUNDLE_IDENTIFIER="$BUNDLE_ID" MARKETING_VERSION="$VERSION" \
     CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" build
 APP="$RUNNER_TEMP/DerivedData/Build/Products/Release/$DISPLAY_NAME.app"
 for BIN in "$APP/Contents/MacOS/$DISPLAY_NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper" "$APP/Contents/Helpers/Pipcast Dictation.app/Contents/MacOS/Pipcast Dictation"; do

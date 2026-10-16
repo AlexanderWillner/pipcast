@@ -253,7 +253,7 @@ struct SnippetsTests {
     private static func testRepositoryStorage() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent(
-            "tinycast-snippets-tests-\(UUID().uuidString)",
+            "pipcast-snippets-tests-\(UUID().uuidString)",
             isDirectory: true)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
@@ -455,7 +455,7 @@ struct SnippetsTests {
     private static func testRepositoryConcurrency() async throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent(
-            "tinycast-snippets-concurrency-\(UUID().uuidString)",
+            "pipcast-snippets-concurrency-\(UUID().uuidString)",
             isDirectory: true)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
@@ -641,7 +641,7 @@ struct SnippetsTests {
     /// The dangerous case is a copy that never lands, returning what the reader last copied.
     private static func testCopySelectionFallback() async {
         let injector = TextInjector(clipboardManager: ClipboardManager(), settings: AppSettings())
-        let backing = NSPasteboard(name: .init("tinycast-copy-tests-\(UUID().uuidString)"))
+        let backing = NSPasteboard(name: .init("pipcast-copy-tests-\(UUID().uuidString)"))
         defer { backing.releaseGlobally() }
         let pasteboard = StubPasteboard(backing: backing)
 
@@ -908,7 +908,7 @@ struct SnippetsTests {
                 readStateAfterPaste: true))
 
         let backingPasteboard = NSPasteboard(
-            name: .init("tinycast-snippets-tests-\(UUID().uuidString)"))
+            name: .init("pipcast-snippets-tests-\(UUID().uuidString)"))
         let pasteboard = StubPasteboard(backing: backingPasteboard)
         defer { backingPasteboard.releaseGlobally() }
         let customType = NSPasteboard.PasteboardType("com.example.custom")
@@ -1006,7 +1006,7 @@ struct SnippetsTests {
     private static func testStoreWatcher() async throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent(
-            "tinycast-snippets-watcher-\(UUID().uuidString)",
+            "pipcast-snippets-watcher-\(UUID().uuidString)",
             isDirectory: true)
         defer { try? fm.removeItem(at: root) }
         let repository = SnippetRepository(
@@ -1470,7 +1470,7 @@ struct SnippetsTests {
             "a template that reads only the clipboard declares no arguments",
             SnippetTemplateEngine.declaredArguments(in: "https://x.dev/?q={clipboard}").isEmpty)
 
-        // Raycast's snippet spelling resolves like Tinycast's.
+        // Raycast's snippet spelling resolves like Pipcast's.
         let child = record("/tmp/ph-child.md", Snippet(name: "Child", text: "nested"))
         let byName = record("/tmp/ph-name.md", Snippet(name: "ByName", text: "{snippet name=\"Child\"}"))
         let byColon = record("/tmp/ph-colon.md", Snippet(name: "ByColon", text: "{snippet:Child}"))
@@ -2060,11 +2060,11 @@ private final class StubPasteboard: PasteboardAccess {
 
 @MainActor
 final class ClipboardManager {
-    static let internalType = NSPasteboard.PasteboardType("com.tinycast.internal")
-    func prepareForTinycastPasteboardMutation() {}
+    static let internalType = NSPasteboard.PasteboardType("io.github.msarheed.pipcast.internal")
+    func prepareForPipcastPasteboardMutation() {}
     private(set) var pauses = 0
     private(set) var syncedWhilePaused = false
-    func synchronizeAfterTinycastPasteboardMutation(changeCount: Int) {
+    func synchronizeAfterPipcastPasteboardMutation(changeCount: Int) {
         syncedWhilePaused = pauses > 0
     }
     func pauseCapture() { pauses += 1 }
@@ -2082,7 +2082,7 @@ enum Permissions {
 }
 
 enum Paster {
-    static let tinycastEventTag: Int64 = 0x54494E59
+    static let pipcastEventTag: Int64 = 0x54494E59
     @MainActor static func postCommandV(toPid pid: pid_t? = nil) {}
     @MainActor static func postCommandC(toPid pid: pid_t? = nil) {}
 }

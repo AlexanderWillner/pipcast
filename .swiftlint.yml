@@ -1,12 +1,12 @@
 included:
-  - Tinycast
+  - Pipcast
   - Tests
 
 excluded:
-  - Tinycast/DesignSystem/Scrolling/EdgeDissolve.swift
-  - Tinycast/DesignSystem/Scrolling/ThinScrollbar.swift
-  - Tinycast/Features/Emoji/Model/EmojiData.generated.swift
-  - Tinycast/Features/Calculator/Model/CurrencyData.generated.swift
+  - Pipcast/DesignSystem/Scrolling/EdgeDissolve.swift
+  - Pipcast/DesignSystem/Scrolling/ThinScrollbar.swift
+  - Pipcast/Features/Emoji/Model/EmojiData.generated.swift
+  - Pipcast/Features/Calculator/Model/CurrencyData.generated.swift
 
 disabled_rules:
   - todo                                      # tracked in issues, not by the linter

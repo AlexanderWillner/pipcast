@@ -22,7 +22,7 @@ function Caret() {
   return (
     <span
       aria-hidden="true"
-      className="demo-caret ml-px inline-block h-[1.1em] w-px translate-y-[0.15em] bg-violet-bright"
+      className="demo-caret ml-px inline-block h-[1.1em] w-px translate-y-[0.15em] bg-brand-bright"
     />
   );
 }
@@ -56,7 +56,7 @@ function LauncherPreview() {
       name: "GitHub Desktop",
       kind: "Application",
       icon: GitHubLogo,
-      tint: "linear-gradient(160deg, #a875ff, #5b12bd)",
+      tint: "linear-gradient(160deg, #8ab4e8, #5b12bd)",
     },
     {
       name: "Search GitHub",
@@ -102,7 +102,7 @@ function CalculatorPreview() {
       <p className="text-subheading font-semibold tracking-tight text-fg">
         347.9678677 mi
       </p>
-      <p className="mt-2 inline-flex w-fit rounded-full bg-violet/15 px-2.5 py-0.5 text-caption font-medium text-violet-bright">
+      <p className="mt-2 inline-flex w-fit rounded-full bg-brand/15 px-2.5 py-0.5 text-caption font-medium text-brand-bright">
         Copy Answer ↵
       </p>
     </div>
@@ -115,17 +115,17 @@ function ClipboardPreview() {
       <li className="flex items-center gap-2.5 rounded-lg bg-tint/8 px-2 py-1.5">
         <IconTile icon={FileText} tint="rgb(120 120 128 / 0.6)" />
         <span className="truncate font-mono text-caption text-fg">
-          brew install --cask tinycast
+          brew install --cask pipcast
         </span>
       </li>
       <li className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
-        <span className="size-6 shrink-0 rounded-md bg-violet" />
-        <span className="font-mono text-caption text-fg">#863BFF</span>
+        <span className="size-6 shrink-0 rounded-md bg-brand" />
+        <span className="font-mono text-caption text-fg">#5488CA</span>
       </li>
       <li className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
         <IconTile
           icon={ImageIcon}
-          tint="linear-gradient(135deg, #863bff, #47bfff)"
+          tint="linear-gradient(135deg, #5488ca, #47bfff)"
         />
         <span className="text-caption text-fg">Image · 2148×1302</span>
       </li>
@@ -141,7 +141,7 @@ function AiChatPreview() {
           <Paperclip size={11} aria-hidden="true" />
           notes.pdf
         </span>
-        <span className="rounded-2xl rounded-br-md bg-violet px-3 py-1.5 text-caption text-white">
+        <span className="rounded-2xl rounded-br-md bg-brand-deep px-3 py-1.5 text-caption text-white">
           Summarize this
         </span>
       </div>
@@ -159,7 +159,7 @@ function QuickActionsPreview() {
   return (
     <div className="flex h-full flex-col justify-center gap-3 px-1">
       <p className="text-small text-fg">
-        <span className="rounded bg-violet/25 px-0.5">
+        <span className="rounded bg-brand/25 px-0.5">
           their shipping it tomorow
         </span>
       </p>
@@ -169,7 +169,7 @@ function QuickActionsPreview() {
             key={action}
             className={cn(
               "rounded-full px-2.5 py-1 text-caption font-medium",
-              i === 0 ? "bg-violet text-white" : "bg-tint/8 text-fg-muted",
+              i === 0 ? "bg-brand-deep text-white" : "bg-tint/8 text-fg-muted",
             )}
           >
             {action}
@@ -194,7 +194,7 @@ function WindowsPreview() {
           <span className="grid aspect-16/10 grid-cols-6 gap-1 rounded-lg bg-tint/8 p-1.5">
             <span
               className={cn(
-                "rounded-md bg-violet/70 ring-1 ring-violet-bright",
+                "rounded-md bg-brand/70 ring-1 ring-brand-bright",
                 layout.slot,
               )}
             />
@@ -228,14 +228,14 @@ function ExtensionsPreview() {
           <span
             className={cn(
               "flex flex-col items-center gap-2 rounded-xl px-2 py-3 sm:px-4",
-              i === stages.length - 1 ? "bg-violet/15" : "bg-tint/8",
+              i === stages.length - 1 ? "bg-brand/15" : "bg-tint/8",
             )}
           >
             <stage.icon
               size={18}
               aria-hidden="true"
               className={
-                i === stages.length - 1 ? "text-violet-bright" : "text-fg-muted"
+                i === stages.length - 1 ? "text-brand-bright" : "text-fg-muted"
               }
             />
             <span className="text-center text-caption text-fg">

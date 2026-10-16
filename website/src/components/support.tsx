@@ -1,9 +1,9 @@
 import { site } from "../data/site";
 import { supportHero } from "../data/support";
 import { Button } from "./ui/button";
-import { GitHubLogo, Logo, SupportIcon } from "./ui/icon";
+import { GitHubLogo, Logo, FeedbackIcon } from "./ui/icon";
 
-// The mark alone on a violet glow, so the page ends on the brand.
+// The mark alone on a brand glow, so the page ends on the brand.
 function GlowingMark() {
   return (
     <span className="relative mx-auto flex size-28 items-center justify-center sm:size-32">
@@ -29,9 +29,9 @@ export function Support() {
         {supportHero.intro}
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button href={site.support} size="lg">
-          <SupportIcon size={18} />
-          Support Tinycast
+        <Button href={site.community.issues} size="lg">
+          <FeedbackIcon size={18} />
+          Share feedback
         </Button>
         <Button href={site.repo} variant="ghost" size="lg">
           <GitHubLogo size={16} />

@@ -19,7 +19,7 @@ export function SectionLabel({
 }) {
   return (
     <p className="flex items-baseline gap-2.5 font-mono text-eyebrow uppercase">
-      <span className="text-violet-bright">
+      <span className="text-brand-bright">
         {String(index).padStart(2, "0")}
       </span>
       <span className="text-fg-muted">{label}</span>

@@ -2,7 +2,7 @@ import AppleArchive
 import Foundation
 import System
 
-/// Compiles the shipped bundle and archive layer, so a `.tinycast` can't quietly change shape.
+/// Compiles the shipped bundle and archive layer, so a `.pipcast` can't quietly change shape.
 @main
 @MainActor
 struct BackupArchiveTest {
@@ -14,6 +14,29 @@ struct BackupArchiveTest {
         } else {
             print("FAIL  \(description)")
             failures += 1
+        }
+    }
+
+    static func declaredBackupTypes() {
+        let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        do {
+            let data = try Data(contentsOf: repo.appendingPathComponent("Pipcast/Info.plist"))
+            let plist = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+            let source = try String(
+                contentsOf: repo.appendingPathComponent("Pipcast/Features/Backup/Service/BackupActions.swift"),
+                encoding: .utf8)
+            for (key, constructor, identifier, ext) in [
+                ("UTExportedTypeDeclarations", "exportedAs", "io.github.msarheed.pipcast.backup", "pipcast"),
+                ("UTImportedTypeDeclarations", "importedAs", "com.tinycast.backup", "tinycast")
+            ] {
+                let declarations = plist?[key] as? [[String: Any]] ?? []
+                let declaration = declarations.first { $0["UTTypeIdentifier"] as? String == identifier }
+                let tags = declaration?["UTTypeTagSpecification"] as? [String: Any]
+                check("\(ext) extension is registered", (tags?["public.filename-extension"] as? [String]) == [ext])
+                check("\(ext) picker matches its declaration", source.contains("UTType(\(constructor): \"\(identifier)\")"))
+            }
+        } catch {
+            check("backup type declarations are readable: \(error)", false)
         }
     }
 
@@ -29,6 +52,7 @@ struct BackupArchiveTest {
         let root = scratch()
         defer { try? FileManager.default.removeItem(at: root) }
 
+        declaredBackupTypes()
         roundTrip(in: root)
         clipboardLines(in: root)
         noAbsolutePathsEscape(in: root)
@@ -62,11 +86,18 @@ struct BackupArchiveTest {
             counts: ["clipboard": 1, "notes": 1])
         try? bundle.writeManifest(manifest)
 
-        let archive = root.appendingPathComponent("out.tinycast")
+        let archive = root.appendingPathComponent("out.pipcast")
         let opened = root.appendingPathComponent("open")
         do {
             try BackupArchive.seal(directory: source, into: archive)
             try BackupArchive.open(file: archive, into: opened)
+            let legacy = root.appendingPathComponent("existing.tinycast")
+            try FileManager.default.copyItem(at: archive, to: legacy)
+            let legacyOpened = root.appendingPathComponent("legacy-open")
+            try BackupArchive.open(file: legacy, into: legacyOpened)
+            let legacyManifest = try BackupBundle(root: legacyOpened).readManifest()
+            check("legacy backup filenames preserve their manifest", legacyManifest == manifest)
+
         } catch {
             check("seal and open succeed (\(error))", false)
             return
@@ -171,7 +202,7 @@ struct BackupArchiveTest {
     }
 
     static func rejectsGarbage(in root: URL) {
-        let file = root.appendingPathComponent("garbage.tinycast")
+        let file = root.appendingPathComponent("garbage.pipcast")
         try? Data("not an archive".utf8).write(to: file)
         let into = root.appendingPathComponent("garbage-out")
         do {
@@ -194,7 +225,7 @@ struct BackupArchiveTest {
     /// A hostile archive must not write outside the directory the caller chose.
     static func refusesTraversal(in root: URL) {
         // Header-by-header: `writeDirectoryContents` refuses to emit the `..` path we need here.
-        let archive = root.appendingPathComponent("evil.tinycast")
+        let archive = root.appendingPathComponent("evil.pipcast")
         let payload = Data("escaped".utf8)
         guard
             let destination = ArchiveByteStream.fileStream(
@@ -240,7 +271,7 @@ struct BackupArchiveTest {
 
     /// A link entry names no `..` at all, and reading through it would leave the extract.
     static func refusesSymbolicLinks(in root: URL) {
-        let archive = root.appendingPathComponent("linked.tinycast")
+        let archive = root.appendingPathComponent("linked.pipcast")
         guard
             let destination = ArchiveByteStream.fileStream(
                 path: FilePath(archive.path), mode: .writeOnly, options: [.create, .truncate],

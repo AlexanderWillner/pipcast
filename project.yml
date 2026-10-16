@@ -1,4 +1,4 @@
-name: Tinycast
+name: Pipcast
 options:
   bundleIdPrefix: io.github.msarheed.pipcast
   deploymentTarget:
@@ -16,10 +16,10 @@ settings:
     # A stable self-signed identity keeps the Accessibility grant across rebuilds. docs/signing.md
     CODE_SIGN_IDENTITY: "Pipcast Self-Signed"
     SWIFT_STRICT_CONCURRENCY: complete
-    TINYCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app
+    PIPCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app
   configs:
     Debug:
-      TINYCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app.dev
+      PIPCAST_BUNDLE_IDENTIFIER: io.github.msarheed.pipcast.app.dev
       DICTATION_EXECUTABLE_NAME: Pipcast Dev Dictation
     Release:
       CODE_SIGN_IDENTITY: "Developer ID Application"
@@ -34,11 +34,11 @@ settings:
       DEAD_CODE_STRIPPING: YES
 
 targets:
-  Tinycast:
+  Pipcast:
     type: application
     platform: macOS
     sources:
-      - path: Tinycast
+      - path: Pipcast
         # Helper-only sources: compiling them in would link Vision and PDFKit into the app.
         excludes:
           - Features/Clipboard/Service/ClipboardTextExtractor.swift
@@ -47,7 +47,7 @@ targets:
           - Features/FileSearch/Helper
           - Resources/EmojiKeywords
       # A folder reference keeps the packs in their own directory, which `EmojiIndex` lists.
-      - path: Tinycast/Resources/EmojiKeywords
+      - path: Pipcast/Resources/EmojiKeywords
         type: folder
       # The MIT mark's licence asks the notice to travel with the binary, not just the repo.
       - path: NOTICE.md
@@ -84,10 +84,10 @@ targets:
     settings:
       base:
         PRODUCT_NAME: Pipcast
-        PRODUCT_BUNDLE_IDENTIFIER: "$(TINYCAST_BUNDLE_IDENTIFIER)"
-        INFOPLIST_FILE: Tinycast/Info.plist
-        CODE_SIGN_ENTITLEMENTS: Tinycast/Tinycast.entitlements
-        ASSETCATALOG_COMPILER_APPICON_NAME: tinycast
+        PRODUCT_BUNDLE_IDENTIFIER: "$(PIPCAST_BUNDLE_IDENTIFIER)"
+        INFOPLIST_FILE: Pipcast/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Pipcast/Pipcast.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: pipcast
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS:
           - "$(inherited)"
@@ -101,8 +101,8 @@ targets:
     type: tool
     platform: macOS
     sources:
-      - Tinycast/Features/Clipboard/Service/ClipboardTextExtractor.swift
-      - Tinycast/Features/Clipboard/Service/ClipboardTextHelper.swift
+      - Pipcast/Features/Clipboard/Service/ClipboardTextExtractor.swift
+      - Pipcast/Features/Clipboard/Service/ClipboardTextHelper.swift
     settings:
       base:
         # Pinned, or release.yml's PRODUCT_NAME renames the binary `ClipboardTextWorker` looks for.
@@ -114,13 +114,13 @@ targets:
     type: tool
     platform: macOS
     sources:
-      - Tinycast/Features/FileSearch/Helper/FileIndexHelper.swift
-      - Tinycast/Features/FileSearch/Model/FileSearchIgnoreList.swift
-      - Tinycast/Features/FileSearch/Model/FileSearchPolicy.swift
-      - Tinycast/Features/FileSearch/Model/FileSearchQuery.swift
-      - Tinycast/Features/FileSearch/Model/FileSearchScope.swift
-      - Tinycast/Features/FileSearch/Service/FileIndexCrawler.swift
-      - Tinycast/Features/FileSearch/Service/FileIndexSnapshot.swift
+      - Pipcast/Features/FileSearch/Helper/FileIndexHelper.swift
+      - Pipcast/Features/FileSearch/Model/FileSearchIgnoreList.swift
+      - Pipcast/Features/FileSearch/Model/FileSearchPolicy.swift
+      - Pipcast/Features/FileSearch/Model/FileSearchQuery.swift
+      - Pipcast/Features/FileSearch/Model/FileSearchScope.swift
+      - Pipcast/Features/FileSearch/Service/FileIndexCrawler.swift
+      - Pipcast/Features/FileSearch/Service/FileIndexSnapshot.swift
     settings:
       base:
         # Pinned like ClipboardTextHelper's: release.yml's PRODUCT_NAME would otherwise rename it.
@@ -133,23 +133,23 @@ targets:
     type: application
     platform: macOS
     info:
-      path: Tinycast/Features/Dictation/Helper/Info.plist
+      path: Pipcast/Features/Dictation/Helper/Info.plist
       properties:
         CFBundleName: "$(DICTATION_EXECUTABLE_NAME)"
         CFBundleDisplayName: "$(DICTATION_EXECUTABLE_NAME)"
         LSUIElement: true
     sources:
-      - Tinycast/Features/Dictation/Helper
-      - Tinycast/Features/Dictation/Model/DictationModel.swift
-      - Tinycast/Features/Dictation/Model/DictationAudioChunks.swift
-      - Tinycast/Features/Dictation/Model/DictationLanguage.swift
-      - Tinycast/Features/Dictation/Service/DictationWire.swift
+      - Pipcast/Features/Dictation/Helper
+      - Pipcast/Features/Dictation/Model/DictationModel.swift
+      - Pipcast/Features/Dictation/Model/DictationAudioChunks.swift
+      - Pipcast/Features/Dictation/Model/DictationLanguage.swift
+      - Pipcast/Features/Dictation/Service/DictationWire.swift
     settings:
       base:
         EXECUTABLE_NAME: "$(DICTATION_EXECUTABLE_NAME)"
         PRODUCT_NAME: "$(DICTATION_EXECUTABLE_NAME)"
         WRAPPER_NAME: "$(DICTATION_EXECUTABLE_NAME).app"
         PRODUCT_MODULE_NAME: DictationHelper
-        PRODUCT_BUNDLE_IDENTIFIER: "$(TINYCAST_BUNDLE_IDENTIFIER).dictation"
+        PRODUCT_BUNDLE_IDENTIFIER: "$(PIPCAST_BUNDLE_IDENTIFIER).dictation"
         SKIP_INSTALL: YES
         SWIFT_OPTIMIZATION_LEVEL: -O

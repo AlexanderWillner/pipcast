@@ -15,8 +15,8 @@ type ButtonProps = {
 // Each variant carries its own radius: the pill reads as a web CTA, which is
 // wrong for the action surface, and that one is square-ish like the app's own.
 const variants: Record<Variant, string> = {
-  // The brand violet marks the one action that matters: getting the app.
-  primary: "rounded-full bg-violet text-white hover:bg-violet-deep",
+  // The brand color marks the one action that matters: getting the app.
+  primary: "rounded-full bg-brand-deep text-white hover:brightness-90",
   // Ink on Light, paper on Dark — the highest-contrast surface either theme has.
   action: "rounded-md bg-action text-action-fg hover:opacity-90",
   ghost: "rounded-full text-fg-muted hover:bg-tint/5 hover:text-fg",
