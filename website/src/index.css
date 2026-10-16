@@ -547,7 +547,6 @@
    marketing page are one design rather than two that happen to sit together. */
 :root,
 .dark {
-  --pc-brand-readable: #8ab4e8;
   --color-fd-background: var(--tc-canvas);
   --color-fd-foreground: var(--tc-fg);
   --color-fd-muted: var(--tc-well);
