@@ -179,6 +179,18 @@ Xcode's re-indent (⌃I), as it always has been. Two consequences worth knowing:
 Errors block, warnings do not. No CI runs this script; CodeRabbit runs SwiftLint on each PR but not
 the settings-search check, so run it locally before you open one.
 
+## Brand assets
+
+`docs/branding/pipcast-logo.svg` is the original vector artwork. The app uses
+`Pipcast/pipcast.icon`: separate frame and pip layers with native dark and tinted appearances.
+The frame is a filled outline so Icon Composer does not close an open stroke across the gap.
+`MenuBarIcon.imageset` is a monochrome template with spacing adjusted for an 18-point menu item.
+
+The website uses `Logo` in `website/src/components/ui/icon.tsx`, plus `public/favicon.svg`.
+After changing the canonical logo, regenerate the social image with
+`node Scripts/render-social-image.mjs` (requires `npm ci` in `website` first).
+Preview the app icon in all Icon Composer appearances when changing its layers.
+
 ## Generated data
 
 Three Swift files are emitted by scripts and must never be hand-edited. Each downloads its source, so
