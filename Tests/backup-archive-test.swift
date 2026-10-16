@@ -71,9 +71,8 @@ struct BackupArchiveTest {
             try FileManager.default.copyItem(at: archive, to: legacy)
             let legacyOpened = root.appendingPathComponent("legacy-open")
             try BackupArchive.open(file: legacy, into: legacyOpened)
-            check(
-                "legacy backup filenames preserve their manifest",
-                try BackupBundle(root: legacyOpened).readManifest() == manifest)
+            let legacyManifest = try BackupBundle(root: legacyOpened).readManifest()
+            check("legacy backup filenames preserve their manifest", legacyManifest == manifest)
 
         } catch {
             check("seal and open succeed (\(error))", false)
