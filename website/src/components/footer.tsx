@@ -11,6 +11,7 @@ const links = [
   { label: "GitHub", href: site.repo },
   { label: "Issues", href: site.community.issues },
   { label: "Support", href: site.support },
+  { label: "Based on Tinycast", href: "https://github.com/abue-ammar/tinycast" },
 ];
 
 // One rule and one row. Everything a three-column sitemap held is a scroll or a

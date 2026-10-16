@@ -2,8 +2,6 @@ import { type SVGProps } from "react";
 
 type BrandIconProps = { size?: number } & SVGProps<SVGSVGElement>;
 
-// The Pipcast mark — the lightning-Z from the app icon, filled with the brand
-// violet gradient. Single flat path (the app icon's blurred layers are dropped).
 export function Logo({ size = 24, ...props }: BrandIconProps) {
   return (
     <svg width={size} height={size} viewBox="234 230 556 540" fill="none" aria-hidden="true" {...props}>

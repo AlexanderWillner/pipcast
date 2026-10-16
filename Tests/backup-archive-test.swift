@@ -67,6 +67,14 @@ struct BackupArchiveTest {
         do {
             try BackupArchive.seal(directory: source, into: archive)
             try BackupArchive.open(file: archive, into: opened)
+            let legacy = root.appendingPathComponent("existing.tinycast")
+            try FileManager.default.copyItem(at: archive, to: legacy)
+            let legacyOpened = root.appendingPathComponent("legacy-open")
+            try BackupArchive.open(file: legacy, into: legacyOpened)
+            check(
+                "legacy backup filenames preserve their manifest",
+                try BackupBundle(root: legacyOpened).readManifest() == manifest)
+
         } catch {
             check("seal and open succeed (\(error))", false)
             return

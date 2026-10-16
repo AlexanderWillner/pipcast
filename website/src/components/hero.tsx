@@ -70,7 +70,7 @@ export async function Hero() {
             style={{ animationDelay: "240ms" }}
           >
             <Button
-              href={`${site.repo}/releases/latest`}
+              href={`${site.repo}/releases`}
               variant="action"
               size="md"
             >
@@ -78,10 +78,10 @@ export async function Hero() {
               Download for Mac
             </Button>
             <Link
-              href="/#gallery"
+              href="/#features"
               className="inline-flex items-center gap-1.5 text-small text-fg-muted transition-colors hover:text-fg"
             >
-              See it in action
+              Explore features
               <ArrowRight size={14} />
             </Link>
           </div>
