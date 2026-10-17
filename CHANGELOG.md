@@ -3,6 +3,14 @@
 What changed in each Pipcast release, newest first. The release workflow writes each version's
 section from its commits, and Pipcast shows this file in What's New.
 
+## 0.1.1
+
+1 fix.
+
+### Fixed
+
+- **release** — Use symbol form for depends_on macos by @AlexanderWillner in #20
+
 ## 0.1.0 — 2026-10-17
 
 The first release of Pipcast: a fast, native launcher that lives in your menu bar.
