@@ -3,7 +3,7 @@
 What changed in each Pipcast release, newest first. The release workflow writes each version's
 section from its commits, and Pipcast shows this file in What's New.
 
-## 0.1.1
+## 0.1.1 — 2026-10-17
 
 1 fix.
 
