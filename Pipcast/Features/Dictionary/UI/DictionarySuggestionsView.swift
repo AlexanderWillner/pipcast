@@ -15,7 +15,7 @@ struct DictionarySuggestionsView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    SectionHeader(title: "Suggestions", isFirst: true)
+                    SectionHeader(title: String(localized: "Suggestions"), isFirst: true)
                     ForEach(words, id: \.self) { word in
                         DictionarySuggestionRow(word: word, selected: word == selectedWord)
                             .selectionFrame(word == selectedWord)

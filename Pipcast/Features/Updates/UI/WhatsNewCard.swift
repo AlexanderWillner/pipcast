@@ -42,12 +42,14 @@ struct WhatsNewCard: View {
     }
 
     private var title: String {
-        "What's New in \(Bundle.main.appDisplayName) \(entry.version.description)"
+        String(localized: "What's New in \(Bundle.main.appDisplayName) \(entry.version.description)")
     }
 
     /// The release's own headline, styled as written; without one, what the card leads to.
     private var subtitle: AttributedString {
-        guard let headline = entry.headline else { return "See what changed in this update" }
+        guard let headline = entry.headline else {
+            return AttributedString(localized: "See what changed in this update")
+        }
         let options = AttributedString.MarkdownParsingOptions(
             interpretedSyntax: .inlineOnlyPreservingWhitespace)
         return (try? AttributedString(markdown: headline, options: options)) ?? AttributedString(headline)
@@ -59,18 +61,23 @@ struct WhatsNewCard: View {
 enum WhatsNewActionsMenu {
     static func content(entry: Changelog.Entry, core: AppCore) -> PopoverMenuContent {
         PopoverMenuContent(
-            header: "What's New",
+            header: String(localized: "What's New"),
             items: [
                 PopoverMenuItem(
-                    title: "Open What's New", systemImage: CommandID.whatsNew.sfSymbol, shortcut: "↵"
+                    title: String(localized: "Open What's New"), systemImage: CommandID.whatsNew.sfSymbol,
+                    shortcut: "↵"
                 ) {
                     core.changelogCoordinator.showChangelog()
                 },
-                PopoverMenuItem(title: "View on GitHub", systemImage: "arrow.up.right.square") {
+                PopoverMenuItem(
+                    title: String(localized: "View on GitHub"), systemImage: "arrow.up.right.square"
+                ) {
                     core.changelogCoordinator.dismissNews()
                     core.changelogCoordinator.openRelease(entry)
                 },
-                PopoverMenuItem(title: "Dismiss", systemImage: "xmark", startsSection: true) {
+                PopoverMenuItem(
+                    title: String(localized: "Dismiss"), systemImage: "xmark", startsSection: true
+                ) {
                     core.changelogCoordinator.dismissNews()
                 }
             ])

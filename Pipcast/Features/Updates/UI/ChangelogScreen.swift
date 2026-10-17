@@ -15,7 +15,7 @@ struct ChangelogScreen: PaletteScreen {
         }
     }
 
-    var primaryActionTitle: String { "View on GitHub" }
+    var primaryActionTitle: String { String(localized: "View on GitHub") }
 
     func hasActions(at selection: Int) -> Bool { false }
 
@@ -29,13 +29,14 @@ struct ChangelogScreen: PaletteScreen {
 
     /// A beta's entry is the release it is heading to, which is not installed yet.
     private var currentLabel: String {
-        store.running?.isPrerelease == true ? "Beta" : "Installed"
+        store.running?.isPrerelease == true ? String(localized: "Beta") : String(localized: "Installed")
     }
 
     func body(selection: Int, scroll: ScrollIntent) -> AnyView {
         let rows = rows
         guard !rows.isEmpty else {
-            return AnyView(EmptyResults(text: store.entries.isEmpty ? "No release notes" : "No matches"))
+            let text = store.entries.isEmpty ? String(localized: "No release notes") : String(localized: "No matches")
+            return AnyView(EmptyResults(text: text))
         }
         let selected = rows[min(max(selection, 0), rows.count - 1)]
         return AnyView(

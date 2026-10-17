@@ -15,7 +15,9 @@ struct DictionaryScreen: PaletteScreen {
         return (session.lookup?.suggestions ?? []).map(DictionaryResult.suggestion)
     }
 
-    var primaryActionTitle: String { entry == nil ? "Define Word" : "Copy Definition" }
+    var primaryActionTitle: String {
+        entry == nil ? String(localized: "Define Word") : String(localized: "Copy Definition")
+    }
 
     func ownsVerticalKeys(at selection: Int) -> Bool { vm.isComposing }
 
@@ -35,10 +37,14 @@ struct DictionaryScreen: PaletteScreen {
                 ) {
                     activate(result)
                 },
-                PopoverMenuItem(title: "Copy Word", systemImage: "character.cursor.ibeam", shortcut: "⌥↵") {
+                PopoverMenuItem(
+                    title: String(localized: "Copy Word"), systemImage: "character.cursor.ibeam", shortcut: "⌥↵"
+                ) {
                     coordinator.copyWord(result.id)
                 },
-                PopoverMenuItem(title: "Open in Dictionary", systemImage: "book", shortcut: "⌘↵") {
+                PopoverMenuItem(
+                    title: String(localized: "Open in Dictionary"), systemImage: "book", shortcut: "⌘↵"
+                ) {
                     coordinator.openInDictionary(result.id)
                 }
             ])
@@ -69,14 +75,16 @@ struct DictionaryScreen: PaletteScreen {
     }
 
     func body(selection: Int, scroll: ScrollIntent) -> AnyView {
-        if term.isEmpty { return AnyView(EmptyResults(text: "Type a word to define")) }
+        if term.isEmpty { return AnyView(EmptyResults(text: String(localized: "Type a word to define"))) }
         if let entry { return AnyView(DictionaryEntryView(entry: entry)) }
         if !rows.isEmpty {
             return AnyView(DictionarySuggestionsView(
                 words: rows.map(\.id), selection: selection, scroll: scroll,
                 onActivate: { word in activate(.suggestion(word)) }))
         }
-        if session.lookup?.term == term { return AnyView(EmptyResults(text: "No definition found")) }
+        if session.lookup?.term == term {
+            return AnyView(EmptyResults(text: String(localized: "No definition found")))
+        }
         return AnyView(Color.clear)
     }
 }

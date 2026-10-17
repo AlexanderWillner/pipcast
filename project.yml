@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
+  developmentLanguage: en
   groupSortPosition: top
 
 settings:
@@ -91,6 +92,8 @@ targets:
         INFOPLIST_FILE: Pipcast/Info.plist
         CODE_SIGN_ENTITLEMENTS: Pipcast/Pipcast.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: pipcast
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS:
           - "$(inherited)"

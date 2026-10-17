@@ -24,9 +24,9 @@ struct MenuBarMenu: View {
             }
         }
         Divider()
-        Button("Check for Updates...") { AppCore.shared.updateCoordinator.checkForUpdates() }
-        Button("\(appName) Feedback...") { AppCore.shared.supportCoordinator.showSupport() }
-        Button("Settings...") { AppCore.shared.settingsCoordinator.showSettings() }
+        Button("Check for Updates…") { AppCore.shared.updateCoordinator.checkForUpdates() }
+        Button("\(appName) Feedback…") { AppCore.shared.supportCoordinator.showSupport() }
+        Button("Settings…") { AppCore.shared.settingsCoordinator.showSettings() }
             .keyboardShortcut(",")
         Divider()
         // No ⌘Q: the app menu binds it to Close Settings, and two contradictory ⌘Qs is a lie.

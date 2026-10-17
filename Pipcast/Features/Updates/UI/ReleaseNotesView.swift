@@ -30,7 +30,7 @@ struct ReleaseNotesView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .bullet(let text):
             HStack(alignment: .firstTextBaseline, spacing: metrics.spacing.sm) {
-                Text("•").foregroundStyle(Theme.Colors.textSecondary)
+                Text(verbatim: "•").foregroundStyle(Theme.Colors.textSecondary)
                 Text(markdown(text))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

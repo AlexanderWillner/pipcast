@@ -58,7 +58,8 @@ final class ChangelogCoordinator {
                 if core.canInterruptUser, !core.isShowingMessage {
                     store.markAnnounced()
                     core.showMessage(
-                        "Updated to \(Bundle.main.appDisplayName) \(running) — see what's new",
+                        String(
+                            localized: "Updated to \(Bundle.main.appDisplayName) \(running.description) — see what's new"),
                         tone: .neutral, onClick: { [weak self] in self?.showChangelog() })
                     return
                 }

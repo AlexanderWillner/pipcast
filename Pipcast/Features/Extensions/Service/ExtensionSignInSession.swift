@@ -10,8 +10,8 @@ final class ExtensionSignInSession: NSObject, ASWebAuthenticationPresentationCon
 
         var errorDescription: String? {
             switch self {
-            case .cancelled: "Sign-in was cancelled."
-            case .failedToStart: "The browser could not start sign-in. Please try again."
+            case .cancelled: String(localized: "Sign-in was cancelled.")
+            case .failedToStart: String(localized: "The browser could not start sign-in. Please try again.")
             }
         }
     }

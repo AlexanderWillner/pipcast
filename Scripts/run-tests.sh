@@ -136,6 +136,7 @@ run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            Pipcast/Features/Launcher/Service/VisibilityStore.swift \
                            Pipcast/Features/Launcher/Service/BundleNameCache.swift \
                            Pipcast/Platform/AppDisplayName.swift Pipcast/Platform/BundleLocalization.swift \
+                           Pipcast/Platform/SystemLanguages.swift \
                            Pipcast/Platform/Images/FileIconStamp.swift Pipcast/Platform/Memo.swift \
                            Pipcast/Platform/Signposts.swift Pipcast/Platform/NotificationToken.swift
 run launcher-file-test     $L/LauncherFileFormat.swift \
@@ -243,6 +244,8 @@ run appearance-test        Pipcast/Platform/Appearance.swift \
                            Pipcast/DesignSystem/Theme.swift \
                            Pipcast/DesignSystem/InterfaceMetrics.swift \
                            Pipcast/Features/Settings/AppAppearance.swift
+run language-test          Pipcast/Features/Settings/AppLanguage.swift
+run relaunch-test          Pipcast/App/AppDelegate.swift Pipcast/Platform/RelaunchRunner.swift
 run interface-size-test    Pipcast/Platform/Appearance.swift \
                            Pipcast/DesignSystem/Theme.swift \
                            Pipcast/DesignSystem/InterfaceMetrics.swift \
@@ -322,7 +325,7 @@ run dictionary-session-test Pipcast/Features/Dictionary/Model/DictionaryEntry.sw
                            Pipcast/Features/Dictionary/Service/DictionaryService.swift \
                            Pipcast/Features/Dictionary/Service/DictionarySuggestionService.swift \
                            Pipcast/Features/Dictionary/Service/DictionarySession.swift
-run dictation-test         Pipcast/Features/Dictation/Model/DictationModel.swift Pipcast/Features/Dictation/Model/DictationIdleRelease.swift Pipcast/Features/Dictation/Model/DictationTextFormatter.swift
+run dictation-test         Pipcast/Features/Dictation/Model/DictationModel.swift Pipcast/Features/Dictation/Model/DictationIdleRelease.swift Pipcast/Features/Dictation/Model/DictationLanguage.swift Pipcast/Features/Dictation/Model/DictationTextFormatter.swift
 run dictation-field-test   Pipcast/Features/Dictation/Model/DictationModel.swift \
                            Pipcast/Features/Dictation/Model/DictationAudioChunks.swift \
                            Pipcast/Features/Dictation/Model/DictationMode.swift \
@@ -478,6 +481,8 @@ run custom-command-test    Pipcast/Platform/PseudoTerminal.swift \
                            Pipcast/Features/CustomCommands/Service/ShellCommandRunner.swift
 run custom-command-list-test Pipcast/Features/CustomCommands/Model/CustomCommand.swift \
                              Pipcast/Features/CustomCommands/UI/CustomCommandListScreen.swift
+run uninstall-coordinator-test Pipcast/Features/Uninstall/Model/*.swift \
+                           Pipcast/Features/Uninstall/UI/UninstallCoordinator.swift
 run uninstall-test         Pipcast/Features/Uninstall/Model/UninstallTarget.swift \
                            Pipcast/Features/Uninstall/Model/UninstallSearchRoot.swift \
                            Pipcast/Features/Uninstall/Model/UninstallRules.swift \

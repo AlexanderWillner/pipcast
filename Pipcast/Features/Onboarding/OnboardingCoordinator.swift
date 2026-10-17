@@ -9,7 +9,7 @@ final class OnboardingCoordinator {
     init(core: AppCore) {
         self.core = core
         window = AppWindowController(
-            title: "Welcome to Pipcast", contentSize: OnboardingView.initialSize,
+            title: String(localized: "Welcome to Pipcast"), contentSize: OnboardingView.initialSize,
             activation: core.activationPolicy)
     }
 

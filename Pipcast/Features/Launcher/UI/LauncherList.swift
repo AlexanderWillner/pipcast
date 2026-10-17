@@ -49,10 +49,10 @@ struct LauncherList: View {
 
         var sectionTitle: String {
             switch self {
-            case .calc: return "Calculator"
-            case .meeting: return "Meeting"
-            case .whatsNew: return "Update"
-            case .color: return "Color"
+            case .calc: return String(localized: "Calculator")
+            case .meeting: return String(localized: "Meeting")
+            case .whatsNew: return String(localized: "Update")
+            case .color: return String(localized: "Color")
             }
         }
 
@@ -100,7 +100,8 @@ struct LauncherList: View {
 
     private var fileRows: [Row] {
         guard let files else { return [] }
-        return [.header("Files")] + files.results.enumerated().map { Row.file($1, index: $0) }
+        return [.header(String(localized: "Files"))]
+            + files.results.enumerated().map { Row.file($1, index: $0) }
     }
 
     /// Every row the fallback section contributes, always after the results.
@@ -122,26 +123,26 @@ struct LauncherList: View {
         var grouped: [AppEntry.Kind: [AppEntry]] = [:]
         for app in rest { grouped[app.kind, default: []].append(app) }
         if !favorites.isEmpty {
-            rows.append(.header("Favorites"))
+            rows.append(.header(String(localized: "Favorites")))
             rows.append(
                 contentsOf: favorites.enumerated().map {
                     .app($1, slot: numberSlots.digit(forRow: cardOffset + $0))
                 })
         }
         if !meetings.isEmpty {
-            rows.append(.header(AppEntry.Kind.meeting.descriptor.sectionTitle))
+            rows.append(.header(String(localized: AppEntry.Kind.meeting.descriptor.sectionTitle)))
             rows.append(contentsOf: meetings.enumerated().map {
                 .app($1, slot: numberSlots.digit(forRow: cardOffset + favoriteCount + $0))
             })
         }
         if !suggestions.isEmpty {
-            rows.append(.header("Suggestions"))
+            rows.append(.header(String(localized: "Suggestions")))
             rows.append(contentsOf: suggestions.enumerated().map {
                 .app($1, slot: numberSlots.digit(forRow: cardOffset + favoriteCount + meetingCount + $0))
             })
         }
         if !matches.isEmpty {
-            rows.append(.header("Results"))
+            rows.append(.header(String(localized: "Results")))
             rows.append(contentsOf: matches.enumerated().map {
                 .app($1, slot: numberSlots.digit(forRow: cardOffset + pinnedCount + $0))
             })
@@ -155,7 +156,7 @@ struct LauncherList: View {
         var offset = cardOffset + pinnedCount + matchCount
         for kind in kinds {
             guard let group = grouped[kind], !group.isEmpty else { continue }
-            rows.append(.header(kind.descriptor.sectionTitle))
+            rows.append(.header(String(localized: kind.descriptor.sectionTitle)))
             rows.append(contentsOf: group.enumerated().map {
                 .app($1, slot: numberSlots.digit(forRow: offset + $0))
             })
@@ -173,7 +174,7 @@ struct LauncherList: View {
         let rows = rows
         return Group {
             if results.isEmpty && card == nil && files == nil && fallbacks == nil {
-                EmptyResults(text: "No apps found")
+                EmptyResults(text: String(localized: "No apps found"))
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -186,7 +187,7 @@ struct LauncherList: View {
                                     SectionHeader(
                                         title: title, isFirst: row.id == rows.first?.id,
                                         configure: fallbacks?.onConfigure,
-                                        configureHelp: "Configure Fallbacks…")
+                                        configureHelp: String(localized: "Configure Fallbacks…"))
                                 case .card(let card):
                                     LeadCardView(card: card, selected: cardSelected)
                                         .overlay(alignment: .topTrailing) {

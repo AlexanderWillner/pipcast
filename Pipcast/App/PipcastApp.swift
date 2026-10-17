@@ -1,6 +1,13 @@
 import SwiftUI
 
 @main
+enum PipcastLaunch {
+    static func main() {
+        AppSettings.pinLanguage()
+        PipcastApp.main()
+    }
+}
+
 struct PipcastApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 

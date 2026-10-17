@@ -397,6 +397,7 @@ struct SystemAction: Sendable {
     var id = ID.fixture
     var entryID = ""
     var name = ""
+    var englishName = ""
     var sfSymbol = ""
 }
 enum SystemActionCatalog {
@@ -408,6 +409,7 @@ struct WindowCommand: Sendable {
     var id = ID.fixture
     var entryID = ""
     var name = ""
+    var englishName = ""
     var sfSymbol = ""
 }
 enum WindowCommandCatalog {

@@ -7,7 +7,7 @@ struct AboutView: View {
     private static var version: String {
         let short = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
-        return "Version \(short) (\(build))"
+        return String(localized: "Version \(short) (\(build))")
     }
 
     // Cached, and read from the bundle: the app icon is generic until LaunchServices registers.
@@ -148,12 +148,14 @@ private struct AboutLink: Identifiable {
             detail: "github.com/mSarheed/pipcast",
             url: URL(string: "https://github.com/mSarheed/pipcast")!),
         AboutLink(
-            id: "issues", glyph: .symbol("bubble.left.and.bubble.right"), title: "Feedback",
-            detail: "Report a bug or suggest an improvement",
+            id: "issues", glyph: .symbol("bubble.left.and.bubble.right"),
+            title: String(localized: "Feedback"),
+            detail: String(localized: "Report a bug or suggest an improvement"),
             url: URL(string: "https://github.com/mSarheed/pipcast/issues")!),
         AboutLink(
-            id: "upstream", glyph: .symbol("arrow.triangle.branch"), title: "Original project",
-            detail: "Tinycast by Abue Ammar and contributors",
+            id: "upstream", glyph: .symbol("arrow.triangle.branch"),
+            title: String(localized: "Original project"),
+            detail: String(localized: "Tinycast by Abue Ammar and contributors"),
             url: URL(string: "https://github.com/abue-ammar/tinycast")!)
     ]
 }
