@@ -130,6 +130,26 @@ final class SnippetCoordinator {
         paletteCoordinator.showPalette(mode: .snippetEditor)
     }
 
+    func canCreateSnippet(from item: ClipboardItem) -> Bool {
+        settings.snippetsEnabled && item.kind == .text && item.text != nil
+    }
+
+    @discardableResult
+    func createSnippet(from item: ClipboardItem) -> Bool {
+        guard canCreateSnippet(from: item), !palette.isComposing,
+            (NSApp.keyWindow?.firstResponder as? NSTextView)?.hasMarkedText() != true,
+            let text = item.text
+        else {
+            return false
+        }
+        (NSApp.keyWindow as? MenuPanel)?.parent?.makeKey()
+        let editor = SnippetEditorSession(record: nil, initialText: text, sourceClipboardID: item.id)
+        editor.focusedField = .name
+        self.editor = editor
+        paletteCoordinator.showPalette(mode: .snippetEditor)
+        return true
+    }
+
     func requestSnippetSave() {
         guard settings.snippetsEnabled, let editor, editor.canSave else { return }
         editor.isSaving = true
@@ -159,6 +179,11 @@ final class SnippetCoordinator {
         if !palette.pop(preservingSelection: true) {
             paletteCoordinator.hidePalette()
             palette.prepare(mode: .launcher)
+        } else if palette.mode == .clipboard, let sourceID = editor?.sourceClipboardID,
+            let index = clipboardStore.search(palette.query, filter: palette.clipboardFilter)
+                .firstIndex(where: { $0.id == sourceID })
+        {
+            palette.restoreSelection(index)
         }
         editor = nil
     }

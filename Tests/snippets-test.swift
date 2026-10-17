@@ -13,6 +13,7 @@ struct SnippetsTests {
         _ = NSApplication.shared
         testIdentityAndRevision()
         testEditorSession()
+        try await testClipboardDraftLifecycle()
         testRaycastImport()
         try testMarkdownCodec()
         try testRepositoryStorage()
@@ -80,7 +81,16 @@ struct SnippetsTests {
             Snippet(
                 name: "Original", text: "Hello", keyword: "!hello", isEnabled: false,
                 showsConfirmation: true))
-        let editing = SnippetEditorSession(record: original)
+        let text = "\n  Hello 👩🏽‍💻\r\n你好 e\u{301}\n{clipboard}\n  "
+        let prefilled = SnippetEditorSession(record: nil, initialText: text)
+        check("prefilling preserves template bytes", Array(prefilled.text.utf8) == Array(text.utf8))
+        check(
+            "prefilling creates only an unnamed draft",
+            prefilled.record == nil && prefilled.name.isEmpty && prefilled.keyword.isEmpty
+                && !prefilled.canSave)
+        prefilled.name = "From Clipboard"
+        check("saving a prefilled draft keeps its text", prefilled.snippet.text == text)
+        let editing = SnippetEditorSession(record: original, initialText: "Ignored clipboard text")
         check("editing keeps the loaded record and source revision", editing.record == original)
         check("editing starts with every original option", editing.snippet == original.snippet)
         editing.name = "Changed"
@@ -107,6 +117,194 @@ struct SnippetsTests {
         check("Shift-Tab returns to the template", editing.focusedField == .template)
         editing.advanceFocus(backwards: true)
         check("form focus wraps through the existing options", editing.focusedField == .confirmation)
+    }
+
+    private static func testClipboardDraftLifecycle() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = SnippetRepository(applicationSupportRoot: directory)
+        let store = SnippetsStore(repository: repository)
+        let settings = AppSettings()
+        let palette = PaletteState()
+        let core = AppCore()
+        let clipboard = ClipboardStore(directory: directory.appending(path: "Clipboard"))
+        let navigation = PaletteCoordinator(state: palette)
+        let coordinator = SnippetCoordinator(
+            store: store, listener: SnippetKeywordListener(syntheticEventTag: 0),
+            injector: TextInjector(clipboardManager: ClipboardManager(), settings: settings),
+            clipboardStore: clipboard,
+            appIndex: AppIndex(), settings: settings, windowController: PaletteWindowController(),
+            paletteCoordinator: navigation, palette: palette,
+            showMessage: { _, _ in }, core: core)
+        let text = "  First 👩🏽‍💻\n你好 e\u{301}\r\n{clipboard}\n"
+        clipboard.addText(text, sourceBundleID: nil)
+        clipboard.addText("Newer", sourceBundleID: nil)
+        clipboard.addText("Newest", sourceBundleID: nil)
+        let clip = clipboard.items[2]
+        palette.selection = 2
+        palette.clipboardFilter = .text
+        check("disabled snippets offer no action", !coordinator.canCreateSnippet(from: clip))
+        check("creating never enables snippets", !coordinator.createSnippet(from: clip) && !settings.snippetsEnabled)
+        await Task.yield()
+        check("creating asks for no consent", core.confirmationCount == 0 && Permissions.accessibilityRequests == 0)
+        settings.snippetsEnabled = true
+        for item in [ClipboardItem(imagePath: "/missing.png", sourceBundleID: nil),
+            ClipboardItem(filePath: "/example.txt", sourceBundleID: nil)] {
+            check("non-text clips offer no action", !coordinator.canCreateSnippet(from: item))
+            check("non-text clips cannot open a draft", !coordinator.createSnippet(from: item))
+        }
+        let actions = MenuPanel()
+        actions.setFrame(NSRect(x: -10000, y: -10000, width: 300, height: 100), display: false)
+        let search = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
+        actions.contentView = search
+        actions.makeKeyAndOrderFront(nil)
+        check("Actions search takes focus", actions.makeFirstResponder(search))
+        guard let fieldEditor = actions.firstResponder as? NSTextView else {
+            check("Actions has a native field editor", false)
+            actions.orderOut(nil)
+            return
+        }
+        fieldEditor.setMarkedText(
+            "にほん", selectedRange: NSRange(location: 3, length: 0),
+            replacementRange: NSRange(location: NSNotFound, length: 0))
+        check("Actions composition is separate from palette state", NSApp.keyWindow === actions && !palette.isComposing)
+        check(
+            "Actions IME composition refuses a snippet draft",
+            !coordinator.createSnippet(from: clip) && coordinator.editor == nil && fieldEditor.hasMarkedText())
+        fieldEditor.insertText("日本", replacementRange: NSRange(location: NSNotFound, length: 0))
+        check("committed Actions input allows a draft", coordinator.createSnippet(from: clip))
+        coordinator.cancelSnippetEditing()
+        let parent = MenuPanel()
+        parent.setFrame(actions.frame, display: false)
+        parent.orderFront(nil)
+        var activations = 0
+        actions.onKeyDown = { event in
+            guard event.specialKey == .carriageReturn || event.specialKey == .enter else { return false }
+            parent.makeKey()
+            activations += 1
+            _ = coordinator.createSnippet(from: clip)
+            return true
+        }
+        for (character, keyCode): (String, UInt16) in [("\r", 36), ("\u{3}", 76)] {
+            actions.makeKey()
+            _ = actions.makeFirstResponder(search)
+            fieldEditor.setMarkedText(
+                "にほん", selectedRange: NSRange(location: 3, length: 0),
+                replacementRange: NSRange(location: NSNotFound, length: 0))
+            let event = NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+                windowNumber: actions.windowNumber, context: nil, characters: character,
+                charactersIgnoringModifiers: character, isARepeat: false, keyCode: keyCode)!
+            actions.sendEvent(event)
+            check("composing Return reaches the native field editor", !fieldEditor.hasMarkedText())
+            check("composing Return never activates the selected Actions row", activations == 0)
+            check("composing Return preserves the menu and refuses a draft",
+                NSApp.keyWindow === actions && coordinator.editor == nil)
+            coordinator.cancelSnippetEditing()
+        }
+        actions.makeKey()
+        _ = actions.makeFirstResponder(search)
+        fieldEditor.insertText("日本", replacementRange: NSRange(location: NSNotFound, length: 0))
+        activations = 0
+        let committedReturn = NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+            windowNumber: actions.windowNumber, context: nil, characters: "\r",
+            charactersIgnoringModifiers: "\r", isARepeat: false, keyCode: 36)!
+        actions.sendEvent(committedReturn)
+        check("committed Return activates the row after returning focus to the palette",
+            activations == 1 && NSApp.keyWindow === parent && coordinator.editor?.text == text)
+        coordinator.cancelSnippetEditing()
+        let ownWindow = MenuPanel()
+        ownWindow.setFrame(parent.frame, display: false)
+        let ownEditor = HarnessEditor(frame: NSRect(x: 0, y: 0, width: 300, height: 100))
+        ownWindow.contentView = ownEditor
+        ownWindow.makeKeyAndOrderFront(nil)
+        _ = ownWindow.makeFirstResponder(ownEditor)
+        check("in-app source has an injection target",
+            InjectionTarget.behindPalette(ownWindow: ownWindow, app: nil)?.ownEditor === ownEditor)
+        parent.makeKey()
+        parent.addChildWindow(actions, ordered: .above)
+        actions.makeKey()
+        _ = actions.makeFirstResponder(search)
+        var shownFrom: NSWindow?
+        navigation.onShow = { shownFrom = NSApp.keyWindow }
+        actions.onKeyDown = { event in
+            guard event.charactersIgnoringModifiers == "s", event.modifierFlags.contains(.command) else { return false }
+            return coordinator.createSnippet(from: clip)
+        }
+        let commandS = NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: .command, timestamp: 0,
+            windowNumber: actions.windowNumber, context: nil, characters: "s",
+            charactersIgnoringModifiers: "s", isARepeat: false, keyCode: 1)!
+        settings.snippetsEnabled = false
+        actions.sendEvent(commandS)
+        check("disabled creation leaves Actions key and does not re-show the palette",
+            NSApp.keyWindow === actions && shownFrom == nil && coordinator.editor == nil)
+        settings.snippetsEnabled = true
+        fieldEditor.setMarkedText(
+            "にほん", selectedRange: NSRange(location: 3, length: 0),
+            replacementRange: NSRange(location: NSNotFound, length: 0))
+        actions.sendEvent(commandS)
+        check("composing creation leaves Actions key and does not re-show the palette",
+            NSApp.keyWindow === actions && shownFrom == nil && coordinator.editor == nil)
+        fieldEditor.insertText("日本", replacementRange: NSRange(location: NSNotFound, length: 0))
+        actions.sendEvent(commandS)
+        check("Actions shortcut returns key to the palette before showing the snippet editor",
+            shownFrom === parent && coordinator.editor?.text == text)
+        check("Actions creation leaves the original in-app injection responder intact",
+            InjectionTarget.behindPalette(ownWindow: ownWindow, app: nil)?.ownEditor === ownEditor)
+        coordinator.cancelSnippetEditing()
+        navigation.onShow = nil
+        parent.removeChildWindow(actions)
+        ownWindow.orderOut(nil)
+        actions.onKeyDown = nil
+        parent.orderOut(nil)
+        actions.orderOut(nil)
+        palette.isComposing = true
+        check("IME composition keeps its input", !coordinator.createSnippet(from: clip) && coordinator.editor == nil)
+        palette.isComposing = false
+        check("text clip opens the editor", coordinator.createSnippet(from: clip))
+        guard let draft = coordinator.editor else { return }
+        check("clipboard draft focuses Name", draft.focusedField == .name)
+        check("clipboard draft preserves exact bytes", Array(draft.text.utf8) == Array(text.utf8))
+        check(
+            "opening creates no snippet directory",
+            !FileManager.default.fileExists(atPath: repository.snippetsDirectory.path))
+        clipboard.addText("Copied while editing", sourceBundleID: nil)
+        coordinator.cancelSnippetEditing()
+        check(
+            "cancel follows the source clip after history changes",
+            palette.selection == 3 && palette.restoredSelection == 3
+                && clipboard.search(palette.query, filter: palette.clipboardFilter)[palette.selection].id == clip.id)
+        check("cancel releases the draft", coordinator.editor == nil && palette.mode == .clipboard)
+        check(
+            "cancel writes nothing",
+            !FileManager.default.fileExists(atPath: repository.snippetsDirectory.path))
+        _ = coordinator.createSnippet(from: clip)
+        guard let saving = coordinator.editor else { return }
+        saving.name = "Clipboard draft"
+        clipboard.addText("Copied before Save", sourceBundleID: nil)
+        try FileManager.default.createDirectory(at: repository.channelDirectory, withIntermediateDirectories: true)
+        try Data("blocked".utf8).write(to: repository.snippetsDirectory)
+        coordinator.requestSnippetSave()
+        await coordinator.saveSnippet(saving)
+        check("save failure preserves the draft", coordinator.editor === saving && saving.errorMessage != nil)
+        check("failed save allows retry", !saving.isSaving && saving.canSave && saving.text == text)
+        try FileManager.default.removeItem(at: repository.snippetsDirectory)
+        coordinator.requestSnippetSave()
+        await coordinator.saveSnippet(saving)
+        let snapshot = try repository.load()
+        check("retry saves the original template", snapshot.records.first?.snippet.text == text)
+        check("save releases the draft", coordinator.editor == nil && palette.mode == .clipboard)
+        check(
+            "save follows the source clip after history changes",
+            palette.selection == 4 && palette.restoredSelection == 4
+                && clipboard.search(palette.query, filter: palette.clipboardFilter)[palette.selection].id == clip.id)
+        _ = coordinator.createSnippet(from: clip)
+        clipboard.remove(clip)
+        coordinator.cancelSnippetEditing()
+        check("a removed source leaves the existing fallback row", palette.restoredSelection == 4)
+        check("enabled creation asks for no permission", core.confirmationCount == 0 && Permissions.accessibilityRequests == 0)
     }
 
     private static func testRaycastImport() {
@@ -2074,10 +2272,16 @@ final class ClipboardManager {
 @MainActor
 final class AppSettings {
     var snippetsEnabled = false
+    var snippetsShowInLauncher = true
+    var snippetsFolder: String?
 }
 
 enum Permissions {
-    static func ensureAccessibility() -> Bool { false }
+    @MainActor static var accessibilityRequests = 0
+    @MainActor @discardableResult static func ensureAccessibility() -> Bool {
+        accessibilityRequests += 1
+        return false
+    }
     static func isAccessibilityTrusted() -> Bool { false }
 }
 
