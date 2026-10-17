@@ -453,7 +453,7 @@ second apart. These are one ordered workload per build, not three independent wo
 | After sweep + 50 launcher cycles | 230.0 / 99.7 | 239.7 / 95.5 | 224.5 / 95.8 |
 
 **The 100 MB RSS budget is not met**, and closing the palette does not return memory to launch
-baseline. Final footprint peaks at 108.9 MB. The former 40–80 MB normal-use range was unmeasured
+baseline. Final lifetime footprint peak is 108.9 MB. The former 40–80 MB normal-use range was unmeasured
 and has been replaced with these readings; the requirement in [standards.md](standards.md#performance-and-memory)
 remains unchanged.
 
@@ -498,8 +498,10 @@ and allocator pressure relief were separately rebuilt and measured, then reverte
 #### Other historical refactor measurements
 
 These older measurements remain useful as orders of magnitude, not as current measurements or contracts.
+
 | | Value |
 | --- | --- |
+| Release binary | 3,655,736 B (from 3,471,592 B at the start of the refactor) |
 | `SettingsPaneScanner` warm scan | 0.014 ms (16.5 ms cold), 52 panes |
 | Largest view / owner | `RootPaletteView` 662 lines, `AppCore` 284 lines |
 | Comment density | 1,653 of 27,289 source lines (6.1%) |
