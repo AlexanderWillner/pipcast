@@ -774,9 +774,8 @@ Compact mode retains favorite-only slots, including ⌘6–⌘0 for favorites be
 Clipboard retains its pinned-entry slots. Other screens retain their own shortcuts. The compact
 visibility setting is visual only and does not disable favorite shortcuts.
 
-Holding ⌘ for 400 ms replaces app and file kind labels with their chords; calculator and color
-cards show a trailing overlay without changing their layout. The delay prevents a flash under ⌘↵
-and ⌘K. Releasing ⌘ or resigning key clears it. The row and hint views observe
+Holding ⌘ replaces app and file kind labels with their chords the moment ⌘ goes down; calculator and color
+cards show a trailing overlay without changing their layout. Releasing ⌘ or resigning key clears it. The row and hint views observe
 `PaletteState.commandHeld` locally, so revealing hints does not rebuild the whole palette. Slot
 digits are computed from section offsets, never by searching each row's ID.
 
