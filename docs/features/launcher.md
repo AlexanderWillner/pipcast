@@ -377,6 +377,16 @@ a `selectedRowID` rather than an entry id. Nothing about a fallback row is learn
 revealed: `activate` routes to `FallbackCoordinator.run` instead of `LauncherCoordinator.launch`, and
 `FallbackActionsMenu` offers only running it and opening the pane.
 
+### Settings scope
+
+A leading `?` scopes root search to settings: `?extensions` lists the rows a Settings search
+would find, and ↵ opens Settings on the row. A bare `?` browses every pane once. The mode stays
+launcher, so Esc, history and the footer keep working; `SettingsSearchScreen` (in
+`Settings/`, beside the catalog it reads) is the screen, and `RootPaletteView` resolves it when
+`SettingsSearchScreen.scope(of:)` strips the prefix. Rows carry no `AppEntry`, so nothing about
+them is learned, pinned, aliased or hidden, and ⌘1…⌘0 address the first ten visible rows. See
+`SettingsSearchCatalog.scopeResults`, covered by `settings-history-test`.
+
 ### User aliases
 
 `AliasStore` (`Launcher/Service/`) keeps one user-chosen alias per entry, keyed by `preferenceKey`

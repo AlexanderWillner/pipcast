@@ -50,6 +50,10 @@ struct RootPaletteView: View {
     private var screen: any PaletteScreen {
         switch vm.mode {
         case .launcher:
+            // A leading `?` scopes root search to settings; the mode stays launcher.
+            if SettingsSearchScreen.scope(of: vm.query) != nil {
+                return SettingsSearchScreen(core: core, vm: vm, openActions: openActions)
+            }
             return LauncherScreen(
                 appIndex: appIndex, favorites: favorites, visibility: visibility,
                 currencyRates: currencyRates, core: core, vm: vm, running: selectionIsRunning,
@@ -1404,12 +1408,11 @@ struct RootPaletteView: View {
 
     private func activateNumberSlot(_ index: Int) {
         guard !menuOpen, !vm.isControlListOpen, !vm.isComposing else { return }
-        guard vm.mode == .launcher, !isCollapsed else {
+        guard vm.mode == .launcher, !isCollapsed, let screen = screen as? LauncherScreen else {
             performShortcut(.numberSlot(index))
             return
         }
-        guard let screen = screen as? LauncherScreen,
-            let selection = screen.numberSlots.selection(at: index, rowCount: screen.rows.count)
+        guard let selection = screen.numberSlots.selection(at: index, rowCount: screen.rows.count)
         else { return }
         let previous = vm.selection
         numberArgumentFocus = nil
