@@ -79,6 +79,12 @@ A chord aimed at the selected row — ⌃X, ⇧⌘F, ⌘Y and the rest — follo
 `PaletteShortcut` recognises the key and carries its compact-bar and open-menu guards, and the screen
 answers through `perform(_:at:)`, so a new chord never adds a cast to the shell.
 
+SwiftUI can retain old key-handler closures after a render. The extension shortcut resolver reads the
+current screen and selection when a key arrives, deriving the selection from that same screen, only in
+extension mode with no menu open. It must never capture the render's cached `PaletteScreen`: that
+snapshot owns its rows, and every summon would retain another launcher list even after the palette
+closes.
+
 The panel offers an unmodified, non-repeated Space to the root view only when its native editor
 has no marked text and an empty selection at the end. The root checks search focus, menu state,
 the opt-in alias preference and agreement between editor text and query. The screen decides
