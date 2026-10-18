@@ -3,6 +3,28 @@
 What changed in each Pipcast release, newest first. The release workflow writes each version's
 section from its commits, and Pipcast shows this file in What's New.
 
+## 0.2.0
+
+3 new features, 3 fixes and 3 other changes.
+
+### New
+
+- **launcher** — Search settings with ? prefix by @AlexanderWillner in #32
+- **palette** — Reach clipboard history with number slots and reveal chords instantly by @AlexanderWillner in #28
+- **file-search** — Scope searches to folders and debounce queries by @mSarheed in #27
+
+### Fixed
+
+- **palette** — Stop retaining launcher snapshots by @mSarheed in #24
+- **scripts** — Fail fast on the wrong toolchain and concurrent test runs by @mSarheed in #31
+- **extensions** — Honor form tab navigation and action shortcuts by @mSarheed in #26
+
+### Other
+
+- **coderabbit** — Review the whole repo and slim the swift instructions by @mSarheed in #30
+- Replace the tinycast triage bots with build and title checks by @mSarheed in #29
+- Point agents at the contribution rules by @mSarheed in #23
+
 ## 0.1.1 — 2026-10-17
 
 1 fix.
