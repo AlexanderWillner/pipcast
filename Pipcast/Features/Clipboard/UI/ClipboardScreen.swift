@@ -44,7 +44,7 @@ struct ClipboardScreen: PaletteScreen {
             deleteAll()
             return true
         case .pin: return pin(at: selection)
-        case .numberSlot(let index): return activatePinned(at: index)
+        case .numberSlot(let index): return activateSlot(at: index)
         case .createSnippet:
             guard let item = item(at: selection) else { return false }
             return core.snippetCoordinator.createSnippet(from: item)
@@ -56,11 +56,11 @@ struct ClipboardScreen: PaletteScreen {
         }
     }
 
-    private func activatePinned(at index: Int) -> Bool {
-        guard let item = store.pinnedItem(at: index, in: vm.query, filter: vm.clipboardFilter) else {
-            return false
-        }
-        core.clipboardCoordinator.activate(item)
+    /// ⌘1…⌘0 — the Nth visible row, so the history answers with or without pins.
+    private func activateSlot(at index: Int) -> Bool {
+        let rows = rows
+        guard rows.indices.contains(index) else { return false }
+        core.clipboardCoordinator.activate(rows[index])
         return true
     }
 

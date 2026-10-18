@@ -771,7 +771,7 @@ When the shortcut selects a different row, focus waits for its argument fields t
 view-owned task checks cancellation, row identity, query and palette reset before moving the caret.
 
 Compact mode retains favorite-only slots, including ⌘6–⌘0 for favorites beyond the five-icon strip.
-Clipboard retains its pinned-entry slots. Other screens retain their own shortcuts. The compact
+Clipboard slots address its first ten visible rows. Other screens retain their own shortcuts. The compact
 visibility setting is visual only and does not disable favorite shortcuts.
 
 Holding ⌘ replaces app and file kind labels with their chords the moment ⌘ goes down; calculator and color

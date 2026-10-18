@@ -561,12 +561,6 @@ final class ClipboardStore {
         search(query, filter: filter).firstIndex { $0.id == item.id }
     }
 
-    /// The Nth visible pinned entry under `query` and `filter`, where 0 is the first pinned row.
-    func pinnedItem(at index: Int, in query: String, filter: ClipboardFilter) -> ClipboardItem? {
-        guard index >= 0 else { return nil }
-        return search(query, filter: filter).prefix(while: \.isPinned).dropFirst(index).first
-    }
-
     /// Where a reset lands: past the pins to the newest clip, or on the first match once typed.
     func landingIndex(in query: String, filter: ClipboardFilter) -> Int {
         guard query.trimmingCharacters(in: .whitespaces).isEmpty else { return 0 }
