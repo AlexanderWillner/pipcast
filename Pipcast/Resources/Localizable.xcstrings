@@ -86302,7 +86302,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrir dans Réglages"
+            "value" : "Ouvrir dans les Réglages"
           }
         },
         "ja" : {
@@ -86326,7 +86326,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Открыть в Настройках"
+            "value" : "Открыть в настройках"
           }
         },
         "zh-Hans" : {

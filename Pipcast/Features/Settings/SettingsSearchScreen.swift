@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// The launcher's `?` scope: `?extensions` lists the settings rows a search would find, and ↵
-/// opens Settings on the row. The mode stays launcher, so Esc, history and the footer keep working.
+/// The launcher's `?` scope; the mode stays launcher, so Esc, history and the footer keep working.
 struct SettingsSearchScreen: PaletteScreen {
     let core: AppCore
     let vm: PaletteState
@@ -52,7 +51,7 @@ struct SettingsSearchScreen: PaletteScreen {
     /// No secondary action: one row opens one place.
     func secondary(at selection: Int) -> Bool { false }
 
-    /// ⌘1…⌘0 — the Nth visible row, so pins-first browse answers the chords too.
+    /// ⌘1…⌘0 — the Nth visible row.
     private func activateSlot(at index: Int) -> Bool {
         let rows = rows
         guard rows.indices.contains(index) else { return false }

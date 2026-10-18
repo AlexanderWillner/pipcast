@@ -202,6 +202,9 @@ struct SettingsHistoryTests {
         let found = SettingsSearchCatalog.scopeResults(for: "extensions")
         expect(found.first?.tab == .extensions, "a scoped search lands on the pane")
         expect(
+            found.contains { $0.tab == .extensions && $0.target != nil },
+            "and lists the pane's own rows too")
+        expect(
             SettingsSearchCatalog.scopeResults(for: "nothing here matches at all").isEmpty,
             "and an unmatched scope returns nothing")
     }

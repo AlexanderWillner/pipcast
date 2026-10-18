@@ -1408,29 +1408,11 @@ struct RootPaletteView: View {
 
     private func activateNumberSlot(_ index: Int) {
         guard !menuOpen, !vm.isControlListOpen, !vm.isComposing else { return }
-        // The `?` scope keeps launcher mode, so its positional slots need their own branch.
-        if let settings = screen as? SettingsSearchScreen {
-            guard !isCollapsed else {
-                performShortcut(.numberSlot(index))
-                return
-            }
-            let rows = settings.rows
-            guard NumberSlots.digits.indices.contains(index), rows.indices.contains(index) else {
-                return
-            }
-            numberArgumentFocus = nil
-            returnFocusToSearchField()
-            vm.selection = index
-            scroll = ScrollIntent(kind: .follow)
-            settings.activate(at: index)
-            return
-        }
-        guard vm.mode == .launcher, !isCollapsed else {
+        guard vm.mode == .launcher, !isCollapsed, let screen = screen as? LauncherScreen else {
             performShortcut(.numberSlot(index))
             return
         }
-        guard let screen = screen as? LauncherScreen,
-            let selection = screen.numberSlots.selection(at: index, rowCount: screen.rows.count)
+        guard let selection = screen.numberSlots.selection(at: index, rowCount: screen.rows.count)
         else { return }
         let previous = vm.selection
         numberArgumentFocus = nil
