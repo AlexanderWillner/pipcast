@@ -64,9 +64,8 @@ are all there, and they apply to a human contributor exactly as they do to an ag
 concurrency and the performance budgets. [`docs/ui.md`](docs/ui.md) before any new view or restyle. Look before "fixing" something that looks
 wrong — it may be deliberate.
 
-Two things that are only about contributing, and so are not in those docs:
+One thing that is only about contributing, and so is not in those docs:
 
-- Commit messages imperative: `Add per-app hotkey toggle`.
 - Behaviour you didn't mean to change, didn't change. Say so explicitly in the PR if it did.
 
 ## Bugs
