@@ -42,7 +42,8 @@ xcodebuild -project Pipcast.xcodeproj -scheme Pipcast -configuration Debug build
 
 `xcodebuild` uses whatever `xcode-select` points at; if that's the Command Line Tools rather than
 Xcode, prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (the SwiftUI
-`@State`/`@FocusState` macros need Xcode's macOS platform).
+`@State`/`@FocusState` macros need Xcode's macOS platform). `run-tests.sh` and `lint.sh` need it too,
+and refuse to start on the Command Line Tools rather than fail like broken code.
 
 `Pipcast.xcodeproj` is committed and generated from `project.yml` via XcodeGen — after changing
 project settings in `project.yml`, run `xcodegen generate` and commit the result. There is no
@@ -194,7 +195,8 @@ Xcode's re-indent (⌃I), as it always has been. Two consequences worth knowing:
 - `force_try` is an error; `force_cast` only warns, because the AX and AppKit bridges have four
   legitimate ones.
 
-Errors block, warnings do not. CI runs this script on every PR; run it locally before you open one.
+Errors block, warnings do not. CI runs this script on every PR that touches code; run it locally
+before you open one.
 
 ## Brand assets
 

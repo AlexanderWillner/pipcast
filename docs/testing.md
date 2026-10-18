@@ -15,9 +15,9 @@ The mechanical bar, in one place so it cannot drift. All five pass before a chan
 | A clean build | `xcodebuild … -configuration Debug CODE_SIGNING_ALLOWED=NO`, zero **new** warnings |
 | Docs still true | any doc your change made wrong, fixed in the same commit |
 
-CI (`.github/workflows/ci.yml`) runs the first four on every PR and push to `main`; run them locally
-first anyway. CodeRabbit reviews each PR on top. Each is expanded below; the manual sweep at the end
-of this file is the sixth, judged by what you touched.
+CI (`.github/workflows/ci.yml`) runs the first four on every code change, PR or push to `main`; run
+them locally first anyway. CodeRabbit reviews each PR on top. Each is expanded below; the manual
+sweep at the end of this file is the sixth, judged by what you touched.
 
 ## The harnesses
 
@@ -25,6 +25,9 @@ of this file is the sixth, judged by what you touched.
 ./Scripts/run-tests.sh              # all of them
 ./Scripts/run-tests.sh calc-test    # just one, while iterating
 ```
+
+One run at a time: runs share a scratch directory, so a second one refuses to start until the first
+finishes.
 
 `apple-intelligence-test` runs deterministic checks by default. Its real model generation is opt-in:
 

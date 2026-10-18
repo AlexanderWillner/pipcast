@@ -48,6 +48,20 @@ if [ "${1:-}" = "--exec" ]; then
     exit 0
 fi
 
+source Scripts/require-xcode.sh
+
+# A second run would clear this one's failure markers; a pid symlink takes the lock atomically.
+LOCK="$BIN/run.pid"
+until ln -s "$$" "$LOCK" 2>/dev/null; do
+    holder=$(readlink "$LOCK")
+    if kill -0 "$holder" 2>/dev/null; then
+        echo "✗ Another run-tests.sh (pid $holder) is running. Wait for it to finish." >&2
+        exit 2
+    fi
+    rm -f "$LOCK"
+done
+trap 'rm -f "$LOCK"' EXIT
+
 QUEUE="$BIN/queue"
 : > "$QUEUE"
 rm -f "$BIN"/*.failed "$BIN"/*.running
