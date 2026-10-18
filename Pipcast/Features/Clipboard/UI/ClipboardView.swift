@@ -36,17 +36,14 @@ struct ClipboardList: View {
     private var rows: [Row] {
         var rows: [Row] = []
         var currentTitle: String?
-        var pinnedSlot = 0
         let buckets = DateBucket.Boundaries()
-        for item in results {
+        for (offset, item) in results.enumerated() {
             let title = item.isPinned ? String(localized: "Pinned") : buckets.bucket(for: item.createdAt).title
             if title != currentTitle {
                 rows.append(.header(title))
                 currentTitle = title
             }
-            let slot = item.isPinned ? NumberSlots.digit(at: pinnedSlot) : nil
-            if item.isPinned { pinnedSlot += 1 }
-            rows.append(.item(item, slot: slot))
+            rows.append(.item(item, slot: NumberSlots.digit(at: offset)))
         }
         return rows
     }
@@ -148,7 +145,7 @@ private struct ClipboardRow: View {
     let selected: Bool
     let imageURL: URL?
     let ownsImage: Bool
-    /// This row's ⌘-digit, or nil when it is not among the first ten visible pins.
+    /// This row's ⌘-digit, or nil when it is not among the first ten visible rows.
     let slot: Character?
     @Environment(PaletteState.self) private var palette
     @State private var hovered = false
