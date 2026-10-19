@@ -5,10 +5,12 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ## 0.2.0
 
-3 new features, 3 fixes and 3 other changes.
+5 new features, 3 fixes and 5 other changes.
 
 ### New
 
+- **launcher** — Set an alias or hotkey from the ⌘K actions menu by @mSarheed in #38
+- **quicklinks** — Fetch website icons behind an opt-in setting by @mSarheed in #37
 - **launcher** — Search settings with ? prefix by @AlexanderWillner in #32
 - **palette** — Reach clipboard history with number slots and reveal chords instantly by @AlexanderWillner in #28
 - **file-search** — Scope searches to folders and debounce queries by @mSarheed in #27
@@ -21,6 +23,8 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ### Other
 
+- **file-search** — Wait for recents instead of the clock by @mSarheed in #36
+- **clipboard** — Stop the text indexer starving on loaded runners by @mSarheed in #33
 - **coderabbit** — Review the whole repo and slim the swift instructions by @mSarheed in #30
 - Replace the tinycast triage bots with build and title checks by @mSarheed in #29
 - Point agents at the contribution rules by @mSarheed in #23
