@@ -62040,6 +62040,12 @@
                   "state" : "translated",
                   "value" : "Se importaron %lld extensiones con sus datos."
                 }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Se importaron %lld extensiones con sus datos."
+                }
               }
             }
           }
@@ -62057,6 +62063,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld extensions importées avec leurs données."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld d’extensions importées avec leurs données."
                 }
               }
             }
@@ -62100,6 +62112,12 @@
                   "state" : "translated",
                   "value" : "%lld extensões importadas com seus dados."
                 }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld de extensões importadas com seus dados."
+                }
               }
             }
           }
@@ -62117,6 +62135,18 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Импортировано %lld расширения вместе с данными."
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Импортировано %lld расширения вместе с данными."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Импортировано %lld расширений вместе с данными."
                 }
               }
             }
