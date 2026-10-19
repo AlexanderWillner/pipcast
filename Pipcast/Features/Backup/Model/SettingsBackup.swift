@@ -101,6 +101,7 @@ struct SettingsBackup: Codable {
     struct HotkeyBackup: Codable {
         /// Named apart from `commands`: the launcher toggle is the one action with no command row.
         var togglePalette: HotKeyBinding?
+        var dictation: HotKeyBinding?
         var commands: [String: HotKeyBinding]?
         var apps: [String: HotKeyBinding]?
         var panes: [String: HotKeyBinding]?
@@ -108,6 +109,11 @@ struct SettingsBackup: Codable {
         var systemActions: [String: HotKeyBinding]?
         var windowCommands: [String: HotKeyBinding]?
         var quicklinks: [String: HotKeyBinding]?
+        var quickActions: [String: HotKeyBinding]?
+        var appleShortcuts: [String: HotKeyBinding]?
+        var snippets: [String: HotKeyBinding]?
+        /// Keyed by `AppEntry.id`, which is what survives an extension reinstall.
+        var extensionCommands: [String: HotKeyBinding]?
         var windowLayouts: [String: HotKeyBinding]?
         var windowRooms: [String: HotKeyBinding]?
         var customWindowSizes: [String: HotKeyBinding]?
@@ -207,6 +213,7 @@ extension SettingsBackup {
         let hk = core.hotKeys
         var hotkeys = HotkeyBackup()
         hotkeys.togglePalette = hk.binding(for: .togglePalette)
+        hotkeys.dictation = hk.binding(for: .dictation)
         hotkeys.commands = Dictionary(
             uniqueKeysWithValues: CommandID.allCases.compactMap { id in
                 id.hotKeyAction.flatMap(hk.binding(for:)).map { (id.rawValue, $0) }
@@ -234,6 +241,22 @@ extension SettingsBackup {
         hotkeys.quicklinks = Dictionary(
             uniqueKeysWithValues: hk.boundQuicklinkIDs.compactMap { id in
                 hk.binding(for: .quicklink(id: id)).map { (id.uuidString.lowercased(), $0) }
+            })
+        hotkeys.quickActions = Dictionary(
+            uniqueKeysWithValues: hk.boundQuickActionIDs.compactMap { id in
+                hk.binding(for: .quickAction(id: id)).map { (id.uuidString.lowercased(), $0) }
+            })
+        hotkeys.appleShortcuts = Dictionary(
+            uniqueKeysWithValues: hk.boundAppleShortcutIDs.compactMap { id in
+                hk.binding(for: .appleShortcut(id: id)).map { (id.uuidString.lowercased(), $0) }
+            })
+        hotkeys.snippets = Dictionary(
+            uniqueKeysWithValues: hk.boundSnippetIDs.compactMap { id in
+                hk.binding(for: .snippet(id: id)).map { (id, $0) }
+            })
+        hotkeys.extensionCommands = Dictionary(
+            uniqueKeysWithValues: hk.boundExtensionCommandEntryIDs.compactMap { entryID in
+                hk.binding(for: .extensionCommand(entryID: entryID)).map { (entryID, $0) }
             })
         hotkeys.windowLayouts = Dictionary(
             uniqueKeysWithValues: hk.boundWindowLayoutIDs.compactMap { id in
@@ -595,6 +618,7 @@ extension SettingsBackup {
             count += 1
         }
         if let b = hotkeys.togglePalette { apply(b, .togglePalette) }
+        if let b = hotkeys.dictation { apply(b, .dictation) }
         for (rawID, b) in hotkeys.commands ?? [:] {
             guard let action = CommandID(rawValue: rawID)?.hotKeyAction else { continue }
             apply(b, action)
@@ -634,6 +658,23 @@ extension SettingsBackup {
                 continue
             }
             apply(b, .quicklink(id: id))
+        }
+        for (rawID, b) in hotkeys.quickActions ?? [:] {
+            guard let id = UUID(uuidString: rawID), core.customQuickActions.action(id: id) != nil
+            else { continue }
+            apply(b, .quickAction(id: id))
+        }
+        // No existence guard: the library reads lazily, and a dead binding is swept on the next
+        // successful read. Dropping it here would lose a shortcut whose target just hasn't loaded.
+        for (rawID, b) in hotkeys.appleShortcuts ?? [:] {
+            guard let id = UUID(uuidString: rawID) else { continue }
+            apply(b, .appleShortcut(id: id))
+        }
+        // Swept by `removeSnippetBindings` on load; binds to nothing until its snippet exists.
+        for (id, b) in hotkeys.snippets ?? [:] { apply(b, .snippet(id: id)) }
+        // Never pruned at launch, so a binding outlives the reinstall it waits for.
+        for (entryID, b) in hotkeys.extensionCommands ?? [:] {
+            apply(b, .extensionCommand(entryID: entryID))
         }
         return count
     }

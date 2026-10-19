@@ -40,6 +40,9 @@ enum BackupActions {
 
     static func chooseBackupFile() -> URL? { chooseFile(ofTypes: [.pipcastBackup, .tinycastBackup]) }
 
+    /// The Tinycast half of the switch: its exports carry the same archive layout.
+    static func chooseTinycastFile() -> URL? { chooseFile(ofTypes: [.tinycastBackup]) }
+
     private static func chooseFile(ofTypes types: [UTType]) -> URL? {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = types
@@ -184,6 +187,33 @@ enum BackupActions {
             quicklinksImported: quicklinksImported,
             quicklinksError: quicklinksError,
             missingImages: result.missingImages)
+    }
+
+    /// Every Tinycast channel (stable, beta, dev) shares this bundle-id prefix.
+    static let tinycastBundleIDPrefix = "com.tinycast.app"
+
+    static func isTinycastBundleID(_ id: String) -> Bool { id.hasPrefix(tinycastBundleIDPrefix) }
+
+    /// A Tinycast install is present when one of its support folders exists on this Mac.
+    static var isTinycastInstalled: Bool {
+        !ExtensionCatalog.tinycastSupportDirectories().isEmpty
+    }
+
+    static var tinycastRunning: Bool {
+        NSWorkspace.shared.runningApplications.contains {
+            $0.bundleIdentifier.map(isTinycastBundleID) == true
+                && $0.activationPolicy != .prohibited
+        }
+    }
+
+    /// Quit any running Tinycast so its hotkeys stop clashing; background helpers stay.
+    static func quitTinycast() {
+        for app in NSWorkspace.shared.runningApplications
+        where app.bundleIdentifier.map(isTinycastBundleID) == true
+            && app.activationPolicy != .prohibited
+        {
+            app.terminate()
+        }
     }
 
     /// Every Raycast channel (stable, beta, alpha, internal) shares this bundle-id prefix.

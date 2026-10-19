@@ -19,6 +19,13 @@ struct BackupSettingsView: View {
     @State private var openedManifest: BackupManifest?
     /// Held between opening the file and applying it, so the extracted tree survives the picker.
     @State private var openedStaging: BackupStaging?
+    @State private var tinycastFile: URL?
+    @State private var tinycastManifest: BackupManifest?
+    /// Held between opening the file and applying it, like the Pipcast backup above.
+    @State private var tinycastStaging: BackupStaging?
+    @State private var tinycastImportSelection: Set<BackupCategory> = []
+    @State private var tinycastImporting = false
+    @State private var tinycastStatus: Status?
 
     private enum Status {
         case success(String)
@@ -91,6 +98,50 @@ struct BackupSettingsView: View {
 
             Section {
                 LabeledContent {
+                    Button("Choose…") { chooseTinycastFile() }
+                } label: {
+                    SettingsRowTitle(.backupImportFromTinycast, "Tinycast Backup")
+                    Text(tinycastFileSubtitle)
+                }
+                if let manifest = tinycastManifest {
+                    BackupCategorySelection(
+                        selection: $tinycastImportSelection, available: available(in: manifest))
+                    LabeledContent {
+                        if tinycastImporting {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Button("Import") { runTinycastImport() }
+                                .disabled(tinycastImportSelection.isEmpty)
+                        }
+                    } label: {
+                        Text("Import")
+                    }
+                }
+                if BackupActions.isTinycastInstalled {
+                    LabeledContent {
+                        if BackupActions.tinycastRunning {
+                            Button("Quit Tinycast") { BackupActions.quitTinycast() }
+                        }
+                    } label: {
+                        if BackupActions.tinycastRunning {
+                            Label(
+                                "Tinycast is running — quit it to avoid hotkey conflicts.",
+                                systemImage: "exclamationmark.triangle.fill"
+                            )
+                            .foregroundStyle(.orange)
+                        } else {
+                            Text("Extensions move in Settings › Extensions › Import from Tinycast, with their data.")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                if let tinycastStatus { statusRow(tinycastStatus) }
+            } header: {
+                SettingsSectionHeader(.backupImportFromTinycast)
+            }
+
+            Section {
+                LabeledContent {
                     Button("Choose…") { chooseRaycastFile() }
                 } label: {
                     SettingsRowTitle(.backupImportFromRaycast, "Raycast Export")
@@ -146,7 +197,10 @@ struct BackupSettingsView: View {
         }
         .formStyle(.grouped)
         .settingsScrollTarget(.backup)
-        .onDisappear { if !importingBackup { discardStagedBackup() } }
+        .onDisappear {
+            if !importingBackup { discardStagedBackup() }
+            if !tinycastImporting { discardStagedTinycastBackup() }
+        }
     }
 
     @ViewBuilder
@@ -187,6 +241,13 @@ struct BackupSettingsView: View {
             return String(localized: "A .pipcast file exported from Pipcast.")
         }
         return openedManifest == nil ? String(localized: "\(name) — couldn't be read") : name
+    }
+
+    private var tinycastFileSubtitle: String {
+        guard let name = tinycastFile?.lastPathComponent else {
+            return String(localized: "A .tinycast file exported from Tinycast.")
+        }
+        return tinycastManifest == nil ? String(localized: "\(name) — couldn't be read") : name
     }
 
     private func available(in manifest: BackupManifest) -> [BackupCategory: Int] {
@@ -230,6 +291,45 @@ struct BackupSettingsView: View {
                 backupStatus = .failure(error.localizedDescription)
             }
         }
+    }
+
+    private func chooseTinycastFile() {
+        guard let url = BackupActions.chooseTinycastFile() else { return }
+        discardStagedTinycastBackup()
+        tinycastFile = url
+        tinycastStatus = nil
+        Task {
+            do {
+                let (staging, manifest) = try await BackupActions.openBackup(at: url)
+                tinycastStaging = staging
+                tinycastManifest = manifest
+                tinycastImportSelection = manifest.categories
+            } catch {
+                tinycastStatus = .failure(error.localizedDescription)
+            }
+        }
+    }
+
+    private func runTinycastImport() {
+        guard let staging = tinycastStaging, !tinycastImporting, !tinycastImportSelection.isEmpty
+        else { return }
+        tinycastImporting = true
+        let categories = tinycastImportSelection
+        Task {
+            defer { tinycastImporting = false }
+            let summary = await BackupActions.applyBackup(categories, from: staging, to: core)
+            // Staged files are adopted by the stores during apply, so the tree goes either way.
+            discardStagedTinycastBackup()
+            tinycastFile = nil
+            if let summary { tinycastStatus = .success(BackupActions.summaryText(summary)) }
+        }
+    }
+
+    /// The extracted tree can run to gigabytes, so leaving the pane must not strand it.
+    private func discardStagedTinycastBackup() {
+        tinycastStaging?.discard()
+        tinycastStaging = nil
+        tinycastManifest = nil
     }
 
     private func runBackupImport() {

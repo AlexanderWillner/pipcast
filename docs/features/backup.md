@@ -144,3 +144,17 @@ Raycast import is documented separately in [raycast-import.md](raycast-import.md
 
 Pipcast exports `.pipcast` files and also accepts `.tinycast` files from earlier Pipcast builds
 and Tinycast. Both use the same archive format; import permissions and category filtering still apply.
+
+## Switching from Tinycast
+
+The first-launch wizard and Settings › Backup › Switch from Tinycast import a `.tinycast` backup:
+settings (including the restored hotkey bindings for dictation, quick actions, Apple Shortcuts,
+snippets and extension commands), clipboard history, snippets, notes and launcher learning. Bindings
+whose target isn't there yet — an extension not reinstalled, a deleted shortcut — bind to nothing
+until it exists again, and never grant a capability: the feature switches stay off.
+
+Extensions themselves travel through Settings › Extensions › Import from Tinycast, which copies the
+built extension folders like the Raycast import does, then adopts each installed extension's data
+(preferences, LocalStorage, Cache, accessory picks and command metadata) from Tinycast's support
+folder. Only extensions untouched in Pipcast are adopted, so the migration never clobbers live
+state. Quit Tinycast afterwards so its hotkeys stop clashing.

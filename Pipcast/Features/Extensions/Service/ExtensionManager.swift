@@ -223,13 +223,25 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
     }
 
     /// Scanned off-main: it reads a manifest per directory, and a full Raycast install is dozens.
-    func raycastImportCandidates() async -> [RaycastImportCandidate] {
+    func raycastImportCandidates() async -> [ExtensionImportCandidate] {
         let candidates = await Task.detached(priority: .userInitiated) {
             ExtensionCatalog.importableFromRaycast()
         }.value
+        return markInstalled(candidates)
+    }
+
+    /// The same scan over Tinycast's own support folder, for the complete switch from Tinycast.
+    func tinycastImportCandidates() async -> [ExtensionImportCandidate] {
+        let candidates = await Task.detached(priority: .userInitiated) {
+            ExtensionCatalog.importableFromTinycast()
+        }.value
+        return markInstalled(candidates)
+    }
+
+    private func markInstalled(_ candidates: [InstalledExtension]) -> [ExtensionImportCandidate] {
         let have = Set(installed.map(\.manifest.name))
         return candidates.map {
-            RaycastImportCandidate(installed: $0, isInstalled: have.contains($0.manifest.name))
+            ExtensionImportCandidate(installed: $0, isInstalled: have.contains($0.manifest.name))
         }
     }
 
@@ -261,6 +273,26 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
     func importAllFromRaycast(
         _ candidates: [InstalledExtension], onProgress: (Int) -> Void = { _ in }
     ) async -> [String] {
+        await importAll(candidates, onProgress: onProgress)
+    }
+
+    /// Like the Raycast import, then adopts Tinycast's data files for what was installed:
+    /// preferences, LocalStorage, Cache, accessory picks and command metadata travel, while
+    /// the code itself is the fresh copy just installed. Only extensions untouched here are
+    /// adopted, so a migration never clobbers live Pipcast state.
+    @discardableResult
+    func importAllFromTinycast(
+        _ candidates: [InstalledExtension], onProgress: (Int) -> Void = { _ in }
+    ) async -> [String] {
+        let failed = await importAll(candidates, onProgress: onProgress)
+        migrateTinycastData(
+            for: candidates.filter { !failed.contains($0.title) }.map(\.manifest.name))
+        return failed
+    }
+
+    private func importAll(
+        _ candidates: [InstalledExtension], onProgress: (Int) -> Void
+    ) async -> [String] {
         var failed: [String] = []
         for (index, candidate) in candidates.enumerated() {
             do {
@@ -274,6 +306,30 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
         }
         await refresh()
         return failed
+    }
+
+    /// Copies Tinycast's per-extension data files for freshly imported extensions.
+    @discardableResult
+    func migrateTinycastData(for names: [String]) -> Int {
+        var adopted = 0
+        for support in ExtensionCatalog.tinycastSupportDirectories() {
+            let dataDir = support.appendingPathComponent("extension-data", isDirectory: true)
+            for name in names {
+                let source = dataDir.appendingPathComponent(
+                    "\(ExtensionCatalog.safeName(name)).json", isDirectory: false)
+                if storage.adoptExternalStore(from: source, for: name) { adopted += 1 }
+            }
+            let metadata = ExtensionCommandMetadataStore.readExternal(file: support.appendingPathComponent(
+                "extension-commands.json", isDirectory: false))
+            for name in names {
+                if let incoming = metadata[name] {
+                    commandMetadata.adoptExternalMetadata(incoming, for: name)
+                }
+            }
+        }
+        storage.flush()
+        commandMetadata.flush()
+        return adopted
     }
 
     // MARK: - Updates

@@ -197,6 +197,26 @@ final class ExtensionStorage {
         try? FileManager.default.removeItem(at: fileURL(for: name))
     }
 
+    /// Adopts another install's data file for an extension untouched here: the switch from
+    /// Tinycast carries preferences, LocalStorage, Cache and accessory picks along. A store
+    /// already read or written here wins, so a migration never clobbers live Pipcast state.
+    @discardableResult
+    func adoptExternalStore(from source: URL, for name: String) -> Bool {
+        guard stores[name] == nil,
+            !FileManager.default.fileExists(atPath: fileURL(for: name).path),
+            let data = try? Data(contentsOf: source),
+            (try? JSONDecoder().decode(Store.self, from: data)) != nil
+        else { return false }
+        try? FileManager.default.createDirectory(
+            at: directory, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.copyItem(at: source, to: fileURL(for: name))
+            return true
+        } catch {
+            return false
+        }
+    }
+
     // MARK: - Persistence
 
     private func store(for name: String) -> Store {

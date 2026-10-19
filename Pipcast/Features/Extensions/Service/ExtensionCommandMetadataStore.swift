@@ -94,6 +94,26 @@ final class ExtensionCommandMetadataStore {
         scheduleFlush()
     }
 
+    /// Adopts another install's row metadata for commands untouched here: the switch from
+    /// Tinycast carries subtitle overrides and menu-bar/background state along. A command
+    /// already known here wins, so a migration never clobbers live Pipcast state.
+    func adoptExternalMetadata(_ incoming: [String: ExtensionCommandMetadata], for name: String) {
+        var changed = false
+        for (command, metadata) in incoming where records[name]?[command] == nil {
+            records[name, default: [:]][command] = metadata
+            changed = true
+        }
+        guard changed else { return }
+        scheduleFlush()
+    }
+
+    /// Reads another install's metadata file without touching this one.
+    nonisolated static func readExternal(file: URL) -> [String: [String: ExtensionCommandMetadata]] {
+        (try? Data(contentsOf: file)).flatMap {
+            try? JSONDecoder().decode([String: [String: ExtensionCommandMetadata]].self, from: $0)
+        } ?? [:]
+    }
+
     func flush() {
         flushTask?.cancel()
         flushTask = nil
