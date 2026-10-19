@@ -5,7 +5,7 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ## 0.2.0
 
-5 new features, 3 fixes and 5 other changes.
+5 new features, 4 fixes and 5 other changes.
 
 ### New
 
@@ -17,6 +17,7 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ### Fixed
 
+- **extensions** — Fill http STATUS_CODES and METHODS with node's tables by @mSarheed in #40
 - **palette** — Stop retaining launcher snapshots by @mSarheed in #24
 - **scripts** — Fail fast on the wrong toolchain and concurrent test runs by @mSarheed in #31
 - **extensions** — Honor form tab navigation and action shortcuts by @mSarheed in #26
