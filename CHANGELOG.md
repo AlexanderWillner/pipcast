@@ -5,7 +5,7 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ## 0.2.0
 
-5 new features, 4 fixes and 5 other changes.
+5 new features, 5 fixes and 6 other changes.
 
 ### New
 
@@ -17,6 +17,7 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ### Fixed
 
+- **calculator** — Drop a currency fetch superseded by a newer one by @mSarheed
 - **extensions** — Fill http STATUS_CODES and METHODS with node's tables by @mSarheed in #40
 - **palette** — Stop retaining launcher snapshots by @mSarheed in #24
 - **scripts** — Fail fast on the wrong toolchain and concurrent test runs by @mSarheed in #31
@@ -24,6 +25,7 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ### Other
 
+- Merge upstream tinycast main by @mSarheed
 - **file-search** — Wait for recents instead of the clock by @mSarheed in #36
 - **clipboard** — Stop the text indexer starving on loaded runners by @mSarheed in #33
 - **coderabbit** — Review the whole repo and slim the swift instructions by @mSarheed in #30
