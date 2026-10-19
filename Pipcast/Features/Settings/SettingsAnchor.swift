@@ -34,6 +34,7 @@ extension SettingsAnchor {
 
     static let quicklinksQuicklinks = Self(tab: .quicklinks, title: "Quicklinks")
     static let quicklinksCommands = Self(tab: .quicklinks, title: "Commands")
+    static let quicklinksLibrary = Self(tab: .quicklinks, title: "Library")
     static let quicklinksBehaviour = Self(tab: .quicklinks, title: "Behaviour")
     static let quicklinksImportExport = Self(tab: .quicklinks, title: "Import & Export")
 
@@ -90,6 +91,8 @@ extension SettingsAnchor {
     static let windowManagementLayoutCommands = Self(
         tab: .windowManagement, title: "Layout and Room Commands")
     static let windowManagementOptions = Self(tab: .windowManagement, title: "Options")
+    /// The catalog's commands, which span one section per group, so it names rows, never a header.
+    static let windowManagementCommands = Self(tab: .windowManagement, title: "Commands")
     static let windowManagementCustomSizes = Self(tab: .windowManagement, title: "Custom Sizes")
 
     static let clipboardClipboard = Self(tab: .clipboard, title: "Clipboard")
@@ -131,11 +134,19 @@ enum SettingsTarget: Hashable, Sendable {
     case section(SettingsAnchor)
     /// The row's visible title, which is also the catalog entry's — they are the same string.
     case row(SettingsAnchor, String)
+    /// A launcher entry by name, which the section's own filter field narrows its list to.
+    case launcherItem(SettingsAnchor, String)
 
     var anchor: SettingsAnchor {
         switch self {
-        case .section(let anchor), .row(let anchor, _): return anchor
+        case .section(let anchor), .row(let anchor, _), .launcherItem(let anchor, _): return anchor
         }
+    }
+
+    /// What the pane scrolls to and lights: a launcher entry's row has no id, so its section does.
+    var revealed: SettingsTarget {
+        if case .launcherItem(let anchor, _) = self { return .section(anchor) }
+        return self
     }
 
     var tab: SettingsTab { anchor.tab }

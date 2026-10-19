@@ -16,8 +16,8 @@ The command palette is a borderless floating `NSPanel` hosting SwiftUI; see
   no SwiftUI, no AppKit — so `palette-selection-test` compiles the shipped type rather than a copy.
   Section headers are not selectable and never consume an index.
 - **A menu owns native text input while it is open.** Its panel becomes key so the menu field gets an
-  AppKit field editor; the palette field stays mounted and inert beneath it. Return and keypad Enter
-  stay with that editor during marked-text composition, before a row can dismiss the menu.
+  AppKit field editor; the palette field stays mounted and inert beneath it. Return, keypad Enter and
+  Escape stay with that editor during marked-text composition, before a row can dismiss the menu.
 - **The search field is never mounted conditionally.** A screen that owns the keyboard itself hides it
   through `PaletteScreen.hidesSearchField` — opacity and hit testing, never an `if` — because
   flipping a branch around it tears its field editor down. The header is simply left empty.
@@ -473,6 +473,12 @@ only while the menu is open and clears it before restoring the palette's key sta
 
 Every row closes the menu behind it — `activateMenuItem` is the one path, and a row that reorders the
 list under itself (Move Favorite Up/Down) is no exception, so no row ever runs against a rebuilt menu.
+A row that leads somewhere deeper opens the next `OpenMenu` from its action, after that close:
+Configure Command… opens `.configureCommand`, whose rows open the `.setAlias` and `.setHotkey`
+panels in the same corner. Those two are `PaletteMenuContent(surface:)` — no rows, the popover's glass
+and clip — and `handleMenuPanelKey` hands them every key but Escape, so ↑/↓, Tab, ↵ and ⌘K reach the
+field (the recorder's own monitors take its keys before the panel sees them). See
+[launcher.md](launcher.md#user-aliases).
 
 `PopoverMenuItem.startsSection` draws a separator with the list inset (8pt) above and below it, so a
 row sits as far from it as from the search field's hairline. That height joins the menu's exact
