@@ -3,7 +3,7 @@
 What changed in each Pipcast release, newest first. The release workflow writes each version's
 section from its commits, and Pipcast shows this file in What's New.
 
-## 0.2.0
+## 0.2.0 — 2026-10-19
 
 5 new features, 5 fixes and 6 other changes.
 
