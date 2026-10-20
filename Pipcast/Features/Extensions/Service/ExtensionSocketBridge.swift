@@ -129,6 +129,8 @@ final class ExtensionSocketBridge: Sendable {
             }
         } catch {
             connections.withLock { $0[id] = nil }
+            connection.stateUpdateHandler = nil
+            connection.cancel()
             throw error
         }
     }
