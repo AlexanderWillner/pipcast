@@ -397,6 +397,7 @@ run hotkey-test            Pipcast/Features/HotKeys/Model/DoubleTapModifier.swif
                            Pipcast/Features/QuickActions/Model/BuiltInQuickAction.swift \
                            Pipcast/Features/QuickActions/Model/CustomQuickAction.swift \
                            Pipcast/Features/Launcher/Model/CommandID.swift \
+                           Pipcast/Features/Launcher/Model/CommandDeepLink.swift \
                            Pipcast/Features/Quicklinks/Model/Quicklink.swift \
                            Pipcast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Pipcast/Features/SystemActions/Model/SystemAction.swift \
@@ -626,6 +627,8 @@ run hyper-key-test         Pipcast/Features/HotKeys/Model/HIDKeyMapping.swift \
                            Pipcast/Features/HotKeys/Model/HyperKeyConflictPolicy.swift \
                            Pipcast/Features/HotKeys/Service/KeyboardRemapper.swift \
                            Tests/hyper-key-fixtures.swift
+run window-deeplink-test   Pipcast/Features/WindowManagement/Service/WindowTarget.swift \
+                           Pipcast/Features/WindowManagement/UI/WindowCommandCoordinator.swift
 run hotkey-dispatch-test   Pipcast/Features/HotKeys/Model/DoubleTapModifier.swift \
                            Pipcast/Features/HotKeys/Model/ModifierKey.swift \
                            Pipcast/Features/HotKeys/Model/HotKeyBinding.swift \

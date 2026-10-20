@@ -163,6 +163,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `system-action-test` | `SystemActions/Model/SystemAction.swift` |
 | `microphone-mute-test` | Native input mute, delayed confirmation, device switches and failures; injected CoreAudio calls only |
 | `volume-test` | `SystemActions/Model/VolumeLevel.swift` |
+| `window-deeplink-test` | Explicit external window targets with a retained own window, visible/hidden palette, ordinary shortcut targeting, disabled feature and Space dispatch; shipped coordinator and target resolver with recorded effects |
 | `window-command-test` | `WindowManagement/WindowCommand.swift`, `WindowPlacementEngine.swift`, `WindowActionMemory.swift` |
 | `window-layout-test` | `WindowManagement/Model/WindowLayout*.swift` and `CustomWindowSize*.swift` — the layout record, its geometry and its inverse, the plan and the store; custom sizes' units, frames and store |
 | `window-room-test` | `WindowManagement/Model/Room*.swift` — every room layout and its minimum sizes, the grid, arrangement reading, window matching, parking, the plan, Tab's choices and the three stores |
@@ -684,6 +685,13 @@ Opt into installed English spelling service checks with
 - Learned ranking still surfaces your habitual result for a short query
 - An application row drags onto the Dock and into a Finder window as a copy, never a move, and a
   landed drop hides the palette; a click still launches; no other kind of row drags
+- ⌘K › Copy Deeplink on Search Emoji & Symbols copies `pipcast-dev://command/search-emoji` in Debug;
+  Quit Pipcast, an application and a quicklink offer no such row. With TextEdit in front, `open` the
+  link from Terminal: the picker opens and a pick pastes into TextEdit. `open` the copied link of
+  Left Half: TextEdit's window moves. With Notes off, `pipcast-dev://command/show-notes` says the
+  command is off; `pipcast-dev://command/nope` says it isn't recognized; neither raises an alert.
+  Run this on a build macOS has already granted: an ungranted build's first-launch permission prompt
+  holds the front, so the link can't hand focus back and says it couldn't switch back instead
 
 ### Hotkeys
 
@@ -1000,6 +1008,9 @@ Opt into installed English spelling service checks with
   externally controlled mute reports failure. Rapid repeats while a change is pending are ignored
 - Holding a bound hotkey does **not** stack dialogs
 - Lock Screen locks from a global hotkey with the palette closed, including a Hyper-key binding
+- Open a window-command deeplink with Settings/Notes behind the palette and its ⌘K menu open:
+  the external app receives the placement, Pipcast's window stays unchanged, and Actions closes.
+  Repeat with the palette hidden and with `open -g`; then check ordinary shortcuts still place Notes.
 - Window commands move the window you were last in; cycle-on-repeat steps ½ → ⅓ → ⅔
 - "Top Half" lands flush with the top of the visible frame, on a secondary display too
 - A command with the Notes window focused places Notes, not the app behind it
@@ -1025,6 +1036,9 @@ Opt into installed English spelling service checks with
   the field shows `beta`; a locally filtered List/Grid shows matching rows, and a command using
   `onSearchTextChange` receives the query when it mounts. Repeat without fallback text: the field
   starts empty. A no-view command receives the prop without prefilling the search field.
+- Open a command deeplink with `context=%7B%22input%22%3A%22looked%20up%22%7D`: the command's
+  `props.launchContext` is `{ input: "looked up" }`. ⌘K › Copy Deeplink on that command copies a
+  `pipcast-dev://extensions/…` link that runs it again.
 - Every command under Settings ▸ Extensions has Add Alias, and Record Hotkey when the mode is
   supported; an alias set there finds the command from its start and shows the chip
 - Hiding the extension from the launcher, or turning off Show in launcher, dims its alias fields

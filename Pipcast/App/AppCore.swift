@@ -87,6 +87,10 @@ final class AppCore {
     /// Set when a layout editor should open with Settings; the pane consumes it.
     var pendingWindowLayoutEdit: WindowLayoutEditRequest?
     var pendingExtensionStoreInstall: ExtensionDeepLink.StoreInstall?
+    @ObservationIgnored private var linkFocusTask: Task<Void, Never>?
+    /// The last other app in front: where a link hands focus back once it has activated Pipcast.
+    @ObservationIgnored private var lastOtherApp = NSWorkspace.shared.frontmostApplication
+    @ObservationIgnored private var appActivationToken: NotificationCenter.ObservationToken?
 
     @ObservationIgnored private(set) lazy var snippetCoordinator = SnippetCoordinator(
         store: snippetsStore, listener: snippetListener, injector: textInjector,
@@ -381,8 +385,8 @@ final class AppCore {
             hotKeys.onRunSystemAction = { [weak self] id in
                 self?.systemActionCoordinator.runSystemAction(id: id)
             }
-            hotKeys.onRunWindowCommand = { [weak self] id in
-                self?.windowCommandCoordinator.runWindowCommand(id: id)
+            hotKeys.onRunWindowCommand = { [weak self] id, targetApp in
+                self?.windowCommandCoordinator.runWindowCommand(id: id, targetApp: targetApp)
             }
             hotKeys.onRunWindowLayout = { [weak self] id in
                 self?.windowLayoutCoordinator.runWindowLayout(id: id)
@@ -464,6 +468,7 @@ final class AppCore {
             snippetCoordinator.applySnippetsLauncherPresence()
 
             observeFeatureSwitches()
+            observeAppActivation()
 
             // First launch binds no hotkey, so guide once; the marker is written at show-time.
             if !OnboardingState.hasOnboarded {
@@ -485,15 +490,70 @@ final class AppCore {
 
     func handleOpenURL(_ url: URL) {
         guard ExtensionDeepLink.claims(url) else { return }
-        guard let route = ExtensionDeepLink.route(url: url) else {
-            paletteCoordinator.showPalette(mode: .launcher, restoreAnyMode: true)
+        if let action = CommandDeepLink.action(for: url) {
+            afterReturningFocus { [weak self] targetApp in
+                guard let self, !hotKeys.perform(action, targetApp: targetApp) else { return }
+                showMessage(String(localized: "This command is turned off"), tone: .danger)
+            }
             return
         }
-        switch route {
+        switch ExtensionDeepLink.route(url: url) {
         case .command(let link):
-            extensionCoordinator.runDeepLink(link)
+            afterReturningFocus { [weak self] _ in self?.extensionCoordinator.runDeepLink(link) }
         case .storeInstall(let install):
+            linkFocusTask?.cancel()
             extensionCoordinator.showStoreInstall(install)
+        case nil where (url.host() ?? "").isEmpty && url.path().isEmpty:
+            afterReturningFocus { [weak self] _ in
+                self?.paletteCoordinator.showPalette(mode: .launcher, restoreAnyMode: true)
+            }
+        case nil:
+            let message = String(localized: "Pipcast doesn’t recognize this link")
+            afterReturningFocus { [weak self] _ in self?.showMessage(message, tone: .danger) }
+        }
+    }
+
+    private func observeAppActivation() {
+        let workspace = NSWorkspace.shared
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        appActivationToken = workspace.notificationCenter.addObserver(
+            of: workspace, for: .didActivateApplication
+        ) { [weak self] message in
+            guard message.application.processIdentifier != ownPID else { return }
+            self?.lastOtherApp = message.application
+        }
+    }
+
+    /// Opening a link activates Pipcast, so what it runs must first hand the app in front back.
+    private func afterReturningFocus(_ run: @escaping @MainActor (NSRunningApplication) -> Void) {
+        linkFocusTask?.cancel()
+        let workspace = NSWorkspace.shared
+        let targetApp = NSApp.isActive ? lastOtherApp : workspace.frontmostApplication
+        // Still in front, a window command would place Pipcast's own window instead.
+        let refuse = { [weak self] in
+            let message = String(localized: "Couldn’t switch back to the app you were in")
+            self?.showMessage(message, tone: .danger)
+        }
+        guard let previous = targetApp,
+            previous.processIdentifier != ProcessInfo.processInfo.processIdentifier,
+            !previous.isTerminated
+        else { return refuse() }
+        if paletteCoordinator.isVisible { paletteCoordinator.hidePalette(restoreFocus: false) }
+        // Our own resign too: arriving late, it would hide a palette just shown.
+        let handedBack = {
+            !NSApp.isActive
+                && workspace.frontmostApplication?.processIdentifier == previous.processIdentifier
+        }
+        if handedBack() { return run(previous) }
+        previous.activate()
+        linkFocusTask = Task {
+            let deadline = ContinuousClock.now + .milliseconds(500)
+            while !handedBack(), ContinuousClock.now < deadline {
+                do { try await Task.sleep(for: .milliseconds(10)) } catch { return }
+            }
+            guard !Task.isCancelled else { return }
+            guard handedBack() else { return refuse() }
+            run(previous)
         }
     }
 
@@ -577,6 +637,7 @@ final class AppCore {
     }
 
     func prepareForTermination() {
+        linkFocusTask?.cancel()
         if settings.dictationEnabled { dictationCoordinator.prepareForTermination() }
         settingsFile?.flush()
         clipboardTextIndexer?.stop()
