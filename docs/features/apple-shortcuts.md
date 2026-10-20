@@ -74,8 +74,9 @@ shortcut keeps working. Its filter is membership in `AppIndex.matches`, so it an
 
 `HotKeyAction.appleShortcut(id:)` persists under `hotkey.appleShortcut.<uuid>` with a
 `boundAppleShortcutIDs` index. `appleShortcutsEnabled` rides in settings backups like the quicklink
-flags, since running a shortcut the user built grants no permission class. Bindings are not in
-`HotkeyBackup`, the same as extension commands.
+flags, since running a shortcut the user built grants no permission class. Bindings are included in
+`SettingsBackup.HotkeyBackup`, as are extension-command bindings. Apple Shortcut bindings still follow
+the normal cleanup after a successful library read; a backup does not create the underlying shortcuts.
 
 ## Standalone harness
 

@@ -19,7 +19,7 @@ struct LauncherCategorySwitchSection: View {
             ) {
                 SettingsFeatureToggleLabel(
                     anchor: anchor, title: title,
-                    subtitle: "Off hides all of them and stops their shortcuts.")
+                    subtitle: "Disables the feature and its associated shortcuts.")
             }
         }
     }
@@ -30,6 +30,7 @@ struct LauncherItemsSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
     let searchPrompt: LocalizedStringResource
+    var emptyMessage: LocalizedStringResource = "Nothing here yet."
 
     @Environment(AppIndex.self) private var appIndex
     @Environment(VisibilityStore.self) private var visibility
@@ -47,11 +48,13 @@ struct LauncherItemsSection: View {
         Section {
             SettingsFilterField(prompt: searchPrompt, query: $query)
             LauncherItemsList(
-                entries: entries, query: query, isEnabled: visibility.isKindEnabled(kind))
+                entries: entries, query: query, isEnabled: visibility.isKindEnabled(kind),
+                emptyMessage: emptyMessage)
         } header: {
             SettingsSectionHeader(anchor)
         }
         .settingsEnabled(visibility.isKindEnabled(kind))
+        .revealsLauncherItem(in: anchor, query: $query)
     }
 }
 
@@ -59,6 +62,7 @@ struct LauncherItemsList: View {
     let entries: [AppEntry]
     let query: String
     let isEnabled: Bool
+    var emptyMessage: LocalizedStringResource = "Nothing here yet."
 
     @Environment(VisibilityStore.self) private var visibility
     @Environment(AliasStore.self) private var aliases
@@ -67,7 +71,7 @@ struct LauncherItemsList: View {
 
     var body: some View {
         if entries.isEmpty {
-            Text(query.isEmpty ? "Nothing here yet." : "No matches for “\(query)”.")
+            Text(query.isEmpty ? emptyMessage : "No matches for “\(query)”.")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
         } else if entries.first?.kind != .application && entries.first?.kind != .appleShortcut {
@@ -128,5 +132,26 @@ struct LauncherItemRow: View {
             get: { visibility.isItemVisible(entry) },
             set: { visibility.setItemVisible($0, for: entry) }
         )
+    }
+}
+
+extension View {
+    /// ⌘K › Open Command Settings names a launcher entry; the list holding it narrows to it.
+    func revealsLauncherItem(in anchor: SettingsAnchor, query: Binding<String>) -> some View {
+        modifier(LauncherItemReveal(anchor: anchor, query: query))
+    }
+}
+
+private struct LauncherItemReveal: ViewModifier {
+    let anchor: SettingsAnchor
+    @Binding var query: String
+    @Environment(SettingsNavigationState.self) private var navigation
+
+    func body(content: Content) -> some View {
+        content.onChange(of: navigation.scrollRequest, initial: true) {
+            if case .launcherItem(anchor, let name)? = navigation.scrollRequest?.target {
+                query = name
+            }
+        }
     }
 }

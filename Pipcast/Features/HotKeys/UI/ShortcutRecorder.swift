@@ -54,7 +54,7 @@ struct ShortcutRecorder: View {
         if let binding = hotKeys.binding(for: action) {
             boundLabel(binding)
         } else {
-            Text(isRecording ? "Listening…" : "Record Hotkey")
+            Text(isRecording ? "Waiting for a shortcut…" : "Record Hotkey")
                 .font(Theme.Typography.keyCap)
                 .foregroundStyle(unsetInk)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -112,7 +112,7 @@ struct ShortcutRecorder: View {
     }
 }
 
-private struct ShortcutRecorderHitRegion: NSViewRepresentable {
+struct ShortcutRecorderHitRegion: NSViewRepresentable {
     let capture: ShortcutCaptureSession
 
     func makeNSView(context: Context) -> PassiveView {

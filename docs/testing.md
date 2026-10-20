@@ -15,9 +15,9 @@ The mechanical bar, in one place so it cannot drift. All five pass before a chan
 | A clean build | `xcodebuild … -configuration Debug CODE_SIGNING_ALLOWED=NO`, zero **new** warnings |
 | Docs still true | any doc your change made wrong, fixed in the same commit |
 
-There is no CI: every item is on you, run locally. CodeRabbit reviews each PR, but it is a reviewer,
-not a gate. Each is expanded below; the manual sweep at the end of this file is the sixth, judged by
-what you touched.
+CI (`.github/workflows/ci.yml`) runs the first four on every code change, PR or push to `main`; run
+them locally first anyway. CodeRabbit reviews each PR on top. Each is expanded below; the manual
+sweep at the end of this file is the sixth, judged by what you touched.
 
 The backup archive harness also checks overlapping Tinycast file selections and cancellation cleanup.
 The snippet harness checks backup binding destinations after collisions and deduplication; extension
@@ -29,6 +29,9 @@ storage and metadata harnesses check failed imports and preservation of local st
 ./Scripts/run-tests.sh              # all of them
 ./Scripts/run-tests.sh calc-test    # just one, while iterating
 ```
+
+One run at a time: runs share a scratch directory, so a second one refuses to start until the first
+finishes.
 
 `apple-intelligence-test` runs deterministic checks by default. Its real model generation is opt-in:
 
@@ -137,10 +140,12 @@ If a change touches anything in the right column, the harness on the left is man
 | `clipboard-text-test` | Apple Vision/PDF extraction, scheduling, retry backoff and recovery |
 | `paste-sequence-test` | `Clipboard/Model/PasteSequence.swift` — the walk's order, its end, and what starts it over |
 | `clipboard-test` | `Clipboard/Model/ClipboardStore.swift`, `ClipboardFilter.swift`, `ClipboardFileKind.swift`, the colour trio |
+| `clipboard-coordinator-test` | Edit Entry selection across query/type changes and pins, failed writes, deletion during editing and cancellation; isolated database and recorded clipboard effects |
 | `clipboard-thumbnail-test` | `Platform/Images/ImageThumbnail.swift` copies against the real store — a remove or clear mid-copy leaves none, also with a row and a preview copy in flight on their separate lanes, same-named JPEG/PNG copies stay apart, a timeout or cancel frees the lane, and a failed or unreadable copy falls back to the original; a stand-in script plays the helper |
 | `pasteboard-test` | `Clipboard/Service/ClipboardManager.swift` capture and `Paster.write` — what a Finder copy reads as, and what a file or image entry writes back |
 | `emoji-test` | `Emoji/Model/EmojiCatalog.swift`, `EmojiGridGeometry.swift`, the generated data and keyword packs |
 | `emoji-search-test` | `Emoji/Service/EmojiIndex.swift`, `FrequentEmojiStore.swift`, `Scripts/gen-emoji.js`'s keyword format, multilingual search |
+| `command-escape-tap-test` | `Palette/CommandEscapeTap.swift` — dedicated run-loop dispatch while main is blocked, timeout recovery, stale actions, installation cancellation and teardown; private ports and unposted events only |
 | `palette-navigation-test` | `Palette/PaletteState.swift`'s screen motions — `prepare`, `replace`, `push`, `pop` — and hover arming, pointer drift, scroll disarming and highlight tokens |
 | `palette-selection-test` | `Features/PaletteRowIndex.swift` |
 | `interface-size-test` | `DesignSystem/InterfaceMetrics.swift`, `Features/Settings/InterfaceSize.swift`, `Extensions/Model/ExtensionFormMetrics.swift` |
@@ -162,6 +167,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `system-action-test` | `SystemActions/Model/SystemAction.swift` |
 | `microphone-mute-test` | Native input mute, delayed confirmation, device switches and failures; injected CoreAudio calls only |
 | `volume-test` | `SystemActions/Model/VolumeLevel.swift` |
+| `window-deeplink-test` | Explicit external window targets with a retained own window, visible/hidden palette, ordinary shortcut targeting, disabled feature and Space dispatch; shipped coordinator and target resolver with recorded effects |
 | `window-command-test` | `WindowManagement/WindowCommand.swift`, `WindowPlacementEngine.swift`, `WindowActionMemory.swift` |
 | `window-layout-test` | `WindowManagement/Model/WindowLayout*.swift` and `CustomWindowSize*.swift` — the layout record, its geometry and its inverse, the plan and the store; custom sizes' units, frames and store |
 | `window-room-test` | `WindowManagement/Model/Room*.swift` — every room layout and its minimum sizes, the grid, arrangement reading, window matching, parking, the plan, Tab's choices and the three stores |
@@ -170,7 +176,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `uninstall-test` | all five pure files in `Uninstall/Model/` |
 | `uninstall-coordinator-test` | Confirmation and the post-confirmation quit gate; recorded quit and Trash effects only |
 | `quicklink-test` | all of `Quicklinks/Model/`, plus editor drafts and placeholder selection |
-| `quicklink-coordinator-test` | Opening and requested arguments, launcher editing, current enabled-state preservation, deletion during editing and feature gates; no platform effects or on-screen focus checks |
+| `quicklink-coordinator-test` | Opening and requested arguments, launcher editing, current enabled-state preservation, deletion during editing and feature gates, and website icons — when each is fetched, refresh, pruning, turning off, and fetches still in flight — through a fake download; no platform effects or on-screen focus checks |
 | `apple-shortcut-test` | all of `AppleShortcuts/Model/` — the `shortcuts list` parser and entry ids |
 | `snippets-test` | all of `Snippets/Model/` and `Snippets/Service/`, plus clipboard draft/save lifecycle through the coordinator, Actions Return composition through `Palette/MenuPanel.swift`, editor drafts, placeholder selection and `Platform/HealthTicker.swift` |
 | `notes-test` | all of `Notes/Model/` and `Notes/Service/`, including the Markdown parser, edit plans and reveal policy, plus the real fuzzy matcher and signposts |
@@ -255,7 +261,7 @@ by the release workflow with its configured credentials.
 
 ## Build and size checks
 
-A clean build is part of the bar; nothing builds the app for you, so this is on you.
+A clean build is part of the bar. CI builds Debug only, so the Release build is on you.
 
 ```sh
 xcodegen generate                 # only after editing project.yml
@@ -443,12 +449,103 @@ it three times, take the median.
 
 ### Recorded baselines
 
-Measured at the end of the 2026 refactor, on `main`. Useful as orders of magnitude, not as contracts.
+Measured **2026-10-17–18**, using source-built **Release** apps on a 16 GB Apple Silicon Mac,
+macOS 27.0.1 (26A434), Xcode 27.1 (27A9275), arm64. Baseline is `65f5613`; stable is
+`v0.11.19` (`126c998`), built in a separate worktree under its former Tinycast name.
+Final is `114ac9c6`: the baseline plus live extension-shortcut screen and selection resolution.
+
+Cells show **RSS / physical footprint in decimal MB**, each the median of three readings one
+second apart. These are one ordered workload per build, not three independent workload trials.
+
+| Checkpoint | Baseline `65f5613` | Stable `v0.11.19` | Final `114ac9c6` |
+| --- | ---: | ---: | ---: |
+| Launch idle | 103.4 / 39.7 | 95.5 / 26.5 | 104.5 / 39.6 |
+| Launcher open | 117.4 / 45.8 | 132.6 / 45.7 | 119.1 / 46.4 |
+| First palette close | 119.5 / 45.8 | 132.8 / 45.9 | 121.0 / 46.0 |
+| Clipboard with images open | 140.0 / 60.1 | 192.6 / 98.1 | 135.1 / 57.4 |
+| Clipboard closed | 138.3 / 56.6 | 188.9 / 94.7 | 133.4 / 53.9 |
+| Emoji open | 144.7 / 61.1 | 193.5 / 91.7 | 143.4 / 58.3 |
+| Emoji closed | 146.4 / 59.8 | 172.9 / 68.5 | 141.3 / 56.4 |
+| Calculator open | 146.7 / 59.0 | 173.4 / 67.7 | 141.9 / 56.0 |
+| Calculator closed | 147.3 / 59.7 | 174.0 / 68.8 | 142.4 / 56.7 |
+| Notes open | 159.6 / 64.1 | 186.3 / 73.7 | 156.1 / 61.9 |
+| Notes closed | 159.6 / 64.2 | 186.4 / 73.8 | 153.0 / 62.0 |
+| Snippets open | 160.3 / 63.8 | 187.2 / 73.5 | 156.3 / 62.2 |
+| Snippets closed | 161.2 / 65.0 | 181.0 / 64.4 | 157.1 / 62.7 |
+| Settings open | 211.9 / 108.0 | 226.0 / 102.8 | 208.3 / 104.6 |
+| Settings closed | 210.4 / 100.9 | 225.2 / 95.9 | 207.3 / 97.2 |
+| AI chat open | 214.3 / 104.8 | 228.9 / 101.1 | 211.2 / 103.1 |
+| AI chat closed | 214.0 / 101.3 | 228.6 / 99.5 | 211.1 / 100.7 |
+| Raycast extension open | 226.2 / 101.1 | 239.7 / 101.1 | 223.1 / 106.7 |
+| Raycast extension closed | 226.4 / 96.0 | 239.8 / 95.8 | 223.3 / 102.4 |
+| After sweep + 50 launcher cycles | 230.0 / 99.7 | 239.7 / 95.5 | 223.4 / 99.9 |
+
+**The 100 MB RSS budget is not met**, and closing the palette does not return memory to launch
+baseline. Final lifetime footprint peak is 108.1 MB. The former 40–80 MB normal-use range was unmeasured
+and has been replaced with these readings; the requirement in [standards.md](standards.md#performance-and-memory)
+remains unchanged.
+
+The isolated fixture has 100 clipboard texts, ten large PNGs (103.54 MB compressed), an 8,485-byte
+Markdown note, one snippet without a keyword and an offline 25-row Raycast list. Calculator input
+is `2+2`, Settings opens General and AI chat is empty. Main includes its unread What's New card;
+stable lacks it. AI, Notes, Snippets and Extensions are enabled; OCR and automatic updates are off.
+Profiling uses a build-only bundle-ID suffix and temporary `CFFIXED_USER_HOME`; installed data and
+permissions are untouched. Idle settles after startup; other checkpoints settle at least three seconds.
+Palette modes return to an empty launcher and hide; other windows close. The initial baseline
+Settings search briefly opened System Settings before using ⌘, correctly; no setting changed.
+The final Notes search briefly opened Apple Notes before using Show Notes; no note was edited.
+RSS and footprint use `proc_pid_rusage`; `ps`, `footprint`, `vmmap`, `heap` and `leaks` provide
+cross-checks and separate ownership diagnostics.
+
+The original snapshot fix `b8f8fc4e` was also measured in a separate launcher-only run,
+starting after one warm open/close:
+
+| Additional cycles | Baseline RSS / footprint MB | Original fix RSS / footprint MB |
+| --- | ---: | ---: |
+| 0 | 128.8 / 47.9 | 122.1 / 46.8 |
+| 50 | 133.8 / 52.5 | 124.3 / 45.7 |
+| 100 | 138.9 / 57.3 | 124.6 / 46.1 |
+
+Footprint growth from cycles 50 to 100 drops from 4.85 MB to 0.44 MB. The original fix includes an
+extra warm verification retry. Its native heap checks retain one launcher-row array through 100 empty
+cycles and two through 100 Finder-query cycles. Final retains one 81,920-byte array after 50 cycles.
+Final total footprint after the full sweep is 99.86 MB versus baseline 99.70 MB: no clear saving there.
+These runs are not an hours-long soak or proof of zero growth.
+
+The original snapshot fix had these timings:
+
+| Timing scope | Baseline | Original fix `b8f8fc4e` |
+| --- | ---: | ---: |
+| Startup through initial frame, median of 3 | 143.60 ms | 144.97 ms |
+| Palette show signpost, initial 5 shows | 19.92 ms | 21.37 ms |
+| Palette show signpost, additional 20 shows | 20.64 ms | 20.59 ms |
+
+Instruments launch spans System Interface Initialization through Initial Frame Rendering; palette
+spans `PaletteWindowController.show`. Launch ranges overlap. The initial palette difference prompted
+the larger batch; warmup histories differ, so these timings establish no speedup.
+
+A fresh same-day baseline/final comparison after the selection follow-up measured:
+
+| Timing scope | Baseline `65f5613` | Final `114ac9c6` |
+| --- | ---: | ---: |
+| Startup through initial frame, median of 3 | 167.82 ms | 167.79 ms |
+| Palette show signpost, 20 actual hotkey openings | 31.71 ms | 30.20 ms |
+
+Launch and palette ranges overlap; palette warmup histories differ. No speedup is claimed.
+Traces without complete show intervals and an interrupted warmup batch were excluded.
+
+Settings first use remains the largest unresolved closed-screen increment (about 34–38 MB footprint).
+Its window/state objects release; runtime metadata, symbol caches and allocator residue remain.
+Native leaks reports about 20 KB of small NSXPC/accessibility objects. Settings pane type erasure
+and allocator pressure relief were separately rebuilt and measured, then reverted without clear benefit.
+
+#### Other historical refactor measurements
+
+These older measurements remain useful as orders of magnitude, not as current measurements or contracts.
 
 | | Value |
 | --- | --- |
 | Release binary | 3,655,736 B (from 3,471,592 B at the start of the refactor) |
-| Resident memory | 40–80 MB in normal use; the hard ceiling is 100 MB |
 | `SettingsPaneScanner` warm scan | 0.014 ms (16.5 ms cold), 52 panes |
 | Largest view / owner | `RootPaletteView` 662 lines, `AppCore` 284 lines |
 | Comment density | 1,653 of 27,289 source lines (6.1%) |
@@ -458,9 +555,6 @@ Measured at the end of the 2026 refactor, on `main`. Useful as orders of magnitu
 | `ClipboardStore.pinnedItems` | 27–127 µs per uncached search, 1,000-row window — no cache earns its invalidation yet |
 | Rendered Notes editor, 100,000 characters | 30 ms install and full restyle; 7.5, 5.9 and 3.3 ms per character typed at the end, middle and start (5.2, 3.1 and 0.6 ms with rendering off); 0.6 ms per caret move |
 | `count items of trash` | 5,000 ms against a cold Finder on an *empty* Trash, 110 ms warm — why AppleScript is detached |
-
-Launch time, allocation counts and RSS have never been captured as numbers. The signposts are in place,
-so any of them can be taken from `main` whenever a change makes it worth knowing.
 
 ## Manual regression sweep
 
@@ -498,10 +592,11 @@ Opt into installed English spelling service checks with
   and run it: Escape returns to the launcher **with the query still typed and the row still
   selected**, and the next press clears it. The same screen from its own global hotkey hides the
   palette instead, and shows its own header icon rather than a back chevron
-- ⌘⎋ from any depth lands on an empty root search with the window still open — **must be checked on
-  a real keyboard**: macOS claims the chord, so `CommandEscapeTap` is the only thing that delivers it
-  and it needs Accessibility granted to the running build. With the palette closed, ⌘⎋ still does
-  whatever macOS does with it
+- ⌘esc from any depth lands on an empty root search with the window still open — **must be checked
+  on a real keyboard**: macOS claims the chord, so `CommandEscapeTap` is the only thing that
+  delivers it and it needs Accessibility granted to the running build. With the palette closed, ⌘esc
+  still does whatever macOS does with it. Open a menu or dialog over the palette and verify ⌘esc
+  passes through while the palette is not key; after dismissing it, the palette chord works again
 - A bare ⌫ in an empty field walks the same path Escape does
 - General ▸ Escape Key Behavior set to `Close window and pop to root`: Escape on any screen closes
   the window, and reopening lands on the root search whatever Pop to Root Search says
@@ -566,7 +661,7 @@ Opt into installed English spelling service checks with
 - Copying something else while "Reading text…" shows leaves that copy on the pasteboard, and the
   pill says **Clipboard changed, text not copied**
 - A tall phone screenshot and a full-width Retina screenshot copy each line once, whole, in order
-- A copy from an excluded app (Settings ▸ Clipboard ▸ Disabled Applications) is **not** recorded
+- A copy from an excluded app (Settings ▸ Clipboard ▸ Excluded Applications) is **not** recorded
 - Password-manager copies are still not recorded
 - Off (Settings ▸ Clipboard ▸ Enable Clipboard History): nothing new is recorded, the launcher rows
   and their shortcuts are gone, the menu-bar row is gone, and Tab rings straight past the screen
@@ -594,6 +689,13 @@ Opt into installed English spelling service checks with
 - Learned ranking still surfaces your habitual result for a short query
 - An application row drags onto the Dock and into a Finder window as a copy, never a move, and a
   landed drop hides the palette; a click still launches; no other kind of row drags
+- ⌘K › Copy Deeplink on Search Emoji & Symbols copies `pipcast-dev://command/search-emoji` in Debug;
+  Quit Pipcast, an application and a quicklink offer no such row. With TextEdit in front, `open` the
+  link from Terminal: the picker opens and a pick pastes into TextEdit. `open` the copied link of
+  Left Half: TextEdit's window moves. With Notes off, `pipcast-dev://command/show-notes` says the
+  command is off; `pipcast-dev://command/nope` says it isn't recognized; neither raises an alert.
+  Run this on a build macOS has already granted: an ungranted build's first-launch permission prompt
+  holds the front, so the link can't hand focus back and says it couldn't switch back instead
 
 ### Hotkeys
 
@@ -652,6 +754,10 @@ Opt into installed English spelling service checks with
   type a query, use the arrows and press Return; the palette must accept keyboard input again
 - Pin, duplicate, delete and Open with Default all behave; import and export round-trip
 - Display order is pinned first by pin time, then by name
+- With **Fetch website icons** off, no quicklink makes a network request. Turning it on gives
+  `github.com` its icon in the launcher, Search Quicklinks, the editor and Settings; an unknown domain
+  keeps the globe. A chosen symbol overrides the icon, Automatic brings it back, Refresh Website Icon
+  offline shows "Couldn’t fetch website icon", and turning it off restores every globe
 
 ### Apple Shortcuts
 
@@ -906,6 +1012,9 @@ Opt into installed English spelling service checks with
   externally controlled mute reports failure. Rapid repeats while a change is pending are ignored
 - Holding a bound hotkey does **not** stack dialogs
 - Lock Screen locks from a global hotkey with the palette closed, including a Hyper-key binding
+- Open a window-command deeplink with Settings/Notes behind the palette and its ⌘K menu open:
+  the external app receives the placement, Pipcast's window stays unchanged, and Actions closes.
+  Repeat with the palette hidden and with `open -g`; then check ordinary shortcuts still place Notes.
 - Window commands move the window you were last in; cycle-on-repeat steps ½ → ⅓ → ⅔
 - "Top Half" lands flush with the top of the visible frame, on a secondary display too
 - A command with the Notes window focused places Notes, not the app behind it
@@ -931,6 +1040,9 @@ Opt into installed English spelling service checks with
   the field shows `beta`; a locally filtered List/Grid shows matching rows, and a command using
   `onSearchTextChange` receives the query when it mounts. Repeat without fallback text: the field
   starts empty. A no-view command receives the prop without prefilling the search field.
+- Open a command deeplink with `context=%7B%22input%22%3A%22looked%20up%22%7D`: the command's
+  `props.launchContext` is `{ input: "looked up" }`. ⌘K › Copy Deeplink on that command copies a
+  `pipcast-dev://extensions/…` link that runs it again.
 - Every command under Settings ▸ Extensions has Add Alias, and Record Hotkey when the mode is
   supported; an alias set there finds the command from its start and shows the chip
 - Hiding the extension from the launcher, or turning off Show in launcher, dims its alias fields

@@ -10,7 +10,7 @@
   `ClipboardDefaultAction.action(for:on:)` is the only place that says which chord runs what.**
   Paste owns ↵, Copy ⌘↵ and Paste as Plain Text ⌃⌘↵; `clipboardDefaultAction` moves one to ↵ and
   Paste takes the chord it left, so a Copy default keeps the ↵/⌘↵ swap it always had.
-  `ClipboardCoordinator.activate(_:chord:)` runs it, and ⌘1…⌘0 on a pin and a double-click go
+  `ClipboardCoordinator.activate(_:chord:)` runs it, and ⌘1…⌘0 on a visible row and a double-click go
   through the same call, so no surface can drift from the setting; ⌥↵ pastes regardless, since
   keeping the window open is a paste-only idea. The ⌘K menu lists the three in chord order, which
   puts the default first with the ↵ chip.
@@ -19,6 +19,9 @@
   plain-text default pastes it as it is, and ⌃⌘↵ on it falls back to ⌘↵ as on every other screen.
 - **Clipboard writes stamp a private `internalType` marker** so the poller skips Pipcast's own writes.
   If the writer and the poller ever disagree, the app re-captures its own pastes in a loop.
+- **Edit Entry rewrites a text entry in place and never adds one.** The id, pin and source app
+  stay; saving then copies it as Copy to Clipboard does, marker included, so the poller does not
+  record the edit a second time.
 - **Paste Sequentially never promotes, and its walk is frozen at the first press.** `PasteSequence`
   keeps every entry's id, newest first, and resolves each against the live history, so a promotion
   cannot repeat or skip an entry and a deleted one is passed over rather than pasted.
@@ -265,6 +268,31 @@ A save failure keeps the draft open for correction or retry.
 are disabled the action is absent and the shortcut does nothing; neither path enables snippets or
 requests keyword-monitoring consent. An active IME composition also leaves the shortcut unhandled.
 
+## Edit an entry
+
+**Edit Entry** (⌘E, or its ⌘K row) opens a `.text` entry in a Pipcast dialog over the dimmed
+palette. A file entry never offers it, because its text is a path and rewriting it would repoint
+the row. `ClipboardEditField` is the dialog's accessory: a code-mode `FormTextArea`, since smart
+quotes or autocorrect would corrupt a token, at a fixed height that scrolls rather than grows the
+panel. ↵ starts a new line as in any editor, so ⌘↵ saves and Esc cancels —
+`DialogAccessory.acceptsLineBreaks` is what hands ↵ to the field. An input method's ↵ always commits
+its marked text, in every dialog.
+
+`ClipboardStore.updateText(_:of:)` rewrites the row's `text` under the same id, so the `items_au`
+trigger reindexes FTS and nothing else changes. `Paster.copy` then writes it marked and promotes it
+unless pinned, and the palette stays up with the row selected and scrolled into view, so ⌘V pastes
+the edit and so does ↵ on the row. A query or type filter that hides the edit is cleared; matching
+ones stay. The palette preserves the row through its query and filter observers, including a pin
+past the first row. An empty edit changes nothing. An entry deleted while open — by
+retention, say — is not brought back: `updateText` answers nil and the text goes on the pasteboard
+**unmarked**, entering history as a new copy rather than being lost. A row found by FTS past the
+resident window has no in-memory copy to replace, so the store drops its search memo instead.
+Database write failures throw instead of taking the deleted-entry path: the HUD reports the failure,
+and neither the clipboard nor the selection changes.
+An edit is held to `ClipboardStore.maxTextLength`, the same 32,000 characters capture records, so a
+longer one is refused with a HUD and nothing changes; past that, every later paste of the entry
+would reindex it on the main actor.
+
 ## Type filter
 
 The clipboard header carries a `ClipboardFilterButton` at the trailing edge of the search field —
@@ -397,9 +425,9 @@ Paste and Keep Window Open (⌥↵) does not promote any entry. The rows hold st
 selection, so ↓ then ⌥↵ pastes a run of entries in order. `Paster.write` therefore only writes the
 pasteboard; `paste` and `copy` promote after it, and `pasteInPlace` does not.
 
-The ten palette slots shared with launcher favorites address this visible Pinned block too. A slot
-uses the current query and type filter, so its first entry is the first visible pin; a missing slot is
-a no-op. They are fixed to the physical number row, with ⌘1…⌘9 then ⌘0 as their labels.
+The ten palette slots shared with launcher favorites address the first ten visible rows, pins
+leading. A slot uses the current query and type filter, so its first entry is the first visible row;
+a missing slot is a no-op. They are fixed to the physical number row, with ⌘1…⌘9 then ⌘0 as their labels.
 
 `load` reads every pinned row plus the newest 1000 unpinned ones as two indexed branches over a
 partial index on `pinned_at` (`Tests/clipboard-test.swift` covers the shape). The single

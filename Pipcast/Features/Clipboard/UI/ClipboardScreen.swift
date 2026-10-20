@@ -44,7 +44,7 @@ struct ClipboardScreen: PaletteScreen {
             deleteAll()
             return true
         case .pin: return pin(at: selection)
-        case .numberSlot(let index): return activatePinned(at: index)
+        case .numberSlot(let index): return activateSlot(at: index)
         case .createSnippet:
             guard let item = item(at: selection) else { return false }
             return core.snippetCoordinator.createSnippet(from: item)
@@ -52,15 +52,23 @@ struct ClipboardScreen: PaletteScreen {
             guard let item = item(at: selection), item.offersTextExtraction else { return false }
             core.clipboardCoordinator.copyImageText(item)
             return true
+        case .showInFinder:
+            guard let item = item(at: selection), item.kind != .text else { return false }
+            core.clipboardCoordinator.revealClip(item)
+            return true
+        case .edit:
+            guard let item = item(at: selection), item.kind == .text else { return false }
+            Task { await core.clipboardCoordinator.editClip(item) }
+            return true
         default: return false
         }
     }
 
-    private func activatePinned(at index: Int) -> Bool {
-        guard let item = store.pinnedItem(at: index, in: vm.query, filter: vm.clipboardFilter) else {
-            return false
-        }
-        core.clipboardCoordinator.activate(item)
+    /// ⌘1…⌘0 — the Nth visible row, so the history answers with or without pins.
+    private func activateSlot(at index: Int) -> Bool {
+        let rows = rows
+        guard rows.indices.contains(index) else { return false }
+        core.clipboardCoordinator.activate(rows[index])
         return true
     }
 
@@ -187,28 +195,28 @@ enum ClipboardActionsMenu {
             ) {
                 core.clipboardCoordinator.pasteKeepingWindowOpen(item)
             })
-        if item.isPinned {
+        if item.kind == .text {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Unpin Entry"), systemImage: "pin.slash", startsSection: true,
-                    shortcut: "⌘."
+                    title: String(localized: "Edit Entry"), systemImage: "pencil", startsSection: true,
+                    shortcut: "⌘E"
                 ) {
-                    core.clipboardCoordinator.togglePinnedClip(item)
-                })
-        } else {
-            items.append(
-                PopoverMenuItem(
-                    title: String(localized: "Pin Entry"), systemImage: "pin", startsSection: true,
-                    shortcut: "⌘."
-                ) {
-                    core.clipboardCoordinator.togglePinnedClip(item)
+                    Task { await core.clipboardCoordinator.editClip(item) }
                 })
         }
+        items.append(
+            PopoverMenuItem(
+                title: item.isPinned ? String(localized: "Unpin Entry") : String(localized: "Pin Entry"),
+                systemImage: item.isPinned ? "pin.slash" : "pin", startsSection: item.kind != .text,
+                shortcut: "⌘."
+            ) {
+                core.clipboardCoordinator.togglePinnedClip(item)
+            })
         if core.snippetCoordinator.canCreateSnippet(from: item) {
             items.append(
                 PopoverMenuItem(
                     title: String(localized: "Create Snippet"), systemImage: "plus.rectangle.on.rectangle",
-                    startsSection: true, shortcut: "⌘S"
+                    shortcut: "⌘S"
                 ) {
                     core.snippetCoordinator.createSnippet(from: item)
                 })
@@ -217,16 +225,15 @@ enum ClipboardActionsMenu {
             items.append(
                 PopoverMenuItem(
                     title: String(localized: "Copy Text"), systemImage: "doc.text.viewfinder",
-                    startsSection: true, shortcut: "⇧⌘T"
+                    shortcut: "⇧⌘T"
                 ) {
                     core.clipboardCoordinator.copyImageText(item)
                 })
         }
-        if item.kind == .image || item.kind == .file {
+        if item.kind != .text {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Show in Finder"), systemImage: "folder",
-                    startsSection: !item.offersTextExtraction
+                    title: String(localized: "Show in Finder"), systemImage: "folder", shortcut: "⌘F"
                 ) {
                     core.clipboardCoordinator.revealClip(item)
                 })

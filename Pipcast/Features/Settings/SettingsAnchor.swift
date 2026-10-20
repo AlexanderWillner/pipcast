@@ -34,6 +34,7 @@ extension SettingsAnchor {
 
     static let quicklinksQuicklinks = Self(tab: .quicklinks, title: "Quicklinks")
     static let quicklinksCommands = Self(tab: .quicklinks, title: "Commands")
+    static let quicklinksLibrary = Self(tab: .quicklinks, title: "Library")
     static let quicklinksBehaviour = Self(tab: .quicklinks, title: "Behaviour")
     static let quicklinksImportExport = Self(tab: .quicklinks, title: "Import & Export")
 
@@ -90,13 +91,15 @@ extension SettingsAnchor {
     static let windowManagementLayoutCommands = Self(
         tab: .windowManagement, title: "Layout and Room Commands")
     static let windowManagementOptions = Self(tab: .windowManagement, title: "Options")
+    /// The catalog's commands, which span one section per group, so it names rows, never a header.
+    static let windowManagementCommands = Self(tab: .windowManagement, title: "Commands")
     static let windowManagementCustomSizes = Self(tab: .windowManagement, title: "Custom Sizes")
 
     static let clipboardClipboard = Self(tab: .clipboard, title: "Clipboard")
     static let clipboardCommands = Self(tab: .clipboard, title: "Commands")
     static let clipboardHistory = Self(tab: .clipboard, title: "History")
     static let clipboardDisabledApplications = Self(
-        tab: .clipboard, title: "Disabled Applications")
+        tab: .clipboard, title: "Excluded Applications")
 
     static let emojiCommands = Self(tab: .emoji, title: "Commands")
     static let emojiAppearance = Self(tab: .emoji, title: "Appearance")
@@ -109,8 +112,12 @@ extension SettingsAnchor {
 
     static let extensionsExtensions = Self(tab: .extensions, title: "Extensions")
     static let extensionsCompatibility = Self(tab: .extensions, title: "Compatibility")
-    static let extensionsInstalled = Self(tab: .extensions, title: "Installed")
-    static let extensionsInstall = Self(tab: .extensions, title: "Install")
+    static let extensionsInstalled = Self(
+        tab: .extensions,
+        title: LocalizedStringResource("extensions-installed-section", defaultValue: "Installed"))
+    static let extensionsInstall = Self(
+        tab: .extensions,
+        title: LocalizedStringResource("extensions-install-section", defaultValue: "Install"))
     static let extensionsStorage = Self(tab: .extensions, title: "Storage")
 
     static let permissionsAccessibility = Self(tab: .permissions, title: "Accessibility")
@@ -132,11 +139,19 @@ enum SettingsTarget: Hashable, Sendable {
     case section(SettingsAnchor)
     /// The row's visible title, which is also the catalog entry's — they are the same string.
     case row(SettingsAnchor, String)
+    /// A launcher entry by name, which the section's own filter field narrows its list to.
+    case launcherItem(SettingsAnchor, String)
 
     var anchor: SettingsAnchor {
         switch self {
-        case .section(let anchor), .row(let anchor, _): return anchor
+        case .section(let anchor), .row(let anchor, _), .launcherItem(let anchor, _): return anchor
         }
+    }
+
+    /// What the pane scrolls to and lights: a launcher entry's row has no id, so its section does.
+    var revealed: SettingsTarget {
+        if case .launcherItem(let anchor, _) = self { return .section(anchor) }
+        return self
     }
 
     var tab: SettingsTab { anchor.tab }

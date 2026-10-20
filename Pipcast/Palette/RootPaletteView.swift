@@ -50,12 +50,17 @@ struct RootPaletteView: View {
     private var screen: any PaletteScreen {
         switch vm.mode {
         case .launcher:
+            // A leading `?` scopes root search to settings; the mode stays launcher.
+            if SettingsSearchScreen.scope(of: vm.query) != nil {
+                return SettingsSearchScreen(core: core, vm: vm, openActions: openActions)
+            }
             return LauncherScreen(
                 appIndex: appIndex, favorites: favorites, visibility: visibility,
                 currencyRates: currencyRates, core: core, vm: vm, running: selectionIsRunning,
                 meeting: core.calendarCoordinator.cardedMeeting,
                 whatsNew: core.changelogCoordinator.pinnedRelease, now: meetingClock.now,
                 openActions: openActions, openArgumentOptions: openArgumentOptions,
+                openConfiguration: { open(.configureCommand($0), highlighting: 0) },
                 scrollToFollow: { scroll = ScrollIntent(kind: .follow) })
         case .uninstall:
             return UninstallScreen(
@@ -296,8 +301,40 @@ struct RootPaletteView: View {
             return extensionCommandScreen?.searchAccessoryMenu(
                 searchQuery: ActionMenuSearchQuery(vm.menuQuery),
                 menuSelection: $menuSelection, onActivate: activateMenuItem)
+        case .configureCommand(let entry):
+            return configureCommandMenu(entry)
+        case .setAlias(let entry):
+            let alias = core.aliases.alias(for: entry.preferenceKey)
+            return PaletteMenuContent(surface: { attachment in
+                AnyView(
+                    CommandAliasPanel(
+                        entry: entry, alias: alias, attachment: attachment,
+                        onSave: { saveAlias($0, for: entry) }, onClose: closeMenus
+                    )
+                    .id(vm.menuPresentationToken))
+            })
+        case .setHotkey(let entry, _, _):
+            return PaletteMenuContent(surface: { attachment in
+                AnyView(CommandHotkeyPanel(entry: entry, attachment: attachment, onClose: closeMenus))
+            })
         case nil: return nil
         }
+    }
+
+    private func configureCommandMenu(_ entry: AppEntry) -> PaletteMenuContent {
+        let filtered = CommandConfigurationMenu.content(
+            entry: entry, core: core,
+            setHotkey: { action in
+                let previous = core.hotKeys.binding(for: action)
+                open(.setHotkey(entry, action, previous: previous), highlighting: 0)
+            },
+            setAlias: { open(.setAlias(entry), highlighting: 0) }
+        ).matching(ActionMenuSearchQuery(vm.menuQuery))
+        return PaletteMenuContent(
+            popover: filtered.content, selection: $menuSelection,
+            search: PopoverMenu.Search(
+                placeholder: String(localized: "Search for actions…"), placement: .bottom),
+            onActivate: activateMenuItem, preferredSelection: filtered.bestMatch)
     }
 
     /// What one render resolved: building a screen is a list build, so the header reads this.
@@ -370,8 +407,7 @@ struct RootPaletteView: View {
                     value: core.isDimmingPaletteForDialog
                 )
                 .clipShape(RoundedRectangle(cornerRadius: metrics.radius.panel, style: .continuous)),
-                resolution: resolution),
-            screen: screen, selection: sel)
+                resolution: resolution))
     }
 
     /// The emoji grid's observers, split out so `stateObservers` stays within type-checker reach.
@@ -408,7 +444,10 @@ struct RootPaletteView: View {
             .onChange(of: openMenu) {
                 guard menuOpen else { return }
                 syncMenuPanel(presenting: true)
+                // Only once the panel is key: the capture cancels whenever a window resigns.
+                if case .setHotkey(_, let action, _) = openMenu { core.hotKeys.recordingAction = action }
             }
+            .onChange(of: core.hotKeys.recordingAction) { hotkeyRecordingChanged() }
             // The hosted tree is its own hierarchy, so the highlight has to be pushed into it.
             .onChange(of: menuSelection) { syncMenuPanel(presenting: false) }
             .onChange(of: vm.menuQuery) { menuQueryChanged() }
@@ -429,7 +468,7 @@ struct RootPaletteView: View {
             .modifier(PaletteHideObserver { if menuOpen { closeMenus() } })
             .onChange(of: vm.query) {
                 if vm.collapseQueryLineBreaks() { return }
-                land(restoringNavigation: true)
+                land(restoringSelection: true)
                 if vm.mode == .fileSearch {
                     fileSearch.search(vm.query, filter: vm.fileSearchFilter, folder: vm.fileSearchFolder)
                 }
@@ -450,7 +489,7 @@ struct RootPaletteView: View {
             .modifier(
                 ExtensionSelectionForwarder(screen: resolution.extensionScreen, selection: vm.selection))
             // A narrower list means the old index points at a different row, or at none.
-            .onChange(of: vm.clipboardFilter) { land(restoringNavigation: true) }
+            .onChange(of: vm.clipboardFilter) { land(restoringSelection: true) }
             // The filter is part of the query, so narrowing re-runs it rather than thinning rows.
             .onChange(of: vm.fileSearchFilter) {
                 guard vm.mode == .fileSearch else { return }
@@ -469,7 +508,7 @@ struct RootPaletteView: View {
                 vm.emojiCategoryFilter = .all
                 vm.emojiGridColumnsOverride = nil
                 if menuOpen { closeMenus() }
-                land(restoringNavigation: true)
+                land(restoringSelection: true)
                 searchFocused = !screen.hidesSearchField
                 if vm.mode != .uninstall { uninstall.cancel() }
                 // Entering with no query is the blank screen's own request for recents.
@@ -529,9 +568,7 @@ struct RootPaletteView: View {
 
     /// Split from `body`: one chain of this length is past what the type-checker will infer.
     @ViewBuilder
-    private func keyHandlers(
-        _ content: some View, screen resolved: any PaletteScreen, selection sel: Int
-    ) -> some View {
+    private func keyHandlers(_ content: some View) -> some View {
         content
             // Repeat included: holding the key keeps stepping, as the bare-key form does.
             .onKeyPress(keys: [.downArrow], phases: [.down, .repeat]) { press in
@@ -602,7 +639,6 @@ struct RootPaletteView: View {
                 return screen.alternate(at: selection) ? .handled : .ignored
             }
             .onKeyPress(.escape) {
-                if menuPanel.isClosing { return .handled }
                 // An open control list owns Escape before the palette beneath it.
                 if vm.isControlListOpen { return .ignored }
                 switch PaletteEscapeAction.resolve(
@@ -637,7 +673,10 @@ struct RootPaletteView: View {
             }
             .modifier(
                 ExtensionShortcutKeys(
-                    screen: { menuOpen ? nil : resolved as? ExtensionCommandScreen }, selection: sel)
+                    screen: {
+                        guard !menuOpen, vm.mode == .extensionCommand else { return nil }
+                        return screen as? ExtensionCommandScreen
+                    }, selection: { selection(in: $0) })
             )
             .onKeyPress(phases: .down) { press in
                 guard press.modifiers.contains(.command),
@@ -846,15 +885,11 @@ struct RootPaletteView: View {
                 Text("Quick AI")
                     .font(metrics.typography.bar)
                     .foregroundStyle(Theme.Colors.textSecondary)
-                SymbolImage(
-                    name: CommandID.quickAI.sfSymbol,
-                    size: metrics.scaled(Theme.Typography.menuSymbolSize), monochrome: true
-                )
-                .foregroundStyle(Theme.Colors.textSecondary)
-                .accessibilityHidden(true)
+                KeyCapChip(text: "⇥", style: .outline)
+                    .accessibilityHidden(true)
             }
         }
-        .help("Ask Quick AI")
+        .help("Press Tab to ask Quick AI")
     }
 
     /// Resolved through `PaletteTabAction`, so the hint cannot promise the wrong destination.
@@ -1158,6 +1193,10 @@ struct RootPaletteView: View {
     }
 
     private func closeMenus() {
+        // Recording pauses every hotkey, so it can't outlive the panel narrating it.
+        if case .setHotkey(_, let action, _) = openMenu, core.hotKeys.recordingAction == action {
+            core.hotKeys.recordingAction = nil
+        }
         menuPanel.hide()
         if menuOpen { searchFocused = !screen.hidesSearchField }
         openMenu = nil
@@ -1193,12 +1232,11 @@ struct RootPaletteView: View {
         if presenting, let hostWindow {
             menuPanel.show(
                 view, corner: corner, parent: hostWindow, core: core,
-                clipPath: content.clipPath, motion: content.motion,
+                clipPath: content.clipPath,
                 onKeyDown: handleMenuPanelKey, onDismiss: closeMenus)
         } else {
             menuPanel.update(
-                view, corner: corner, core: core, clipPath: content.clipPath,
-                motion: content.motion)
+                view, corner: corner, core: core, clipPath: content.clipPath)
         }
     }
 
@@ -1209,6 +1247,8 @@ struct RootPaletteView: View {
             escapeMenu()
             return true
         }
+        // The panel's own field takes every other key, ↵ included.
+        if openMenu?.isConfigurationPanel == true { return false }
         if vm.mode.isNativeEditor,
             (hostWindow as? PalettePanel)?.onCommandShortcut?(event) == true
         {
@@ -1279,6 +1319,20 @@ struct RootPaletteView: View {
         return false
     }
 
+    private func saveAlias(_ alias: String, for entry: AppEntry) {
+        closeMenus()
+        CommandConfigurationMenu.saveAlias(alias, for: entry, core: core)
+    }
+
+    /// The recorder ends itself — a binding, Escape, ⌫ or a click away — and the panel goes too.
+    private func hotkeyRecordingChanged() {
+        guard case .setHotkey(_, let action, let previous) = openMenu,
+            core.hotKeys.recordingAction != action
+        else { return }
+        closeMenus()
+        CommandConfigurationMenu.confirmHotkey(action, previous: previous, core: core)
+    }
+
     private func escapeMenu() {
         if vm.menuQuery.isEmpty {
             closeMenus()
@@ -1311,7 +1365,7 @@ struct RootPaletteView: View {
     private var menuCorner: MenuPanelCorner? {
         switch openMenu {
         case .app: .bottomLeading
-        case .actions: .bottomTrailing
+        case .actions, .configureCommand, .setAlias, .setHotkey: .bottomTrailing
         case .argumentOptions: .belowHeaderTrailing
         case .inputOptions(let corner): corner
         case .clipboardFilter, .fileSearchFilter, .emojiCategory, .aiModel, .aiReasoning,
@@ -1324,8 +1378,8 @@ struct RootPaletteView: View {
     // MARK: - Actions
 
     /// Every reset lands here, so handlers that fire together agree in whatever order they run.
-    private func land(restoringNavigation: Bool = false) {
-        let restored = restoringNavigation ? vm.restoredSelection : nil
+    private func land(restoringSelection: Bool = false) {
+        let restored = restoringSelection ? vm.restoredSelection : nil
         let landing = restored.map { min($0, max(screen.rows.count - 1, 0)) } ?? screen.landingSelection
         vm.selection = landing
         scroll = ScrollIntent(kind: restored != nil ? .follow : landing == 0 ? .top : .center)
@@ -1404,12 +1458,11 @@ struct RootPaletteView: View {
 
     private func activateNumberSlot(_ index: Int) {
         guard !menuOpen, !vm.isControlListOpen, !vm.isComposing else { return }
-        guard vm.mode == .launcher, !isCollapsed else {
+        guard vm.mode == .launcher, !isCollapsed, let screen = screen as? LauncherScreen else {
             performShortcut(.numberSlot(index))
             return
         }
-        guard let screen = screen as? LauncherScreen,
-            let selection = screen.numberSlots.selection(at: index, rowCount: screen.rows.count)
+        guard let selection = screen.numberSlots.selection(at: index, rowCount: screen.rows.count)
         else { return }
         let previous = vm.selection
         numberArgumentFocus = nil
@@ -1594,6 +1647,16 @@ private enum OpenMenu: Equatable {
     case aiModel
     case aiReasoning
     case aiAttachments
+    case configureCommand(AppEntry)
+    case setAlias(AppEntry)
+    case setHotkey(AppEntry, HotKeyAction, previous: HotKeyBinding?)
+
+    var isConfigurationPanel: Bool {
+        switch self {
+        case .setAlias, .setHotkey: true
+        default: false
+        }
+    }
 }
 
 /// Reads visibility in its own body, so a summon never re-renders the palette's.

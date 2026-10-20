@@ -201,12 +201,14 @@ which turns into Pipcast's interface language once one is picked, and would rena
 `InfoPlist.strings`, and every app under `/System/Applications` translates in the loctable alone — so
 all 65 of them read English on every Mac, whatever language it is set to.
 
-A tag carrying a script is read under two more codes, because no one folder name covers it: a
-`zh-Hans-CN` Mac also reads `zh-Hans`, the folder most third-party apps ship, then `zh_CN`, the key
-Apple's own loctables use. A script-only `zh-Hans` maximizes to reach the same region. A tag without a
-script otherwise keeps its exact, underscore and bare-language forms. Bokmål (`nb`) additionally
-reads `no` after `nb`, because Apple's Norwegian loctables use that key; an explicit `nb.lproj` still
-wins. Other languages, including Nynorsk (`nn`), gain no alias.
+A tag carrying a script is read under more codes, because no one folder name covers it: a
+`zh-Hans-US` Mac also reads `zh-Hans`, the folder most third-party apps ship, then its own region
+`zh_US`, then `zh_CN`, the script's home region and the key Apple's own loctables use. A region is read
+only when it writes the tag's script, so `zh-Hans-HK` skips the Traditional `zh_HK`, and `zh-Hant-HK`
+reads `zh_HK` before `zh_TW`. A tag without a script otherwise keeps its exact, underscore and
+bare-language forms. Bokmål (`nb`) additionally reads `no` after `nb`, because Apple's Norwegian
+loctables use that key; an explicit `nb.lproj` still wins. Other languages, including Nynorsk (`nn`),
+gain no alias.
 
 The user's own language wins the **display name**, so a row reads the way Finder reads it. The rest,
 English included, ride along as alternate titles, matched as typed and never transliterated.
@@ -308,9 +310,9 @@ re-written so `github.com` and `https://…` mean the same thing here as they do
 entry is an ordinary `.command`, so `VisibilityStore` still gates it — Commands off hides the row —
 and its `url` carries the destination instead of the catalog's `pipcast://` placeholder. Nothing
 learns from it and nothing pins it: `LauncherCoordinator.launch` records no visit for a contextual
-row, since a pasted URL is not a term any row should rank under; and ⇧⌘F and ⇧⌘H are both refused,
-because a favorite — or a hidden-item key — the empty query can never resolve is dead state a backup
-would then carry.
+row, since a pasted URL is not a term any row should rank under; and ⇧⌘F, ⇧⌘H and ⇧⌘, are all
+refused, because a favorite, a hidden-item key, an alias or a hotkey the empty query can never resolve
+is dead state a backup would then carry.
 
 The row prints `AppEntry.subtitle` beside its name — the one field for an entry whose name alone
 can't say what it acts on.
@@ -377,6 +379,16 @@ a `selectedRowID` rather than an entry id. Nothing about a fallback row is learn
 revealed: `activate` routes to `FallbackCoordinator.run` instead of `LauncherCoordinator.launch`, and
 `FallbackActionsMenu` offers only running it and opening the pane.
 
+### Settings scope
+
+A leading `?` scopes root search to settings: `?extensions` lists the rows a Settings search
+would find, and ↵ opens Settings on the row. A bare `?` browses every pane once. The mode stays
+launcher, so Esc, history and the footer keep working; `SettingsSearchScreen` (in
+`Settings/`, beside the catalog it reads) is the screen, and `RootPaletteView` resolves it when
+`SettingsSearchScreen.scope(of:)` strips the prefix. Rows carry no `AppEntry`, so nothing about
+them is learned, pinned, aliased or hidden, and ⌘1…⌘0 address the first ten visible rows. See
+`SettingsSearchCatalog.scopeResults`, covered by `settings-history-test`.
+
 ### User aliases
 
 `AliasStore` (`Launcher/Service/`) keeps one user-chosen alias per entry, keyed by `preferenceKey`
@@ -390,10 +402,25 @@ memos on the store's revision.
 A launcher row shows its entry's alias as a small chip after the name, so what a badge-bearing
 result will answer to is visible without opening anything.
 
-Editing lives in Settings only — an alias is one-time configuration like a shortcut, not a
-per-invocation action, so the ⌘K menu stays out of it. Visibility is the one exception, and only in
-one direction: an unwanted result is noticed while searching, so ⌘K can hide a row, but putting it
-back is still the pane's checkbox. Every pane built
+An alias or hotkey is usually decided on while the row is selected, so ⌘K › **Configure Command…**
+(⇧⌘,) reaches both without leaving the palette. `CommandConfigurationMenu` offers it exactly where
+Settings already does: **Set Alias…** wherever a pane has an `AliasField` (not snippets, meetings or
+query-driven rows), **Set Hotkey…** wherever it has a `ShortcutRecorder` (`AppEntry.hotKeyAction`,
+plus `.extensionCommand(entryID:)`), and **Open Command Settings** for both. Set Alias… replaces the
+menu with a field in the same corner: ↵ saves through `AliasStore`, a blank field removes the alias,
+and Esc or a click away discards it. Set Hotkey… starts `HotKeyManager`'s one capture session once
+the panel is key — its conflict handling, ⌫ removal and Esc are the Settings recorder's own — and
+the panel closes when the recording ends. Either confirms through the message pill when something
+changed, and a modifier-only hotkey without Accessibility says so there instead. Open Command
+Settings opens the pane that lists the row. A list with a filter field — applications, System
+Settings panes, system actions, commands, Apple Shortcuts, the quicklink library — gets a
+`SettingsTarget.launcherItem`, which scrolls to its section and narrows the filter to the row's name
+(`revealsLauncherItem`); custom commands, quick actions, snippets, layouts, rooms, custom sizes and a
+feature pane's own commands scroll to their section; an extension command reveals its extension's
+row; a built-in window command reveals its own row.
+
+Visibility is one-way from ⌘K: an unwanted result is noticed while searching, so ⌘K can hide a
+row, but putting it back is still the pane's checkbox. Every pane built
 on `LauncherItemsSection` puts an `AliasField` on each row, dressed like the `ShortcutRecorder`
 beside it; edits store as typed and trim when the field loses focus, and a blank means none. That
 list filters by **membership only**, keeping the index's name order — re-ranking it per keystroke
@@ -771,12 +798,11 @@ When the shortcut selects a different row, focus waits for its argument fields t
 view-owned task checks cancellation, row identity, query and palette reset before moving the caret.
 
 Compact mode retains favorite-only slots, including ⌘6–⌘0 for favorites beyond the five-icon strip.
-Clipboard retains its pinned-entry slots. Other screens retain their own shortcuts. The compact
+Clipboard slots address its first ten visible rows. Other screens retain their own shortcuts. The compact
 visibility setting is visual only and does not disable favorite shortcuts.
 
-Holding ⌘ for 400 ms replaces app and file kind labels with their chords; calculator and color
-cards show a trailing overlay without changing their layout. The delay prevents a flash under ⌘↵
-and ⌘K. Releasing ⌘ or resigning key clears it. The row and hint views observe
+Holding ⌘ replaces app and file kind labels with their chords the moment ⌘ goes down; calculator and color
+cards show a trailing overlay without changing their layout. Releasing ⌘ or resigning key clears it. The row and hint views observe
 `PaletteState.commandHeld` locally, so revealing hints does not rebuild the whole palette. Slot
 digits are computed from section offsets, never by searching each row's ID.
 
@@ -819,6 +845,57 @@ viewer to bring itself forward, and macOS refuses that request while Pipcast is 
 Settings or About window) yet inactive, which the non-activating palette makes common. Only in that
 state does the reveal also open the viewer named by the global `NSFileViewer` default, Finder when it
 is unset, so every other reveal is exactly the one system call.
+
+## Deeplinks
+
+A built-in command's link is its `AppEntry.id` with the `:` read as `/`, in the channel's scheme —
+the placeholder URL the catalog already built, made real:
+
+| Command                | Link                                  |
+| ---------------------- | ------------------------------------- |
+| Clipboard History      | `pipcast://command/clipboard-history` |
+| Search Emoji & Symbols | `pipcast://command/search-emoji`      |
+| Open Camera            | `pipcast://command/open-camera`       |
+| Left Half              | `pipcast://window-command/left-half`  |
+| Lock Screen            | `pipcast://system-action/lock-screen` |
+
+Those ids already key shortcuts, aliases, favorites and ranking, so a link is as stable as a binding.
+`Model/CommandDeepLink.swift` reads both directions off `CommandID`, `WindowCommandCatalog` and
+`SystemActionCatalog`; there is no list of linkable commands to keep. A command has a link exactly
+when a global shortcut can bind it, so Quit and the query-driven Open in Browser and Run Shell Command
+have none, and neither does anything the user made. `hotkey-test` round-trips every catalog entry.
+
+Opening a link runs the command's `HotKeyAction` through `HotKeyManager.perform`: the same funnel,
+switches as its shortcut, which is what a tool like Leader Key stands in for. A switch that
+refuses it says so in the HUD; a link naming no command says Pipcast doesn't recognize it; a bare
+`pipcast://` opens the palette. None of them is an alert.
+
+Opening a URL activates Pipcast, which would leave a window command nothing to place and the palette
+no paste target. So `AppCore.handleOpenURL` first activates the last other app to come forward, which
+`AppCore` follows through `NSWorkspace`'s `.didActivateApplication` — `menuBarOwningApplication` would
+not do, since an open Settings window makes Pipcast `.regular` and the menu bar its own. It waits up to
+500 ms for that app to come forward and for Pipcast's own resign to land, which arriving late would hide
+a palette just shown. If the hand-back doesn't land, or there is no app to hand back to, the link runs
+nothing and says so in the HUD: with Pipcast still in front, a window command would place Pipcast's own
+window. A newer link cancels the wait. A link opened without activation (`open -g`) captures the
+frontmost external app and runs at once. Both paths dismiss an existing palette without restoring its
+old focus before dispatch, so a link opens its requested screen even when that screen was already open.
+Window commands carry the captured app through `HotKeyManager.perform(targetApp:)` into
+`WindowCommandCoordinator`; neither a retained Notes/Settings key window nor an open Actions menu
+can replace it. Ordinary shortcuts continue to use their own-window and palette targeting rules.
+
+System-action links retain the existing action-specific confirmations and feature gates. In particular,
+Empty Trash follows Finder's warning preference, including running without a dialog when it is off.
+This is deliberate automation parity: Raycast also offers Copy Deeplink for Empty Trash. A copied URL
+is an invocation, not an authorization token; receiving one does not enable a disabled feature.
+
+Debug registers `pipcast-dev` in place of `pipcast` (`PIPCAST_URL_SCHEME` in `project.yml`), so a link
+copied from a local build never opens the installed app. Copy Deeplink reads the scheme back from the
+same setting, through Info.plist's `PipcastURLScheme`. Stable and beta both answer `pipcast://`.
+
+**Copy Deeplink** in a row's ⌘K Actions menu copies its link, in the build's own scheme (so
+`pipcast-dev://command/…` from a Debug build): a built-in command's, or an extension command's
+`extensions/…` link from [extensions.md](extensions.md#deeplinks). A row with no link doesn't offer it.
 
 ## Dragging an application out
 

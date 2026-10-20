@@ -55,6 +55,7 @@ system-wide chord, and HIToolbox's TIS APIs remain the public input-source mecha
 | add or restyle any view                                     | [ui.md](docs/ui.md)                                          |
 | touch one feature's internals                               | [features/](docs/features/) — each opens with its invariants |
 | package or ship a build                                     | [release.md](docs/release.md)                                |
+| open a pull request                                         | [CONTRIBUTING.md](CONTRIBUTING.md)                           |
 
 ## Non-negotiables
 
@@ -132,7 +133,8 @@ feature's doc, under its own `## Invariants`.
 - **Debug builds are their own channel** — `Pipcast Dev.app` / `io.github.msarheed.pipcast.app.dev` — so a local run
   never shares prefs, caches, TCC grants or the login item with an installed copy. Anything newly
   persisted must stay keyed by `Bundle.main.bundleIdentifier`.
-- **Commit subjects, PR titles and squash merges follow [Conventional Commits](https://www.conventionalcommits.org/)**:
+- **Commit subjects, PR titles and squash merges follow [Conventional Commits](https://www.conventionalcommits.org/)**
+  (a CI check enforces the PR title):
   `<type>[optional scope]: <description>`, e.g. `fix(extensions): fall back after a missing executable`.
   Types are `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore` and
   `revert`; the scope is the feature or area touched. Keep the description lowercase and imperative,
@@ -160,3 +162,5 @@ Each item is explained in [testing.md](docs/testing.md#definition-of-done).
 - `./Scripts/lint.sh` is clean.
 - `grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Pipcast/Features/*/Model/` returns nothing.
 - Any doc your change made wrong is fixed in the same commit.
+- Opening a PR: the title is a Conventional Commit (CI checks it), and CI reruns the checks above
+  unless the PR only touches docs.

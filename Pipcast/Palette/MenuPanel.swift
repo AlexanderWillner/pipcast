@@ -13,7 +13,7 @@ final class MenuPanel: NSPanel {
             contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered, defer: false)
         isFloatingPanel = true
-        animationBehavior = .none
+        animationBehavior = .documentWindow
         backgroundColor = .clear
         isOpaque = false
         hasShadow = true
@@ -34,7 +34,8 @@ final class MenuPanel: NSPanel {
         }
         if event.type == .keyDown {
             let isReturn = event.specialKey == .carriageReturn || event.specialKey == .enter
-            if isReturn, (firstResponder as? NSTextView)?.hasMarkedText() == true {
+            let isEscape = event.charactersIgnoringModifiers == "\u{1B}"
+            if isReturn || isEscape, (firstResponder as? NSTextView)?.hasMarkedText() == true {
                 super.sendEvent(event)
                 return
             }

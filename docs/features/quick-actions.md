@@ -74,10 +74,10 @@ selectable Markdown renderer with AI Chat.
   Summarize opens a sheet prefilled with the exact built-in prompt and the action's model. Saving
   replaces both for only that action; Use Default restores the prompt. Translate has no editor because no model handles translation. The same
   pencil on a custom action opens its editor, which owns the name and glyph too.
-- **A custom action never travels in a backup.** Neither the record, its shortcut nor its route, for
-  the reason `quickActionInstructions` already doesn't: an import must never change what a shortcut
-  does to somebody's documents. Its JSON sits outside `UserDefaults`, so no settings key can sweep it
-  up, and `quickActionModelOverrides` is excluded like `quickActionModel`.
+- **A custom action's content and route never travel in a backup.** Its record stays outside
+  `UserDefaults`, and `quickActionModelOverrides` is excluded like `quickActionModel`: an import must
+  never change what a shortcut does to somebody's documents. Only its hotkey binding travels in
+  `SettingsBackup.HotkeyBackup`; it remains dormant until its target exists and the feature is enabled.
 
 ## The actions
 

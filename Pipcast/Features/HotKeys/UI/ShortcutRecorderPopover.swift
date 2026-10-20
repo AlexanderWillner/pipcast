@@ -12,6 +12,31 @@ struct ShortcutRecorderAnchorKey: PreferenceKey {
 struct ShortcutRecorderPopover: View {
     let placement: CalloutPlacement
 
+    var body: some View {
+        ShortcutCaptureReadout()
+            .offset(y: Theme.Spacing.sm + 1)
+            .padding(.horizontal, Theme.Spacing.md)
+            .padding(.vertical, Theme.Spacing.sm)
+            .padding(placement.caretEdge == .top ? .top : .bottom, Theme.Size.calloutCaretHeight)
+            .frame(
+                width: Theme.Size.shortcutPopover.width, height: Theme.Size.shortcutPopover.height
+            )
+            .overlay(alignment: .topLeading) {
+                KeyCapChip(text: String(localized: "esc"), scale: .compact)
+                    .opacity(0.7)
+                    .padding(.leading, Theme.Spacing.md)
+                    .padding(
+                        .top,
+                        Theme.Spacing.sm
+                            + (placement.caretEdge == .top ? Theme.Size.calloutCaretHeight : 0))
+            }
+            .glassEffect(
+                .regular, in: CalloutShape(caretEdge: placement.caretEdge, caretX: placement.caretX))
+    }
+}
+
+/// The live recording — prompt, held keys or conflict — wherever the recording is narrated.
+struct ShortcutCaptureReadout: View {
     @Environment(HotKeyManager.self) private var hotKeys
     private var capture: ShortcutCaptureSession { hotKeys.capture }
 
@@ -47,28 +72,11 @@ struct ShortcutRecorderPopover: View {
             Text(state.label)
                 .font(Theme.Typography.compactKeyCap)
                 .foregroundStyle(state.tint ?? Theme.Colors.textSecondary)
-                .lineLimit(1)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
                 .truncationMode(.tail)
-                .frame(height: Theme.Size.shortcutPopoverLine)
+                .frame(height: Theme.Size.shortcutPopoverLine * 2)
         }
-        .offset(y: Theme.Spacing.sm + 1)
-        .padding(.horizontal, Theme.Spacing.md)
-        .padding(.vertical, Theme.Spacing.sm)
-        .padding(placement.caretEdge == .top ? .top : .bottom, Theme.Size.calloutCaretHeight)
-        .frame(
-            width: Theme.Size.shortcutPopover.width, height: Theme.Size.shortcutPopover.height
-        )
-        .overlay(alignment: .topLeading) {
-            KeyCapChip(text: String(localized: "esc"), scale: .compact)
-                .opacity(0.7)
-                .padding(.leading, Theme.Spacing.md)
-                .padding(
-                    .top,
-                    Theme.Spacing.sm
-                        + (placement.caretEdge == .top ? Theme.Size.calloutCaretHeight : 0))
-        }
-        .glassEffect(
-            .regular, in: CalloutShape(caretEdge: placement.caretEdge, caretX: placement.caretX))
     }
 
     private var state: State {
@@ -80,17 +88,18 @@ struct ShortcutRecorderPopover: View {
             return .binding(
                 secondPress ? key.doubleBinding : key.singleBinding,
                 label: secondPress
-                    ? String(localized: "Release to record") : String(localized: "Tap again for double"))
+                    ? String(localized: "Release to record")
+                    : String(localized: "Press again for a double press"))
         }
         if let key = capture.heldModifier {
-            return .binding(key.singleBinding, label: String(localized: "Release or add a key"))
+            return .binding(key.singleBinding, label: String(localized: "Release or complete the shortcut"))
         }
         let flags =
             capture.heldGlobe
             ? capture.heldModifiers.union(.function) : capture.heldModifiers
         let held = KeyShortcut.collapsedModifierSymbols(
             from: flags, hyperChord: KeyShortcut.displayedHyperChord())
-        guard held.isEmpty else { return State(caps: held, label: String(localized: "Add a key")) }
+        guard held.isEmpty else { return State(caps: held, label: String(localized: "Press another key")) }
         return State(
             caps: [DoubleTapModifier.option.glyph, "A"], label: String(localized: "Type a shortcut"),
             isExample: true)

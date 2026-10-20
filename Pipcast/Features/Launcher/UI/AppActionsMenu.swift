@@ -15,7 +15,7 @@ enum AppActionsMenu {
     static func content(
         app: AppEntry, searchQuery: String, core: AppCore, running: Bool,
         favorites: FavoriteActions, onResetRanking: @escaping () -> Void,
-        onHideFromSearch: @escaping () -> Void
+        onHideFromSearch: @escaping () -> Void, onConfigure: @escaping () -> Void
     ) -> PopoverMenuContent {
         var items = leadingItems(app: app, searchQuery: searchQuery, core: core)
         // A query-driven row lives only for its query, so no preference could outlive it.
@@ -65,6 +65,18 @@ enum AppActionsMenu {
                 PopoverMenuItem(
                     title: title, systemImage: "eye.slash", shortcut: "⇧⌘H", action: onHideFromSearch))
         }
+        if CommandConfigurationMenu.isConfigurable(app) {
+            items.append(
+                PopoverMenuItem(
+                    title: String(localized: "Configure Command…"), systemImage: "gearshape.2",
+                    startsSection: true, shortcut: "⇧⌘,", action: onConfigure))
+        }
+        if let deeplink = core.launcherCoordinator.deeplink(for: app) {
+            items.append(
+                PopoverMenuItem(title: String(localized: "Copy Deeplink"), systemImage: "link") {
+                    core.launcherCoordinator.copyDeeplink(deeplink)
+                })
+        }
         if running, app.kind == .application {
             items.append(
                 PopoverMenuItem(
@@ -104,6 +116,14 @@ enum AppActionsMenu {
                 ) {
                     core.quicklinkCoordinator.copyQuicklink(id: quicklink.id)
                 })
+            if core.quicklinkCoordinator.canRefreshWebsiteIcon(quicklink) {
+                items.append(
+                    PopoverMenuItem(
+                        title: String(localized: "Refresh Website Icon"), systemImage: "arrow.clockwise"
+                    ) {
+                        core.quicklinkCoordinator.refreshWebsiteIcon(id: quicklink.id)
+                    })
+            }
             items.append(
                 PopoverMenuItem(
                     title: String(localized: "Edit Quicklink"), systemImage: "pencil", shortcut: "⌘E"

@@ -19,7 +19,9 @@ final class PaletteState {
     var selection: Int = 0
     /// True while an IME holds marked text, which leaves `query` empty. The panel publishes it.
     var isComposing = false
-    var clipboardFilter: ClipboardFilter = .all { didSet { restoredSelection = nil } }
+    var clipboardFilter: ClipboardFilter = .all {
+        didSet { if oldValue != clipboardFilter { restoredSelection = nil } }
+    }
     var fileSearchFilter: FileSearchFilter = .all
     var fileSearchFolder: String?
     var emojiCategoryFilter: EmojiCategoryFilter = .all
@@ -50,9 +52,8 @@ final class PaletteState {
     var pendingArgumentEntryID: String?
     /// The row a shortcut opened root search onto, listed alone while the query is its name.
     var argumentEntryID: String?
+    /// True while ⌘ is down, which numbers the favorite rows. The panel is the only writer.
     private(set) var commandHeld = false
-    /// A chord is a tap, so the numbering waits out the tap before it claims the trailing labels.
-    @ObservationIgnored private var commandHoldTask: Task<Void, Never>?
     /// True while a form field owns the keyboard, so the palette's own text keys stay out of it.
     private(set) var isEditingField = false
     /// True while a control inside a screen has a list open, which owns the arrows and ↵ whole.
@@ -158,8 +159,9 @@ final class PaletteState {
         focusToken = UUID()
     }
 
-    /// Long enough that ⌘↵ or ⌘K never flashes the numbering, short enough to feel like a reveal.
-    private static let commandHoldDelay = Duration.milliseconds(400)
+    func noteCommandHeld(_ held: Bool) {
+        commandHeld = held
+    }
 
     /// U+0001 can't appear in an entry id or an argument name, so the halves stay unambiguous.
     nonisolated static func argumentKey(_ entryID: String, _ name: String) -> String {
@@ -179,24 +181,13 @@ final class PaletteState {
         queryRewriteToken = UUID()
     }
 
+    func preserveSelection() {
+        restoredSelection = selection
+    }
+
     func noteEmojiGridZoom(_ zoom: EmojiGridZoom) {
         emojiGridZoom = zoom
         emojiGridZoomToken = UUID()
-    }
-
-    func noteCommandHeld(_ held: Bool) {
-        commandHoldTask?.cancel()
-        commandHoldTask = nil
-        guard held else {
-            commandHeld = false
-            return
-        }
-        guard !commandHeld else { return }
-        commandHoldTask = Task { [weak self] in
-            try? await Task.sleep(for: Self.commandHoldDelay)
-            guard !Task.isCancelled else { return }
-            self?.commandHeld = true
-        }
     }
 
     func noteEditingField(_ editing: Bool) {

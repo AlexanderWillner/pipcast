@@ -331,7 +331,7 @@ screens hold (see [palette.md](palette.md)).
   only in whether it holds one value or several. It drops `ExtensionPickerList`, a searchable list,
   and **the control keeps first responder the whole time it is open**: the list is a separate window,
   and a second field inside it would take focus off the control and close the list. So the
-  popover's search row renders the query rather than editing it, and every key — the arrows, ↵, ⎋,
+  popover's search row renders the query rather than editing it, and every key — the arrows, ↵, esc,
   ⌫ and each typed character — is claimed on the control. `PaletteState.isControlListOpen` is what
   keeps the palette's own arrow and Escape handlers out of an open list; without it ↓ moved the
   form's selection instead of the list's highlight.
@@ -594,15 +594,17 @@ along with the extension's stored preferences and its chosen icon.
 
 A user alias binds to a **command**, keyed by the launcher entry id
 (`extension:<extension>/<command>`) — the same key the shortcut, favorite and ranking stores use.
-Settings › Extensions › the command › Alias is the writer; `AppIndex` already ranks it as
+Settings › Extensions › the command › Alias writes it, and so does the command's ⌘K ›
+Configure Command… › Set Alias… in root search; both go through `AliasStore`. `AppIndex` ranks it as
 `.userAlias`. The field sits beside the shortcut recorder on the command's title row, the same
 pairing Settings ▸ Commands uses. It dims when the command is hidden from launcher search — the
 global Show in launcher switch, or this extension's — because the ranker never sees the entry then.
 
 ## Deeplinks
 
-Pipcast registers `raycast`, `com.raycast` and `pipcast` to receive extension links. An installed
-Raycast competes for its schemes, and macOS chooses which app receives a link.
+Pipcast registers `raycast`, `com.raycast` and `pipcast` (`pipcast-dev` in Debug) to receive
+extension links. An installed Raycast competes for its schemes, and macOS chooses which app receives
+a link.
 
 `raycast://extensions/<owner>/<extension>?source=webstore`, used by the Store website's Install
 buttons, opens Settings → Extensions and looks up that exact listing to offer the existing Install
@@ -612,15 +614,23 @@ opens their Settings pane so they can be enabled through the usual consent flow.
 `raycast://extensions/<owner>/<extension>/<command>` runs an installed command from outside the app —
 a browser link, another app, a Shortcut — and `pipcast://` mirrors it so our own links never depend
 on Raycast winning the scheme. Both accept Raycast's query parameters: `arguments` as URL-encoded
-JSON, `fallbackText`, and `launchType=background`, which only a no-view command receives — a view
-command always takes over the palette, so it launches as `userInitiated`. The owner is a hint: a
+JSON, `context` as a URL-encoded JSON object that reaches the command as `props.launchContext`,
+`fallbackText`, and `launchType=background`, which only a no-view command receives — a view
+command always takes over the palette, so it launches as `userInitiated`. `context` stays plain
+data: an object shaped like `{type, id}` is never read as a view node. The owner is a hint: a
 scoped install matches by `owner/extension` first and falls back to the bare slug, so short links
-keep working. Anything else on a claimed scheme just reopens the palette, and an unknown command says
-so rather than failing silently. `ExtensionDeepLink` owns the claimed schemes and the parsing,
+keep working. A bare scheme reopens the palette; any other link Pipcast can't route, and an unknown
+command, says so in the HUD rather than failing silently. A command link hands focus back to the app
+the user was in before it runs, as [launcher.md](launcher.md#deeplinks) describes. Copy Deeplink
+hands out `<scheme>://extensions/<owner>/<extension>/<command>` in the build's own scheme — `pipcast`
+on stable and beta, `pipcast-dev` in Debug — the owner being the manifest's `owner` or else its
+`author`. `ExtensionDeepLink` owns the claimed schemes and the parsing,
 covered by `Tests/ext-test.swift`. Two-segment links without `source=webstore` keep running commands
 as `<extension>/<command>`; three-segment command links keep running even with that parameter.
 An extension's own `open("raycast://…")` resolves through the same
-`ExtensionManager.resolve(_:)` instead of launching Raycast.
+`ExtensionManager.resolve(_:)` instead of launching Raycast. It runs extension command links only:
+Pipcast's built-in command links ([launcher.md](launcher.md#deeplinks)) are for the outside, and an
+extension written for Raycast never names one.
 
 For view commands, nonempty `fallbackText` also prefills the search field: lists and grids filter
 locally or receive it through `onSearchTextChange` when their handler mounts. It remains available
@@ -710,7 +720,7 @@ the descriptor calls `tar` unpacks through), `os`,
 each async form reporting the child's real `pid` for `process.kill` — Timers pauses that way),
 `crypto` (hashes, HMAC, PBKDF2, AES-CBC/ECB, random, UUID), `zlib` (gzip/zlib/raw deflate, both
 directions, plus `create*` streams that buffer until `end`), `http`/`https` (`request`, `get` and `Agent`, buffered over the same URLSession bridge
-as `fetch`, with `socketPath` for Unix-socket HTTP), `stream` (`Readable`, `Writable`, `Duplex`, `Transform`, `PassThrough`, `pipeline`,
+as `fetch`, with `socketPath` for Unix-socket HTTP, plus Node's `STATUS_CODES` and `METHODS` tables), `stream` (`Readable`, `Writable`, `Duplex`, `Transform`, `PassThrough`, `pipeline`,
 `finished`, plus `stream/promises` and `stream/web`), `util`, `events`, `buffer`, `url`, `querystring`, `punycode`, `assert`,
 `string_decoder`, `timers`. Every other built-in resolves to a stub that throws only when used, so a
 bundle that merely references `http2` or `domain` still loads. Those stubs are manufactured lazily,

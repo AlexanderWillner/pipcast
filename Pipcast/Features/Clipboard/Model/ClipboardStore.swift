@@ -170,6 +170,8 @@ enum ClipboardChord: CaseIterable, Sendable {
 @MainActor
 @Observable
 final class ClipboardStore {
+    enum UpdateError: Error { case tooLong, writeFailed }
+
     /// Newest-first with pins in place, every pin resident. docs/features/clipboard.md
     private(set) var items: [ClipboardItem] = [] {
         didSet {
@@ -204,6 +206,8 @@ final class ClipboardStore {
     /// Same memo for the empty query, so the pinned split runs once per mutation.
     @ObservationIgnored private var orderedCache: [ClipboardItem]?
 
+    /// Longest text history holds; a longer copy is skipped, since truncation would lose the tail.
+    nonisolated static let maxTextLength = 32_000
     nonisolated private static let memoryWindow = 1000
     /// The most unpinned rows any one query answers with, ordinary and OCR-only alike.
     nonisolated private static let searchLimit = 200
@@ -403,6 +407,32 @@ final class ClipboardStore {
         if item.isPinned { unpin(item) } else { pin(item) }
     }
 
+    func updateText(_ text: String, of item: ClipboardItem) throws(UpdateError) -> ClipboardItem? {
+        guard item.kind == .text else { return nil }
+        guard text.count <= Self.maxTextLength else { throw .tooLong }
+        guard let stmt = prepare("UPDATE items SET text = ?1 WHERE id = ?2") else {
+            throw .writeFailed
+        }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, text, -1, SQLITE_TRANSIENT)
+        sqlite3_bind_text(stmt, 2, item.id.uuidString, -1, SQLITE_TRANSIENT)
+        guard sqlite3_step(stmt) == SQLITE_DONE else { throw .writeFailed }
+        guard sqlite3_changes(db) > 0 else { return nil }
+        let index = items.firstIndex { $0.id == item.id }
+        let current = index.map { items[$0] } ?? item
+        let edited = ClipboardItem(
+            id: current.id, kind: .text, text: text, imagePath: nil, createdAt: current.createdAt,
+            sourceBundleID: current.sourceBundleID, pinnedAt: current.pinnedAt)
+        if let index {
+            items[index] = edited
+        } else {
+            // An FTS hit past the memory window: only the memo still holds the old text.
+            invalidateSearch()
+            searchRevision += 1
+        }
+        return edited
+    }
+
     func remove(_ item: ClipboardItem) {
         textSearchMatches.removeAll { $0.id == item.id }
         if let stmt = deleteByIDStmt {
@@ -559,12 +589,6 @@ final class ClipboardStore {
     /// Row index of `item` as currently listed, so the palette can follow a row that moved.
     func rowIndex(of item: ClipboardItem, in query: String, filter: ClipboardFilter) -> Int? {
         search(query, filter: filter).firstIndex { $0.id == item.id }
-    }
-
-    /// The Nth visible pinned entry under `query` and `filter`, where 0 is the first pinned row.
-    func pinnedItem(at index: Int, in query: String, filter: ClipboardFilter) -> ClipboardItem? {
-        guard index >= 0 else { return nil }
-        return search(query, filter: filter).prefix(while: \.isPinned).dropFirst(index).first
     }
 
     /// Where a reset lands: past the pins to the newest clip, or on the first match once typed.
