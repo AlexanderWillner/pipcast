@@ -1,8 +1,10 @@
 # Apple Shortcuts
 
 The shortcuts a user builds in Apple's Shortcuts app appear in the launcher as their own section,
-searchable by name and runnable with ↵, a favorite slot or a global shortcut. Pipcast lists and runs
-them and nothing else: creating, editing, permissions and the actions themselves stay with Shortcuts.
+searchable by name and runnable with ↵, a favorite slot or a global shortcut, each drawn with its own
+icon. Pipcast lists them, reads their icons and runs them, and nothing else: creating, editing, the
+shortcuts' own permissions and their actions stay with Shortcuts. Icons need an Automation grant of
+their own; see [Icons](#icons).
 
 The feature ships **off**. **Settings → Apple Shortcuts** carries the one switch, and lists the
 library only while it is on. Off is fully off: the `shortcuts` tool is never spawned, the launcher
@@ -13,6 +15,9 @@ registered, so re-enabling restores every global shortcut.
 
 - **Shortcuts owns the library.** Nothing about a shortcut is stored except what every launcher entry
   already keys by `preferenceKey` — alias, visibility, favorite, ranking — and its hotkey binding.
+  Its icon is a cache Shortcuts can always answer again, never preferences or a backup.
+- **Only the Settings pane may raise the Automation prompt.** The launcher reads icons unprompted, so
+  a system dialog never lands on top of the palette.
 - **`run(id:)` is the single funnel** for a launcher row and a global shortcut alike, so the switch
   can't be bypassed.
 - **A failed read keeps the last good library.** Emptying the launcher because one spawn failed would
@@ -39,8 +44,9 @@ or a binding follows the shortcut rather than its old title. The entry id is
 Shortcuts app itself.
 
 The list is re-read whenever the launcher opens, the Settings pane appears, or the switch turns on.
-The tool answers in ~10 ms, so an overlapping request is simply dropped rather than queued. An
-unchanged list publishes nothing.
+The tool answers in ~10 ms, so an overlapping request joins the read in flight rather than queuing
+another; a prompt the pane asked for rides along (see [Icons](#icons)). An unchanged list publishes
+nothing.
 
 ## Sweeping deleted shortcuts
 
@@ -62,11 +68,55 @@ a shortcut usually acts on the app the user was in. There is **no timeout** — 
 dialog of its own for as long as it likes. Success is silent; a non-zero exit shows the tool's last
 lines in Pipcast's own dialog.
 
+## Icons
+
+Each row draws the shortcut's own icon, its glyph on its colour, as Shortcuts renders it. No public API
+lists shortcut icons, and the Shortcuts database under `~/Library/Shortcuts` needs Full Disk Access, so
+`AppleShortcutIconProvider` asks **Shortcuts Events** through its public scripting dictionary: the
+`icon` property of `shortcut id "<UUID>"`, a 256-pixel TIFF of the finished tile. The identifier must
+be the uppercase spelling; Shortcuts answers a lowercase one with nothing. It is a raw `getd` Apple
+event rather than AppleScript, so every send can carry `kAEDoNotPromptForUserConsent`.
+
+Sending needs **Automation permission for Shortcuts Events**, granted in Privacy & Security ›
+Automation. `access(prompting:)` launches the helper hidden, since permission can only be determined
+against a running target, then asks `AEDeterminePermissionToAutomateTarget`. Only a denial (-1743) or
+a prompt never answered (-1744) counts as **refused**; anything else — the helper missing or not yet
+answering — is **unavailable** and simply tried again on the next read. The Settings pane asks for a
+prompting sweep, so opening the pane or turning the switch on raises the system prompt once. Every
+launcher read is unprompted: once refused, the launcher stops asking until the pane asks again.
+Running and listing shortcuts need no permission either way.
+
+`AppleShortcutIconStore` owns the reads. **One runs at a time, and nothing asked meanwhile is
+dropped**: requests merge, sweep and prompt alike, and run once the current read ends. The
+coordinator holds the pane's prompt across a list read already in flight, so turning the switch on —
+whose own unprompted read is already running — still ends in the prompt. **A prompt never outlives
+its read**: the list read spends it whatever it returns, and an empty library drops every queued
+request, so a prompt can't wait for a later launcher open and land over the palette.
+
+`AppleShortcutIconCache` keeps one 128-pixel PNG per shortcut in Caches, named
+`<uuid>-<digest>.png` from a hash of the TIFF, so a changed icon is a new path and `IconCache` never
+serves the old bitmap. Rows draw it as `.artwork` at `IconCache.appIconExtent`, the size of an app icon.
+Icons are read one shortcut at a time, so a large library never holds more than one full-size TIFF.
+A failed send ends the read, so a stalled Shortcuts Events costs one timeout, not one per shortcut.
+
+- **The first read after launch, and every read the pane makes, sweeps**: every icon is fetched again,
+  since a new glyph or colour keeps the shortcut's identifier. Unchanged icons write nothing, unless
+  macOS purged the file from Caches meanwhile; then it is written again under the same name.
+- **Any other read fetches only shortcuts with no icon yet**, so an ordinary launcher open sends no
+  Apple event at all. An icon edited while Pipcast runs updates on the next pane visit or launch.
+- **A shortcut whose icon couldn't be read waits for the next sweep**, so one that Shortcuts never
+  answers can't cost every launcher open an Apple event.
+- **The folder is scanned once per launch**, deleting files for shortcuts no longer listed. A replaced
+  icon's file is deleted only after rows point at its successor. An empty or failed read scans nothing.
+
+Without permission, or for a shortcut Shortcuts can't answer, the row keeps the Shortcuts app's icon.
+Turning the feature off cancels a read in flight; the files stay for the next time it turns on.
+
 ## Launcher and Settings
 
 `AppEntry.Kind.appleShortcut` is its own section, published right after Quicklinks. It is file-backed
-rather than a symbol tile: every row's `url` is Shortcuts.app, so each draws that app's icon from one
-cached bitmap. Reveal in Finder is refused, because the file is the app, not the shortcut.
+rather than a symbol tile: every row's `url` is Shortcuts.app, whose icon a row draws until its own
+is cached. Reveal in Finder is refused, because the file is the app, not the shortcut.
 
 The pane lists rows through `LauncherItemsList`, the same table the launcher-category panes use: icon,
 name, alias, shortcut recorder and the checkbox that hides one row from launcher search while its

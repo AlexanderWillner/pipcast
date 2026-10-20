@@ -4,7 +4,7 @@ import AppKit
 @MainActor
 @Observable
 final class AppleShortcutCoordinator {
-    /// Every row draws the Shortcuts app's icon, so one cached bitmap serves the whole list.
+    /// A row whose own icon is unread draws the Shortcuts app's, from one cached bitmap.
     static let applicationURL =
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.shortcuts")
         ?? URL(fileURLWithPath: "/System/Applications/Shortcuts.app")
@@ -21,9 +21,12 @@ final class AppleShortcutCoordinator {
     private let aliases: AliasStore
     private let paletteCoordinator: PaletteCoordinator
     private unowned let core: AppCore
+    private let icons = AppleShortcutIconStore()
     /// Nil until a read succeeds, so the first one after launch always sweeps.
     @ObservationIgnored private var shortcuts: [AppleShortcut]?
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
+    /// The pane's prompt, held for the list read in flight and spent by it whatever it returns.
+    @ObservationIgnored private var promptsForIcons = false
 
     init(
         settings: AppSettings, appIndex: AppIndex, hotKeys: HotKeyManager,
@@ -39,6 +42,7 @@ final class AppleShortcutCoordinator {
         self.aliases = aliases
         self.paletteCoordinator = paletteCoordinator
         self.core = core
+        icons.onChange = { [weak self] in self?.publishEntries() }
     }
 
     func name(of id: UUID) -> String? {
@@ -50,6 +54,7 @@ final class AppleShortcutCoordinator {
     /// Off forgets the library but frees nothing: only a successful read may say what is gone.
     func applyPresence() {
         guard settings.appleShortcutsEnabled else {
+            icons.cancel()
             shortcuts = nil
             entries = []
             appIndex.setAppleShortcuts([])
@@ -58,19 +63,37 @@ final class AppleShortcutCoordinator {
         refresh()
     }
 
-    /// Re-read on every launcher open; the tool answers in milliseconds, so overlaps just drop.
-    func refresh() {
-        guard settings.appleShortcutsEnabled, refreshTask == nil else { return }
+    /// Re-read on every launcher open; an overlapping call joins the read in flight.
+    func refresh(promptingForIcons prompting: Bool = false) {
+        guard settings.appleShortcutsEnabled else { return }
+        if prompting { promptsForIcons = true }
+        guard refreshTask == nil else { return }
         refreshTask = Task {
             let found = try? await AppleShortcutRunner.list()
             refreshTask = nil
+            let prompting = promptsForIcons
+            promptsForIcons = false
             // A failed read keeps the last good library, and with it every alias and binding.
-            guard let found, settings.appleShortcutsEnabled, found != shortcuts else { return }
-            shortcuts = found
-            entries = found.map { AppEntry($0, applicationURL: Self.applicationURL) }
-            appIndex.setAppleShortcuts(entries)
-            removeReferences(toShortcutsMissingFrom: found)
+            guard let found, settings.appleShortcutsEnabled else { return }
+            let isFirstRead = shortcuts == nil
+            if found != shortcuts {
+                shortcuts = found
+                publishEntries()
+                removeReferences(toShortcutsMissingFrom: found)
+            }
+            icons.read(
+                found,
+                AppleShortcutIconStore.Request(sweep: isFirstRead || prompting, prompting: prompting))
         }
+    }
+
+    private func publishEntries() {
+        entries = (shortcuts ?? []).map { shortcut in
+            AppEntry(
+                shortcut, applicationURL: Self.applicationURL,
+                icon: icons.url(of: shortcut.id))
+        }
+        appIndex.setAppleShortcuts(entries)
     }
 
     /// Frees what a deleted shortcut held, including one deleted while Pipcast wasn't running.
