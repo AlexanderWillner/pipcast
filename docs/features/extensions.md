@@ -446,6 +446,20 @@ Escape and a bare backspace pop the extension's own navigation stack, and only l
 it's at its root. Pushed screens stay mounted, so popping back restores their state. Each pushed
 screen starts with an empty search; going back restores the parent's query and selected row.
 
+A List or Grid's `searchText` is the field's controlled value, as in Raycast: when the rendered prop
+changes, the field shows it with the caret after it, line breaks folded to spaces as a paste is, and
+it is compared in that form. Like a native field changed in code, that is no edit, so
+`ExtensionManager.dispatch` holds back the field's `onSearchTextChange` for a text the extension set
+itself; without that, two values could chase each other through the handler forever.
+`ExtensionSearchState` keeps the texts that were sent and tells the extension's replies to them
+apart from values it sets: only the newest reply can move the field, so an older one never swallows
+keystrokes typed since, and an unchanged prop never reverts typing. Once the user clears a value the
+extension set, it does not refill the empty field by setting that value again, as dict-cc does on
+every clear, so the next Escape still leaves the command; an action asking for it again does. Each
+covered screen keeps the `searchText` it last rendered to compare on return; a pushed screen's own
+replaces its empty search, while a first render's empty value keeps text typed during launch for the
+handler that mounts.
+
 ## Turning it on
 
 Extensions are **off until asked for**, and the switch is a real one rather than a filter: while it is
@@ -958,11 +972,11 @@ the same tile `IconCache` draws for the built-in commands, so the row reads as p
 
 An extension's own artwork has its own cache — `Service/ExtensionIconCache.swift` — rather than
 living in `IconCache`. That split is the point: `IconCache` stays the app-and-symbol layer and knows
-nothing about extensions. It lends out only the pixel work (`displayPixel`, `artworkExtent`,
-`paintedExtent`, `rasterized`), so there is one definition of how an icon is measured and drawn.
+nothing about extensions. It lends out only the pixel work (`IconCache.fitted`, which measures and
+rasterizes), so there is one definition of how an icon is measured and drawn.
 
 `ExtensionIconCache.extent` fits that artwork to **0.76** of the canvas, where an app icon and a
-symbol tile both sit at `IconCache.artworkExtent` **0.83**. The gap is deliberate and optical, not a
+symbol tile both sit at `IconCache.appIconExtent` **0.83**. The gap is deliberate and optical, not a
 size correction — measured, all three paths already produce an identical 40pt box.
 
 Every macOS 26 app icon is a squircle with a glyph inside it, and the ground disappears into the
@@ -973,9 +987,14 @@ change size depending on where it came from. An inline `data:` image is the one 
 fitted: the extension that drew it has already sized it, and rasterizing would cost the vector.
 
 Change the number only against a rendered strip of real icons; it means nothing on its own.
-`ext-icon-test` guards the invariant: padding in the source cannot change the drawn size, and a
-`data:` payload decodes in either encoding — and one naming a `raycast-*` colour draws ink, in the
-stroke that appearance calls for.
+`ext-icon-test` guards the invariant: padding in the source cannot change the drawn size, a
+non-square image keeps its aspect ratio, and a `data:` payload decodes in either encoding — and one
+naming a `raycast-*` colour draws ink, in the stroke that appearance calls for.
+
+Fitting fills a square, so `ExtensionIconCache` first centres anything wider or taller on a square
+canvas of its longer side. Drawn straight in, every non-square image stretches, a PNG as much as an
+SVG, with or without a `viewBox`: Weather's 27×17 SF Symbol eye rounded into a circle and its
+8×21 pin spread into a T. `NSImage` already reads an SVG's intrinsic size from `width`/`height`.
 
 - `ExtensionAppearance` (symbol + `ExtensionTint`) is stored per extension by manifest name in
   `ExtensionAppearanceStore`, and applies to **every command** of that extension — the same inheritance
