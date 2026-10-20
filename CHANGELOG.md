@@ -3,13 +3,22 @@
 What changed in each Pipcast release, newest first. The release workflow writes each version's
 section from its commits, and Pipcast shows this file in What's New.
 
-## 0.2.1
+## 0.3.0
 
-1 fix.
+2 new features, 1 fix and 1 other change.
+
+### New
+
+- **tinycast** — Complete switch incl. extensions by @AlexanderWillner in #44
+- **launcher** — Add deeplinks for built-in commands by @mSarheed in #41
 
 ### Fixed
 
 - **updates** — Report a failed check as a check, not a download by @mSarheed in #43
+
+### Other
+
+- Build release in ci and gate releases on the signed commit by @mSarheed in #45
 
 ## 0.2.0 — 2026-10-19
 
