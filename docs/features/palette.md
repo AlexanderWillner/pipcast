@@ -557,6 +557,18 @@ screen opened with a carried query (the Search Files fallback) came up with that
 IME's composition and any other focused field — the inline argument fields, an extension form — are
 left alone: the handler returns `.ignored` for them, and their own `onSubmit` still commits.
 
+## ↑ at the top recalls a search
+
+Root search claims ↑ for [Recent searches](launcher.md#recent-searches) only where the key would
+otherwise stop: on the compact bar, or on the top row with the field empty or still holding the
+entry ↑ last recalled. `RootPaletteView.recallOlderSearch` checks the palette's half — launcher mode,
+no menu, no composition, the search field focused, no modifier — and `LauncherCoordinator` the rest,
+so ↓, an open menu, an argument field and every other screen keep their arrows untouched. The
+coordinator answers first, so the selected row is only resolved when there is something to recall.
+`upHoldRecalls` lets key repeat continue only a walk its own hold began by recalling, never one a
+hold reached by moving up the list. The recalled text goes through `rewriteQuery`, landing the caret
+after it, and a non-empty query expands the compact bar on its own.
+
 ## The query is one line
 
 A paste, a drop or ⌥↵ can put line breaks into the search field, which then wraps its text out of

@@ -54,6 +54,9 @@ reports notification-dependent checks as skipped when the session cannot deliver
   subtitle, an exact alternate title and a keyword hit are three different rules.
 - **`Model/SearchScopes.swift` and `Model/LauncherRankingStore.swift` are pure too** — the ranking store
   takes its clock via `now` and its path via `fileURL`, for `scopes-test` and `ranking-test`.
+- **Recent searches never leave memory.** `PaletteState.queryHistory` is not written to disk, a
+  backup or settings.json; only the switch that allows it is. ↑ recalls one only where the key
+  would otherwise do nothing, so list navigation never changes under it.
 
 ## Search scopes
 
@@ -505,6 +508,47 @@ and the sensitivity, so a launch or a reset invalidates them.
 
 Learned data stays on device in `launcher-ranking.json`; a result that has learned ranking offers a
 per-item reset in its Actions menu, and users can clear all learned ranking in General Settings.
+
+## Recent searches
+
+↑ in an empty root search brings back the last search that ran something, and each further ↑ the
+one before it, as a shell's history does — so a calculation can be rerun with one number changed,
+or a search repeated after the window closed. ⌃P is ↑ here as everywhere. The recalled text lands
+with the caret after it; editing it makes it a new search, and the next ↑ then does nothing until
+the field is empty again. ↓ keeps moving the selection, and Escape clears the field as usual.
+
+`LauncherQueryHistory` (`Launcher/Model/`) is the pure part, covered by `query-history-test`:
+
+- **Recorded when a row runs**, never while typing. `LauncherScreen` hands the query to
+  `LauncherCoordinator.rememberSearch` from ↵, a click, a ⌘-digit, ⌘↵ and ⇧⌘↵, before the action can
+  rewrite or clear the field. An error card runs nothing and records nothing; ⌘K rows and chords
+  aimed at a row are not runs. Neither is the name a shortcut seeded to ask for arguments, while
+  it still lists that row alone (`argumentEntryID`): nobody typed it. Edited, it is a search.
+- **Only root search.** A screen with its own field — an extension, the clipboard, snippets,
+  Calculator History, settings search after `?` — never records, and ↑ there is untouched.
+- **What is kept** is the trimmed query: the newest 50, an exact repeat moved to the front rather
+  than stored twice. A calculator query is kept as its expression, so its answer is worked out again
+  on recall with today's rates; the answers themselves are Calculator History's.
+- **What is skipped**: anything over 200 characters, which is pasted content, and an unbroken run
+  of 32 or more characters that is either hex with letters and digits or mixes upper and lower case
+  with digits — the shapes of an API key, token or hash. A `://` address and a path starting `/` or
+  `~` are kept whatever their shape. The field joins a paste's lines before anything is recorded, so
+  a short multi-line paste is kept as one line; the model's own refusal of a line break is a backstop.
+- **Where ↑ recalls**: in root search with no menu open, no IME composition, no argument field
+  focused and no modifier held, on the compact bar or with the top row selected. The query must be
+  empty or still exactly the entry ↑ last put there. Anywhere else ↑ does what it always did.
+- **A held key never starts a walk.** Only a fresh press recalls; key repeat continues only a
+  walk that same hold began by recalling, so holding ↑ up the list stops at its top even when the
+  field still holds a recalled search.
+
+The history lives on `PaletteState` for the app's lifetime and is never persisted, so quitting
+Pipcast forgets it. Settings › General › Search › **Recall recent searches**
+(`launcherRemembersSearches`, on by default) is the switch; turning it off clears the history, from
+the pane or from settings.json, through an `AppCore` `track` sink. The sink clears on every change
+of the switch, so turning it off and on again before the sink runs still forgets. **Recent searches
+› Clear History** empties it while leaving recall on. A backup and settings.json
+(`search.remembersRecentSearches`) carry the switch, as they carry Clipboard History's, and never a
+search.
 
 ## The empty list
 

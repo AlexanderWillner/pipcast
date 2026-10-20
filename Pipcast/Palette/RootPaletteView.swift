@@ -35,6 +35,8 @@ struct RootPaletteView: View {
     /// Sampled once by `openActions`, so the running-only rows can't appear while the menu is up.
     @State private var selectionIsRunning = false
     @State private var menuSelection = 0
+    /// True while the held ↑ began by recalling; a hold that began in the list never recalls.
+    @State private var upHoldRecalls = false
     /// The argument field whose choices are up, so `menuContent` can rebuild the same menu.
     @State private var argumentOptionsField: String?
     @State private var inputOptions: PopoverMenuContent?
@@ -587,8 +589,11 @@ struct RootPaletteView: View {
                 return moveVertically(1)
             }
             .onKeyPress(keys: [.upArrow], phases: [.down, .repeat]) { press in
+                if press.phase == .down { upHoldRecalls = false }
                 if let reorder = movePinnedOrFavorite(-1, modifiers: press.modifiers) { return reorder }
                 if vm.isControlListOpen { return .ignored }
+                upHoldRecalls = (press.phase == .down || upHoldRecalls) && recallOlderSearch(press)
+                if upHoldRecalls { return .handled }
                 if isCollapsed { return .ignored }
                 if menuOpen {
                     moveMenu(-1)
@@ -1405,6 +1410,19 @@ struct RootPaletteView: View {
         vm.selection = next
         scroll = ScrollIntent(kind: .follow)
         return .handled
+    }
+
+    /// Only where ↑ would otherwise stop: the compact bar, or root search's top row.
+    private func recallOlderSearch(_ press: KeyPress) -> Bool {
+        // Holding ↑ up the list must stop at the top, not run on into the history.
+        let startingWalk = press.phase == .down
+        let launcher = core.launcherCoordinator
+        guard press.modifiers.isDisjoint(with: [.command, .option, .control, .shift]),
+            vm.mode == .launcher, !menuOpen, !vm.isComposing, searchFocused, argumentFocused == nil,
+            launcher.canRecallOlderSearch(startingWalk: startingWalk),
+            isCollapsed || selection(in: screen) == 0
+        else { return false }
+        return launcher.recallOlderSearch(startingWalk: startingWalk)
     }
 
     /// ←/→: consumed only by a horizontally navigating screen, else the caret keeps them.
