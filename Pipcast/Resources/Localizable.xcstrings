@@ -52410,6 +52410,58 @@
         }
       }
     },
+    "Everything Tinycast has built is already here. Import one again to update it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles, was Tinycast erstellt hat, ist bereits hier. Importiere eine Erweiterung erneut, um sie zu aktualisieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo lo que Tinycast ha compilado ya está aquí. Importa una extensión de nuevo para actualizarla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toutes les extensions compilées par Tinycast sont déjà présentes. Réimportez une extension pour la mettre à jour."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tinycastがビルドしたものはすべてここにあります。更新するには、もう一度読み込んでください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tinycast에서 빌드한 항목이 모두 이미 여기에 있습니다. 업데이트하려면 다시 가져오십시오."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudo o que o Tinycast compilou já está aqui. Importe um novamente para atualizá-lo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всё, что собрал Tinycast, уже здесь. Импортируйте расширение снова, чтобы обновить его."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tinycast 构建的所有内容都已在此。再次导入即可更新。"
+          }
+        }
+      }
+    },
     "Everything's ready. Hit Get Started to open the launcher." : {
       "localizations" : {
         "de" : {

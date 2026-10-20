@@ -18,6 +18,10 @@ struct OnboardingView: View {
     /// Only until the first layout measures the real one, which is what the window then takes.
     static let initialSize = CGSize(width: width, height: 352)
 
+    private var tinycastRunning: Bool {
+        core.runningApps.runningNonProhibitedBundleIDs.contains(where: BackupActions.isTinycastBundleID)
+    }
+
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
             hero
@@ -236,14 +240,14 @@ struct OnboardingView: View {
                 ) {
                     Button("Choose…") { model.chooseTinycastFile() }.controlSize(.small)
                 }
-                if BackupActions.isTinycastInstalled {
+                if tinycastRunning || BackupActions.isTinycastInstalled {
                     OnboardingDivider()
                     OnboardingRow(
                         title: String(localized: "Extensions"),
                         subtitle: String(localized: "Installed extensions move in Settings › Extensions, with their data."),
                         systemImage: "puzzlepiece.extension", tint: .gray
                     ) {
-                        if BackupActions.tinycastRunning {
+                        if tinycastRunning {
                             Button("Quit Tinycast") { BackupActions.quitTinycast() }
                                 .controlSize(.small)
                         }

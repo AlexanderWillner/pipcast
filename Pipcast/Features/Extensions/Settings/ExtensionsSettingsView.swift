@@ -57,6 +57,8 @@ struct ExtensionsSettingsView: View {
             ExtensionImportPanel(
                 title: String(localized: "Import from Raycast"),
                 emptyText: String(localized: "No built extensions found in ~/.config/raycast/extensions."),
+                allInstalledText: String(
+                    localized: "Everything Raycast has built is already here. Import one again to update it."),
                 candidates: candidates.entries,
                 onImport: { chosen in
                     importCandidates = nil
@@ -68,6 +70,8 @@ struct ExtensionsSettingsView: View {
             ExtensionImportPanel(
                 title: String(localized: "Import from Tinycast"),
                 emptyText: String(localized: "No built extensions found in Tinycast's support folder."),
+                allInstalledText: String(
+                    localized: "Everything Tinycast has built is already here. Import one again to update it."),
                 candidates: candidates.entries,
                 onImport: { chosen in
                     tinycastImportCandidates = nil
@@ -935,6 +939,7 @@ private struct ImportCandidates: Identifiable {
 private struct ExtensionImportPanel: View {
     let title: String
     let emptyText: String
+    let allInstalledText: String
     let candidates: [ExtensionImportCandidate]
     let onImport: ([InstalledExtension]) -> Void
     let onCancel: () -> Void
@@ -1029,10 +1034,7 @@ private struct ExtensionImportPanel: View {
             return emptyText
         }
         guard !fresh.isEmpty else {
-            return String(
-                localized: """
-                    Everything Raycast has built is already here. Import one again to update it.
-                    """)
+            return allInstalledText
         }
         return String(
             localized: """

@@ -49,6 +49,10 @@ struct BackupSettingsView: View {
             : String(localized: "\(name) — not a Raycast export")
     }
 
+    private var tinycastRunning: Bool {
+        core.runningApps.runningNonProhibitedBundleIDs.contains(where: BackupActions.isTinycastBundleID)
+    }
+
     var body: some View {
         Form {
             Section {
@@ -115,13 +119,13 @@ struct BackupSettingsView: View {
                         Text("Import")
                     }
                 }
-                if BackupActions.isTinycastInstalled {
+                if tinycastRunning || BackupActions.isTinycastInstalled {
                     LabeledContent {
-                        if BackupActions.tinycastRunning {
+                        if tinycastRunning {
                             Button("Quit Tinycast") { BackupActions.quitTinycast() }
                         }
                     } label: {
-                        if BackupActions.tinycastRunning {
+                        if tinycastRunning {
                             Label(
                                 "Tinycast is running — quit it to avoid hotkey conflicts.",
                                 systemImage: "exclamationmark.triangle.fill"

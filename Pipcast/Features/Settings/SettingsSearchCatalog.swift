@@ -617,6 +617,9 @@ enum SettingsSearchCatalog {
             .extensionsInstall, "Import from Raycast",
             keywords: ["migrate", "existing"]),
         .init(
+            .extensionsInstall, "Import from Tinycast",
+            keywords: ["migrate", "switch", "import"]),
+        .init(
             .extensionsInstall, "Add from folder",
             keywords: ["local", "develop", "sideload"]),
         .init(

@@ -200,13 +200,6 @@ enum BackupActions {
         !ExtensionCatalog.tinycastSupportDirectories().isEmpty
     }
 
-    static var tinycastRunning: Bool {
-        NSWorkspace.shared.runningApplications.contains {
-            $0.bundleIdentifier.map(isTinycastBundleID) == true
-                && $0.activationPolicy != .prohibited
-        }
-    }
-
     /// Quit any running Tinycast so its hotkeys stop clashing; background helpers stay.
     static func quitTinycast() {
         for app in NSWorkspace.shared.runningApplications
