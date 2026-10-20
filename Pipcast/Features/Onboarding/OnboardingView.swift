@@ -497,9 +497,6 @@ final class OnboardingModel {
 
     func cancelTinycastImport() {
         tinycastTask?.cancel()
-        tinycastTask = nil
-        tinycastOperation = nil
-        tinycastImporting = false
     }
 
     private func runTinycast(core: AppCore) {
