@@ -13,6 +13,7 @@ struct HotKeyDispatchTest {
     }
 
     static func main() {
+        dormantQuickAction()
         explicitWindowTarget()
         for includesShift in [false, true] { dispatch(includesShift: includesShift) }
         print("\(checks) dispatch checks; \(failures) failures")
@@ -142,4 +143,19 @@ struct HotKeyDispatchTest {
             "Hyper selects the other action in a shared registration",
             palette == 3 && presses == beforePress + 1)
     }
+    static func dormantQuickAction() {
+        let domain = "pipcast.hotkey-dispatch-test.\(UUID())"
+        let defaults = UserDefaults(suiteName: domain)!
+        defer { defaults.removePersistentDomain(forName: domain) }
+        let action = HotKeyAction.quickAction(id: UUID())
+        let binding = HotKeyBinding.combo(KeyShortcut(carbonKeyCode: kVK_ANSI_G, carbonModifiers: controlKey))
+        let first = HotKeyManager(defaults: defaults)
+        first.setBinding(binding, for: action)
+        let reloaded = HotKeyManager(defaults: defaults)
+        reloaded.start(
+            customCommandIDs: [], quicklinkIDs: [], windowLayoutIDs: [],
+            windowRoomIDs: [], customWindowSizeIDs: [])
+        check("a missing quick action keeps its binding across restart", reloaded.binding(for: action) == binding)
+    }
+
 }

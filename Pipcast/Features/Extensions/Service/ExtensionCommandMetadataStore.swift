@@ -94,6 +94,60 @@ final class ExtensionCommandMetadataStore {
         scheduleFlush()
     }
 
+    func isUntouched(_ name: String) -> Bool { records[name] == nil }
+
+    struct PreparedImport {
+        let staged: URL
+        fileprivate let original: [String: [String: ExtensionCommandMetadata]]
+        fileprivate let updated: [String: [String: ExtensionCommandMetadata]]
+    }
+
+    func prepareExternalMetadata(
+        _ incoming: [String: ExtensionCommandMetadata], for name: String
+    ) async throws -> PreparedImport? {
+        guard isUntouched(name), !incoming.isEmpty else { return nil }
+        let original = records
+        var updated = original
+        updated[name] = incoming
+        let staged = try await Self.stage(updated, beside: fileURL)
+        return PreparedImport(staged: staged, original: original, updated: updated)
+    }
+
+    func isCurrent(_ prepared: PreparedImport) -> Bool { records == prepared.original }
+
+    func adoptPreparedMetadata(_ prepared: PreparedImport) throws {
+        guard isCurrent(prepared) else { throw CancellationError() }
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            _ = try FileManager.default.replaceItemAt(fileURL, withItemAt: prepared.staged)
+        } else {
+            try FileManager.default.moveItem(at: prepared.staged, to: fileURL)
+        }
+        flushTask?.cancel()
+        flushTask = nil
+        isDirty = false
+        records = prepared.updated
+    }
+
+    @concurrent
+    private static func stage(
+        _ records: [String: [String: ExtensionCommandMetadata]], beside file: URL
+    ) async throws -> URL {
+        let data = try JSONEncoder().encode(records)
+        try Task.checkCancellation()
+        let staged = file.deletingLastPathComponent().appendingPathComponent(".metadata-import-\(UUID()).json")
+        try data.write(to: staged, options: .atomic)
+        return staged
+    }
+
+    @concurrent
+    static func readExternal(file: URL) async throws -> [String: [String: ExtensionCommandMetadata]] {
+        let data: Data
+        do { data = try Data(contentsOf: file) }
+        catch let error as CocoaError where error.code == .fileReadNoSuchFile { return [:] }
+        try Task.checkCancellation()
+        return try JSONDecoder().decode([String: [String: ExtensionCommandMetadata]].self, from: data)
+    }
+
     func flush() {
         flushTask?.cancel()
         flushTask = nil

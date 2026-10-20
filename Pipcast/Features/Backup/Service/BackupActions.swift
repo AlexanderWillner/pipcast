@@ -40,6 +40,9 @@ enum BackupActions {
 
     static func chooseBackupFile() -> URL? { chooseFile(ofTypes: [.pipcastBackup, .tinycastBackup]) }
 
+    /// The Tinycast half of the switch: its exports carry the same archive layout.
+    static func chooseTinycastFile() -> URL? { chooseFile(ofTypes: [.tinycastBackup]) }
+
     private static func chooseFile(ofTypes types: [UTType]) -> URL? {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = types
@@ -71,22 +74,24 @@ enum BackupActions {
     }
 
     /// Opens the archive and reads its manifest, leaving staging for the caller to apply and discard.
+    @concurrent
     static func openBackup(at file: URL) async throws -> (BackupStaging, BackupManifest) {
-        try await Task.detached(priority: .userInitiated) {
-            let staging = try BackupStaging()
-            do {
-                try BackupArchive.open(file: file, into: staging.root)
-                return (staging, try staging.bundle.readManifest())
-            } catch {
-                staging.discard()
-                throw error
-            }
-        }.value
+        try Task.checkCancellation()
+        let staging = try BackupStaging()
+        do {
+            try BackupArchive.open(file: file, into: staging.root)
+            try Task.checkCancellation()
+            return (staging, try staging.bundle.readManifest())
+        } catch {
+            staging.discard()
+            throw error
+        }
     }
 
     static func applyBackup(
         _ categories: Set<BackupCategory>, from staging: BackupStaging, to core: AppCore
     ) async -> BackupApplier.Summary? {
+        guard !Task.isCancelled else { return nil }
         let bundle = staging.bundle
         if categories.contains(.configuration),
             let data = try? Data(contentsOf: bundle.settingsURL),
@@ -97,6 +102,7 @@ enum BackupActions {
             guard await confirmExecutableImport(core: core, commands: commands, shortcuts: shortcuts)
             else { return nil }
         }
+        guard !Task.isCancelled else { return nil }
         return await BackupApplier.apply(categories, from: bundle, to: core)
     }
 
@@ -184,6 +190,26 @@ enum BackupActions {
             quicklinksImported: quicklinksImported,
             quicklinksError: quicklinksError,
             missingImages: result.missingImages)
+    }
+
+    /// Every Tinycast channel (stable, beta, dev) shares this bundle-id prefix.
+    static let tinycastBundleIDPrefix = "com.tinycast.app"
+
+    static func isTinycastBundleID(_ id: String) -> Bool { id.hasPrefix(tinycastBundleIDPrefix) }
+
+    /// A Tinycast install is present when one of its support folders exists on this Mac.
+    static var isTinycastInstalled: Bool {
+        !ExtensionCatalog.tinycastSupportDirectories().isEmpty
+    }
+
+    /// Quit any running Tinycast so its hotkeys stop clashing; background helpers stay.
+    static func quitTinycast() {
+        for app in NSWorkspace.shared.runningApplications
+        where app.bundleIdentifier.map(isTinycastBundleID) == true
+            && app.activationPolicy != .prohibited
+        {
+            app.terminate()
+        }
     }
 
     /// Every Raycast channel (stable, beta, alpha, internal) shares this bundle-id prefix.

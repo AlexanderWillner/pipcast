@@ -20,6 +20,10 @@ building both Debug and Release, and the Release workflow reruns it on the commi
 sign. Run them locally first anyway. CodeRabbit reviews each PR on top. Each is expanded below;
 the manual sweep at the end of this file is the sixth, judged by what you touched.
 
+The backup archive harness also checks overlapping Tinycast file selections and cancellation cleanup.
+The snippet harness checks backup binding destinations after collisions and deduplication; extension
+storage and metadata harnesses check failed imports and preservation of local state.
+
 ## The harnesses
 
 ```sh

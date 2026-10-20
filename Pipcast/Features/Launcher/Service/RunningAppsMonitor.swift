@@ -4,6 +4,7 @@ import AppKit
 @Observable
 final class RunningAppsMonitor {
     private(set) var runningBundleIDs: Set<String> = []
+    private(set) var runningNonProhibitedBundleIDs: Set<String> = []
     private var runningAppPaths: Set<String> = []
     @ObservationIgnored private var observers: [NotificationToken] = []
 
@@ -29,6 +30,8 @@ final class RunningAppsMonitor {
     private func refresh() {
         let apps = NSWorkspace.shared.runningApplications
         let bundleIDs = Set(apps.compactMap(\.bundleIdentifier))
+        let interactive = Set(apps.filter { $0.activationPolicy != .prohibited }.compactMap(\.bundleIdentifier))
+        if interactive != runningNonProhibitedBundleIDs { runningNonProhibitedBundleIDs = interactive }
         let paths = Set(apps.compactMap { $0.bundleURL?.resolvingSymlinksInPath().standardizedFileURL.path })
         if bundleIDs != runningBundleIDs { runningBundleIDs = bundleIDs }
         if paths != runningAppPaths { runningAppPaths = paths }

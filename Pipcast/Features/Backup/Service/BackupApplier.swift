@@ -18,9 +18,13 @@ enum BackupApplier {
         _ categories: Set<BackupCategory>, from bundle: BackupBundle, to core: AppCore
     ) async -> Summary {
         var summary = Summary()
+        var snippetBindings: [String: HotKeyBinding] = [:]
+        var snippetIDs: [String: String] = [:]
         if categories.contains(.configuration), let data = try? Data(contentsOf: bundle.settingsURL),
-            let backup = try? SettingsBackup(json: data)
+            var backup = try? SettingsBackup(json: data)
         {
+            snippetBindings = backup.hotkeys?.snippets ?? [:]
+            backup.hotkeys?.snippets = nil
             summary.settings = backup.apply(to: core)
         }
         if categories.contains(.clipboard) {
@@ -29,13 +33,28 @@ enum BackupApplier {
         }
         if categories.contains(.snippets) {
             do {
-                summary.snippets = try await applySnippets(bundle, to: core)
+                let imported = try await applySnippets(bundle, to: core)
+                summary.snippets = imported.count
+                snippetIDs = imported.ids
                 summary.snippetsNeedEnabling =
                     summary.snippets > 0 && !core.settings.snippetsEnabled
             } catch {
                 summary.problems.append(
                     String(localized: "Couldn't import snippets: \(error.localizedDescription)"))
             }
+        }
+        for (name, binding) in snippetBindings where BackupBundle.isSafeName(name) {
+            let id: String
+            if categories.contains(.snippets) {
+                guard let importedID = snippetIDs[name] else { continue }
+                id = importedID
+            } else {
+                id = core.snippetsStore.snippetsDirectory.appendingPathComponent(name).standardizedFileURL.path
+            }
+            let action = HotKeyAction.snippet(id: id)
+            guard core.hotKeys.conflictOwner(of: binding, excluding: action) == nil else { continue }
+            core.hotKeys.setBinding(binding, for: action)
+            summary.settings?.hotkeys += 1
         }
         if categories.contains(.notes) {
             summary.notes = await applyNotes(bundle, to: core)
@@ -86,21 +105,20 @@ enum BackupApplier {
         }
     }
 
-    private static func applySnippets(_ bundle: BackupBundle, to core: AppCore) async throws -> Int {
+    private static func applySnippets(
+        _ bundle: BackupBundle, to core: AppCore
+    ) async throws -> BackupSnippetImporter.Result {
         let documents = bundle.documents(in: bundle.snippetsDirectory, extension: "md")
-        guard !documents.isEmpty else { return 0 }
-        // Started first, so imported snippets reach the launcher at once rather than on relaunch.
+        guard !documents.isEmpty else { return .init() }
         if core.settings.snippetsEnabled { await core.snippetsStore.start() }
-        let existing = Set(core.snippetsStore.snippets.map { Pair($0.snippet.name, $0.snippet.text) })
-        let incoming = documents.compactMap { document in
-            try? SnippetMarkdownSerializer.parse(
+        let incoming = documents.compactMap { document -> (String, Snippet)? in
+            guard let snippet = try? SnippetMarkdownSerializer.parse(
                 content: document.contents,
                 fileURL: bundle.snippetsDirectory.appendingPathComponent(document.name))
+            else { return nil }
+            return (document.name, snippet)
         }
-        // Deduped, so importing the same backup twice doesn't leave a second copy of everything.
-        let fresh = incoming.filter { !existing.contains(Pair($0.name, $0.text)) }
-        guard !fresh.isEmpty else { return 0 }
-        return try await core.snippetsStore.importSnippets(fresh).count
+        return try await BackupSnippetImporter.apply(incoming, to: core.snippetsStore)
     }
 
     private static func applyNotes(_ bundle: BackupBundle, to core: AppCore) async -> Int {
@@ -130,14 +148,4 @@ enum BackupApplier {
         return applied
     }
 
-    /// Name and body together, so two snippets sharing one name still both survive an import.
-    private struct Pair: Hashable {
-        let name: String
-        let text: String
-
-        init(_ name: String, _ text: String) {
-            self.name = name
-            self.text = text
-        }
-    }
 }

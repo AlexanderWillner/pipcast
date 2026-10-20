@@ -34,10 +34,11 @@ struct ExtensionSearchAccessoryTests {
     static var failures = 0
     static var passes = 0
 
-    static func main() {
+    static func main() async {
         parsing()
         seeding()
         storageIsolation()
+        await externalStorage()
         print(failures == 0 ? "\nALL PASSED" : "\n\(failures) FAILED")
         print("\(passes) passed, \(failures) failed")
         exit(failures == 0 ? 0 : 1)
@@ -210,4 +211,42 @@ struct ExtensionSearchAccessoryTests {
             print("FAIL  \(label)\(detail.isEmpty ? "" : " — \(detail)")")
         }
     }
+    static func externalStorage() async {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let sourceDirectory = root.appendingPathComponent("source")
+        let destination = root.appendingPathComponent("destination")
+        let source = ExtensionStorage(directory: sourceDirectory)
+        source.setLocalStorage(extension: "sample", key: "value", value: .string("imported"))
+        source.flush()
+        let store = ExtensionStorage(directory: destination)
+        do {
+            let file = sourceDirectory.appendingPathComponent("sample.json")
+            guard let staged = try await ExtensionStorage.stageExternalStore(from: file, in: destination) else {
+                check("existing data stages", false)
+                return
+            }
+            try store.adoptStagedStore(staged, for: "sample")
+            check(
+                "imported LocalStorage is available",
+                store.localStorageValue(extension: "sample", key: "value") == .string("imported"))
+            check("an adopted store is no longer untouched", !store.isUntouched("sample"))
+            guard let raced = try await ExtensionStorage.stageExternalStore(from: file, in: destination) else { return }
+            defer { try? FileManager.default.removeItem(at: raced) }
+            store.setLocalStorage(extension: "raced", key: "value", value: .string("local"))
+            try store.adoptStagedStore(raced, for: "raced")
+            check(
+                "a local edit during staging wins",
+                store.localStorageValue(extension: "raced", key: "value") == .string("local"))
+            try Data("broken".utf8).write(to: file)
+            do {
+                _ = try await ExtensionStorage.stageExternalStore(from: file, in: destination)
+                check("corrupt import data reports failure", false)
+            } catch { check("corrupt import data reports failure", true) }
+            let missing = try await ExtensionStorage.stageExternalStore(
+                from: root.appendingPathComponent("missing.json"), in: destination)
+            check("an extension without stored data needs no migration", missing == nil)
+        } catch { check("external storage fixtures", false, String(describing: error)) }
+    }
+
 }

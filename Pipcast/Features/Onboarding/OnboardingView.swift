@@ -18,6 +18,10 @@ struct OnboardingView: View {
     /// Only until the first layout measures the real one, which is what the window then takes.
     static let initialSize = CGSize(width: width, height: 352)
 
+    private var tinycastRunning: Bool {
+        core.runningApps.runningNonProhibitedBundleIDs.contains(where: BackupActions.isTinycastBundleID)
+    }
+
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
             hero
@@ -47,6 +51,7 @@ struct OnboardingView: View {
         .shortcutRecorderPopoverHost()
         .animation(.easeInOut(duration: 0.2), value: step)
         .onAppear { accessibilityTrusted = Permissions.isAccessibilityTrusted() }
+        .onDisappear { model.cancelTinycastImport() }
         .onReceive(refreshTimer) { _ in
             let trusted = Permissions.isAccessibilityTrusted()
             if trusted != accessibilityTrusted { accessibilityTrusted = trusted }
@@ -89,7 +94,7 @@ struct OnboardingView: View {
         switch step {
         case 0: String(localized: "Welcome to Pipcast")
         case 1: String(localized: "Enable Pasting")
-        case 2: String(localized: "Import from Raycast")
+        case 2: String(localized: "Switch to Pipcast")
         default: String(localized: "You're all set")
         }
     }
@@ -181,6 +186,27 @@ struct OnboardingView: View {
 
     private var raycastStep: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            Picker("", selection: $model.source) {
+                Text("Raycast").tag(OnboardingModel.Source.raycast)
+                Text("Tinycast").tag(OnboardingModel.Source.tinycast)
+            }
+            .pickerStyle(.segmented)
+            .disabled(model.isImporting)
+            .padding(.horizontal, Theme.Spacing.xs)
+            switch model.source {
+            case .raycast: raycastCard
+            case .tinycast: tinycastCard
+            }
+            if let status = model.status {
+                importStatus(status)
+            } else {
+                caption(String(localized: "Optional — you can import later in Settings › Backup."))
+            }
+        }
+    }
+
+    private var raycastCard: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
                     title: String(localized: "Raycast Export"),
@@ -203,10 +229,34 @@ struct OnboardingView: View {
             }
             RaycastImportSelection(selection: $model.selection)
                 .padding(.horizontal, Theme.Spacing.xs)
-            if let status = model.status {
-                importStatus(status)
-            } else {
-                caption(String(localized: "Optional — you can import later in Settings › Backup."))
+        }
+    }
+
+    private var tinycastCard: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            OnboardingCard {
+                OnboardingRow(
+                    title: String(localized: "Tinycast Backup"),
+                    subtitle: model.tinycastFileSubtitle,
+                    systemImage: "doc.badge.gearshape", tint: .orange
+                ) {
+                    Button("Choose…") { model.chooseTinycastFile() }
+                        .controlSize(.small)
+                        .disabled(model.isImporting)
+                }
+                if tinycastRunning || BackupActions.isTinycastInstalled {
+                    OnboardingDivider()
+                    OnboardingRow(
+                        title: String(localized: "Extensions"),
+                        subtitle: String(localized: "Installed extensions move in Settings › Extensions, with their data."),
+                        systemImage: "puzzlepiece.extension", tint: .gray
+                    ) {
+                        if tinycastRunning {
+                            Button("Quit Tinycast") { BackupActions.quitTinycast() }
+                                .controlSize(.small)
+                        }
+                    }
+                }
             }
         }
     }
@@ -230,6 +280,7 @@ struct OnboardingView: View {
             HStack {
                 if step > 0 {
                     Button {
+                        model.cancelTinycastImport()
                         step -= 1
                     } label: {
                         Label("Back", systemImage: "chevron.left")
@@ -243,7 +294,7 @@ struct OnboardingView: View {
                         .buttonStyle(.plain)
                         .foregroundStyle(.secondary)
                 }
-                if step == 2 && model.importing {
+                if step == 2 && model.isImporting {
                     Button {
                     } label: {
                         HStack(spacing: Theme.Spacing.sm) {
@@ -276,7 +327,7 @@ struct OnboardingView: View {
         case 2:
             if model.didImport {
                 String(localized: "Continue")
-            } else if model.importing {
+            } else if model.isImporting {
                 String(localized: "Importing…")
             } else {
                 String(localized: "Import")
@@ -303,6 +354,7 @@ struct OnboardingView: View {
     }
 
     private func advance() {
+        model.cancelTinycastImport()
         step = min(step + 1, Self.lastStep)
     }
 
@@ -370,15 +422,37 @@ final class OnboardingModel {
         case failure(String)
     }
 
+    enum Source {
+        case raycast
+        case tinycast
+    }
+
+    /// Tinycast first when it is there to switch from; otherwise the Raycast flow is unchanged.
+    var source: Source = BackupActions.isTinycastInstalled ? .tinycast : .raycast
     var file: URL?
     var passphrase = ""
     var importing = false
     var status: ImportStatus?
     var selection: RaycastImportOptions = .all
     var isRaycastExport = false
+    var tinycastFile: URL?
+    var tinycastImporting = false
+    @ObservationIgnored private var tinycastTask: Task<Void, Never>?
+    @ObservationIgnored private var tinycastOperation: UUID?
+
+    isolated deinit {
+        tinycastTask?.cancel()
+    }
+
+    var isImporting: Bool { importing || tinycastImporting }
 
     var canImport: Bool {
-        isRaycastExport && !passphrase.isEmpty && !selection.isEmpty && !importing
+        switch source {
+        case .raycast:
+            isRaycastExport && !passphrase.isEmpty && !selection.isEmpty && !isImporting
+        case .tinycast:
+            tinycastFile != nil && !isImporting
+        }
     }
     var didImport: Bool {
         if case .success = status { return true }
@@ -402,6 +476,67 @@ final class OnboardingModel {
     }
 
     func run(core: AppCore) {
+        switch source {
+        case .raycast: runRaycast(core: core)
+        case .tinycast: runTinycast(core: core)
+        }
+    }
+
+    func chooseTinycastFile() {
+        guard !isImporting, let url = BackupActions.chooseTinycastFile(), !isImporting else { return }
+        tinycastFile = url
+        status = nil
+    }
+
+    var tinycastFileSubtitle: String {
+        guard let name = tinycastFile?.lastPathComponent else {
+            return String(localized: "Choose a .tinycast file exported from Tinycast.")
+        }
+        return String(localized: "\(name) — Tinycast backup")
+    }
+
+    func cancelTinycastImport() {
+        tinycastTask?.cancel()
+    }
+
+    private func runTinycast(core: AppCore) {
+        guard let file = tinycastFile, !isImporting else { return }
+        tinycastImporting = true
+        status = nil
+        let identity = UUID()
+        tinycastOperation = identity
+        tinycastTask = Task { [weak self] in
+            defer {
+                if let self, self.tinycastOperation == identity {
+                    self.tinycastImporting = false
+                    self.tinycastTask = nil
+                    self.tinycastOperation = nil
+                }
+            }
+            do {
+                let (staging, manifest) = try await BackupActions.openBackup(at: file)
+                defer { staging.discard() }
+                guard !Task.isCancelled, self?.tinycastOperation == identity,
+                    self?.tinycastFile == file, self?.source == .tinycast
+                else { return }
+                let summary = await BackupActions.applyBackup(
+                    manifest.categories, from: staging, to: core)
+                guard !Task.isCancelled, let self, self.tinycastOperation == identity,
+                    self.tinycastFile == file, self.source == .tinycast
+                else { return }
+                if let summary {
+                    self.status = .success(BackupActions.summaryText(summary))
+                } else {
+                    self.status = .failure(String(localized: "Import cancelled."))
+                }
+            } catch {
+                guard !Task.isCancelled, let self, self.tinycastOperation == identity else { return }
+                self.status = .failure(error.localizedDescription)
+            }
+        }
+    }
+
+    private func runRaycast(core: AppCore) {
         guard canImport, let file else { return }
         importing = true
         status = nil

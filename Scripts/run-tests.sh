@@ -535,6 +535,7 @@ run quicklink-coordinator-test Pipcast/Features/Quicklinks/Model/Quicklink.swift
                            Pipcast/Features/Snippets/Model/Snippet.swift \
                            Pipcast/Features/Snippets/Model/SnippetTemplateEngine.swift
 run slow snippets-test     Tests/snippet-coordinator-fixtures.swift \
+                           Pipcast/Features/Backup/Service/BackupSnippetImporter.swift \
                            Pipcast/Palette/MenuPanel.swift \
                            Pipcast/Platform/AppPaths.swift \
                            Pipcast/Features/Snippets/UI/SnippetCoordinator.swift \
@@ -649,7 +650,8 @@ run backup-archive-test    Pipcast/Platform/AppPaths.swift \
                            Pipcast/Features/Backup/Model/BackupCategory.swift \
                            Pipcast/Features/Backup/Model/BackupClipboardItem.swift \
                            Pipcast/Features/Backup/Model/BackupManifest.swift \
-                           Pipcast/Features/Backup/Service/BackupStaging.swift
+                           Pipcast/Features/Backup/Service/BackupStaging.swift \
+                           Pipcast/Features/Backup/Service/BackupImportSession.swift
 E=Pipcast/Features/Extensions
 run symbols-test           $E/Service/SymbolCatalog.swift
 run ext-cleanup-test       $E/Service/ExtensionCleanup.swift \

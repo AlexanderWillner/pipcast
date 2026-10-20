@@ -54,6 +54,9 @@ struct ExtensionCommandRef: Sendable, Hashable {
 
 /// Finds and installs extensions, stored in Raycast's own layout so a built one imports as-is.
 enum ExtensionCatalog {
+    /// Tinycast's channel bundle ids, stable first: the same layout, another folder.
+    static let tinycastBundleIDs = ["com.tinycast.app", "com.tinycast.app.beta", "com.tinycast.app.dev"]
+
     /// Keyed by bundle id, so a Debug build never shares installs with a release channel.
     static func extensionsDirectory() -> URL {
         supportDirectory().appendingPathComponent("extensions", isDirectory: true)
@@ -66,6 +69,36 @@ enum ExtensionCatalog {
     /// Outside `extension-data`, whose every file the cleanup sweep reads as one extension's own.
     static func commandMetadataFile() -> URL {
         supportDirectory().appendingPathComponent("extension-commands.json", isDirectory: false)
+    }
+
+    /// Every Tinycast install on this Mac, stable first; missing channels are skipped.
+    nonisolated static func tinycastSupportDirectories() -> [URL] {
+        let base =
+            FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first ?? FileManager.default.homeDirectoryForCurrentUser
+        return tinycastBundleIDs.map {
+            base.appendingPathComponent($0, isDirectory: true)
+        }.filter { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    /// The first Tinycast install holding extensions, so an empty channel never reads as none.
+    nonisolated static func tinycastExtensionsDirectory() -> URL? {
+        tinycastSupportDirectories().lazy.map {
+            $0.appendingPathComponent("extensions", isDirectory: true)
+        }.first { hasEntries($0) }
+    }
+
+    /// Every Tinycast extensions folder holding anything, so beta installs aren't missed.
+    nonisolated static func tinycastExtensionRoots() -> [URL] {
+        tinycastSupportDirectories().map {
+            $0.appendingPathComponent("extensions", isDirectory: true)
+        }.filter(hasEntries)
+    }
+
+    private nonisolated static func hasEntries(_ directory: URL) -> Bool {
+        let entries = try? FileManager.default.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        return !(entries ?? []).isEmpty
     }
 
     /// Outside the directories the cleanup sweep reads, like `commandMetadataFile`.
@@ -114,7 +147,11 @@ enum ExtensionCatalog {
 
     /// An unreadable or half-written directory is skipped rather than failing the whole scan.
     nonisolated static func scan() -> [InstalledExtension] {
-        let root = extensionsDirectory()
+        scan(in: extensionsDirectory())
+    }
+
+    /// The same scan over another root: a Tinycast install holds the same layout.
+    nonisolated static func scan(in root: URL) -> [InstalledExtension] {
         let entries =
             (try? FileManager.default.contentsOfDirectory(
                 at: root, includingPropertiesForKeys: [.isDirectoryKey, .addedToDirectoryDateKey],
@@ -254,6 +291,18 @@ enum ExtensionCatalog {
     static func uninstall(_ installed: InstalledExtension) throws {
         try? FileManager.default.removeItem(at: supportPath(for: installed.manifest.name))
         try FileManager.default.removeItem(at: installed.directory)
+    }
+
+    /// Tinycast holds the same layout under its own support folder, so the same scan applies.
+    /// Every channel is read and deduped by name, since stable and beta can both hold one.
+    nonisolated static func importableFromTinycast() -> [InstalledExtension] {
+        tinycastExtensionRoots().flatMap { scan(in: $0) }
+            .reduce(into: [InstalledExtension]()) { unique, candidate in
+                guard !unique.contains(where: { $0.manifest.name == candidate.manifest.name })
+                else { return }
+                unique.append(candidate)
+            }
+            .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
     }
 
     /// Raycast keys installs by UUID, so only the manifest says what a directory holds.

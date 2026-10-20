@@ -6,16 +6,20 @@ struct ExtensionsSettingsView: View {
     @State private var expanded: String?
     @State private var filter = ""
     @State private var importCandidates: ImportCandidates?
+    @State private var tinycastImportCandidates: ImportCandidates?
     @State private var browsingStore = false
     @State private var storeInstall: ExtensionDeepLink.StoreInstall?
     @State private var installingFromGitHub = false
     @State private var error: String?
     @State private var updateError: String?
     /// Extensions Raycast has built that aren't here yet, refreshed whenever the pane appears.
-    @State private var pending: [RaycastImportCandidate] = []
+    @State private var pending: [ExtensionImportCandidate] = []
     /// What a bulk import is doing, so a thirty-item batch reports rather than going quiet.
     @State private var importProgress: (done: Int, total: Int)?
     @State private var importSummary: String?
+    @State private var tinycastPending: [ExtensionImportCandidate] = []
+    @State private var tinycastProgress: (done: Int, total: Int)?
+    @State private var tinycastSummary: String?
     /// What a cleanup would reclaim, rescanned whenever the installed set changes.
     @State private var reclaimable = ExtensionCleanup.Report()
 
@@ -51,12 +55,29 @@ struct ExtensionsSettingsView: View {
         // By item: `isPresented` builds the panel from a snapshot taken before the write.
         .settingsEditorPanel(item: $importCandidates) { candidates in
             ExtensionImportPanel(
+                title: String(localized: "Import from Raycast"),
+                emptyText: String(localized: "No built extensions found in ~/.config/raycast/extensions."),
+                allInstalledText: String(
+                    localized: "Everything Raycast has built is already here. Import one again to update it."),
                 candidates: candidates.entries,
                 onImport: { chosen in
                     importCandidates = nil
                     Task { await importAll(chosen) }
                 },
                 onCancel: { importCandidates = nil })
+        }
+        .settingsEditorPanel(item: $tinycastImportCandidates) { candidates in
+            ExtensionImportPanel(
+                title: String(localized: "Import from Tinycast"),
+                emptyText: String(localized: "No built extensions found in Tinycast's support folder."),
+                allInstalledText: String(
+                    localized: "Everything Tinycast has built is already here. Import one again to update it."),
+                candidates: candidates.entries,
+                onImport: { chosen in
+                    tinycastImportCandidates = nil
+                    Task { await importAllTinycast(chosen) }
+                },
+                onCancel: { tinycastImportCandidates = nil })
         }
         .settingsEditorPanel(isPresented: $browsingStore) {
             ExtensionStorePanel(onClose: { browsingStore = false })
@@ -82,6 +103,7 @@ struct ExtensionsSettingsView: View {
             await core.extensions.refresh()
             await measureReclaimable()
             await findPending()
+            await findPendingTinycast()
             await core.extensions.checkForUpdates()
         }
     }
@@ -240,6 +262,24 @@ struct ExtensionsSettingsView: View {
                     }
                 }
             }
+            // The same job as the button beside it, for the switch from Tinycast: code installs
+            // here, and each installed extension's data travels with it.
+            SettingsRow(
+                title: "Import from Tinycast", subtitle: tinycastImportSubtitle,
+                anchor: .extensionsInstall
+            ) {
+                ExtensionSettingsIcon(systemName: "arrow.down.doc")
+            } trailing: {
+                if tinycastProgress != nil {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Button("Import…", action: openTinycastImport)
+                        .disabled(!tinycastAvailable)
+                    if !tinycastPending.isEmpty {
+                        Button("Import All") { Task { await importAllTinycast(tinycastPending.map(\.installed)) } }
+                    }
+                }
+            }
             SettingsRow(
                 title: "Add from folder",
                 subtitle: String(localized: "A folder with package.json and built commands."),
@@ -325,12 +365,38 @@ struct ExtensionsSettingsView: View {
         ExtensionCatalog.raycastExtensionsDirectory() != nil
     }
 
+    private var tinycastAvailable: Bool {
+        ExtensionCatalog.tinycastExtensionsDirectory() != nil
+    }
+
+    private var tinycastImportSubtitle: String {
+        if let tinycastProgress {
+            return String(localized: "Importing \(tinycastProgress.done) of \(tinycastProgress.total)…")
+        }
+        if let tinycastSummary { return tinycastSummary }
+        guard tinycastAvailable else {
+            return String(localized: "No Tinycast install found in Application Support.")
+        }
+        guard !tinycastPending.isEmpty else {
+            return String(localized: "Copies what Tinycast has already built, with their data.")
+        }
+        let names = listed(tinycastPending.map(\.installed.title))
+        return String(localized: "\(tinycastPending.count) not here yet — \(names).")
+    }
+
     // MARK: - Adding
 
     private func openImport() {
         Task {
             importCandidates = ImportCandidates(
                 entries: await core.extensions.raycastImportCandidates())
+        }
+    }
+
+    private func openTinycastImport() {
+        Task {
+            tinycastImportCandidates = ImportCandidates(
+                entries: await core.extensions.tinycastImportCandidates())
         }
     }
 
@@ -377,6 +443,32 @@ struct ExtensionsSettingsView: View {
             return
         }
         pending = await core.extensions.raycastImportCandidates().filter { !$0.isInstalled }
+    }
+
+    private func importAllTinycast(_ chosen: [InstalledExtension]) async {
+        error = nil
+        tinycastSummary = nil
+        tinycastProgress = (0, chosen.count)
+        let failed = await core.extensions.importAllFromTinycast(chosen) { done in
+            tinycastProgress = (done, chosen.count)
+        }
+        tinycastProgress = nil
+        await findPendingTinycast()
+        let imported = chosen.count - failed.count
+        if failed.isEmpty {
+            tinycastSummary = String(localized: "Imported \(imported) extensions with their data.")
+        } else {
+            tinycastSummary = String(localized: "Imported \(imported); \(failed.count) failed.")
+            error = String(localized: "Couldn't import \(failed.joined(separator: ", ")).")
+        }
+    }
+
+    private func findPendingTinycast() async {
+        guard core.settings.extensionsEnabled, tinycastAvailable else {
+            tinycastPending = []
+            return
+        }
+        tinycastPending = await core.extensions.tinycastImportCandidates().filter { !$0.isInstalled }
     }
 }
 
@@ -831,7 +923,7 @@ private struct ExtensionPreferenceRow: View {
     }
 }
 
-struct RaycastImportCandidate: Identifiable {
+struct ExtensionImportCandidate: Identifiable {
     let installed: InstalledExtension
     let isInstalled: Bool
 
@@ -840,21 +932,24 @@ struct RaycastImportCandidate: Identifiable {
 
 private struct ImportCandidates: Identifiable {
     let id = UUID()
-    let entries: [RaycastImportCandidate]
+    let entries: [ExtensionImportCandidate]
 }
 
 /// Anything not already built starts selected, so the common case is one press.
 private struct ExtensionImportPanel: View {
-    let candidates: [RaycastImportCandidate]
+    let title: String
+    let emptyText: String
+    let allInstalledText: String
+    let candidates: [ExtensionImportCandidate]
     let onImport: ([InstalledExtension]) -> Void
     let onCancel: () -> Void
     @State private var chosen: Set<String> = []
     @State private var seeded = false
     @State private var filter = ""
 
-    private var fresh: [RaycastImportCandidate] { candidates.filter { !$0.isInstalled } }
+    private var fresh: [ExtensionImportCandidate] { candidates.filter { !$0.isInstalled } }
 
-    private var matching: [RaycastImportCandidate] {
+    private var matching: [ExtensionImportCandidate] {
         guard !filter.isEmpty else { return candidates }
         return candidates.filter {
             $0.installed.title.localizedCaseInsensitiveContains(filter)
@@ -863,8 +958,7 @@ private struct ExtensionImportPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-            ExtensionSettingsEditorHeader(
-                title: String(localized: "Import from Raycast"), subtitle: subtitle)
+            ExtensionSettingsEditorHeader(title: title, subtitle: subtitle)
 
             if candidates.count > 6 {
                 SettingsFilterField(prompt: "Filter…", query: $filter)
@@ -937,13 +1031,10 @@ private struct ExtensionImportPanel: View {
 
     private var subtitle: String {
         guard !candidates.isEmpty else {
-            return String(localized: "No built extensions found in ~/.config/raycast/extensions.")
+            return emptyText
         }
         guard !fresh.isEmpty else {
-            return String(
-                localized: """
-                    Everything Raycast has built is already here. Import one again to update it.
-                    """)
+            return allInstalledText
         }
         return String(
             localized: """
@@ -952,14 +1043,14 @@ private struct ExtensionImportPanel: View {
                 """)
     }
 
-    private func detail(for candidate: RaycastImportCandidate) -> String {
+    private func detail(for candidate: ExtensionImportCandidate) -> String {
         let count = candidate.installed.manifest.commands.count
         return candidate.isInstalled
             ? String(localized: "\(count) commands · installed — tick to update")
             : String(localized: "\(count) commands")
     }
 
-    private func binding(for candidate: RaycastImportCandidate) -> Binding<Bool> {
+    private func binding(for candidate: ExtensionImportCandidate) -> Binding<Bool> {
         Binding(
             get: { chosen.contains(candidate.installed.manifest.name) },
             set: { isOn in

@@ -197,6 +197,28 @@ final class ExtensionStorage {
         try? FileManager.default.removeItem(at: fileURL(for: name))
     }
 
+    func isUntouched(_ name: String) -> Bool {
+        stores[name] == nil && !FileManager.default.fileExists(atPath: fileURL(for: name).path)
+    }
+
+    @concurrent
+    static func stageExternalStore(from source: URL, in directory: URL) async throws -> URL? {
+        let data: Data
+        do { data = try Data(contentsOf: source) }
+        catch let error as CocoaError where error.code == .fileReadNoSuchFile { return nil }
+        _ = try JSONDecoder().decode(Store.self, from: data)
+        try Task.checkCancellation()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let staged = directory.appendingPathComponent(".import-\(UUID().uuidString).json")
+        try data.write(to: staged, options: .atomic)
+        return staged
+    }
+
+    func adoptStagedStore(_ staged: URL, for name: String) throws {
+        guard isUntouched(name) else { return }
+        try FileManager.default.moveItem(at: staged, to: fileURL(for: name))
+    }
+
     // MARK: - Persistence
 
     private func store(for name: String) -> Store {

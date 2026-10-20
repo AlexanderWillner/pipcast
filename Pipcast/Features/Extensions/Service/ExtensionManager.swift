@@ -223,13 +223,25 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
     }
 
     /// Scanned off-main: it reads a manifest per directory, and a full Raycast install is dozens.
-    func raycastImportCandidates() async -> [RaycastImportCandidate] {
+    func raycastImportCandidates() async -> [ExtensionImportCandidate] {
         let candidates = await Task.detached(priority: .userInitiated) {
             ExtensionCatalog.importableFromRaycast()
         }.value
+        return markInstalled(candidates)
+    }
+
+    /// The same scan over Tinycast's own support folder, for the complete switch from Tinycast.
+    func tinycastImportCandidates() async -> [ExtensionImportCandidate] {
+        let candidates = await Task.detached(priority: .userInitiated) {
+            ExtensionCatalog.importableFromTinycast()
+        }.value
+        return markInstalled(candidates)
+    }
+
+    private func markInstalled(_ candidates: [InstalledExtension]) -> [ExtensionImportCandidate] {
         let have = Set(installed.map(\.manifest.name))
         return candidates.map {
-            RaycastImportCandidate(installed: $0, isInstalled: have.contains($0.manifest.name))
+            ExtensionImportCandidate(installed: $0, isInstalled: have.contains($0.manifest.name))
         }
     }
 
@@ -260,6 +272,65 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
     @discardableResult
     func importAllFromRaycast(
         _ candidates: [InstalledExtension], onProgress: (Int) -> Void = { _ in }
+    ) async -> [String] {
+        await importAll(candidates, onProgress: onProgress)
+    }
+
+    @discardableResult
+    func importAllFromTinycast(
+        _ candidates: [InstalledExtension], onProgress: (Int) -> Void = { _ in }
+    ) async -> [String] {
+        var failed: [String] = []
+        for (index, candidate) in candidates.enumerated() {
+            do {
+                try Task.checkCancellation()
+                try await importFromTinycast(candidate)
+            } catch {
+                failed.append(candidate.title)
+            }
+            onProgress(index + 1)
+        }
+        await refresh()
+        publishLauncherEntries()
+        menuBars?.synchronize(installed)
+        restartBackgroundLoop()
+        return failed
+    }
+
+    private func importFromTinycast(_ candidate: InstalledExtension) async throws {
+        let name = candidate.manifest.name
+        let support = candidate.directory.deletingLastPathComponent().deletingLastPathComponent()
+        let untouched = storage.isUntouched(name) && commandMetadata.isUntouched(name)
+        var staged: URL?
+        defer { if let staged { try? FileManager.default.removeItem(at: staged) } }
+        var preparedMetadata: ExtensionCommandMetadataStore.PreparedImport?
+        defer { if let preparedMetadata { try? FileManager.default.removeItem(at: preparedMetadata.staged) } }
+        if untouched {
+            staged = try await ExtensionStorage.stageExternalStore(
+                from: support.appendingPathComponent("extension-data/\(ExtensionCatalog.safeName(name)).json"),
+                in: ExtensionCatalog.storageDirectory())
+            let metadata = try await ExtensionCommandMetadataStore.readExternal(
+                file: support.appendingPathComponent("extension-commands.json"))[name] ?? [:]
+            preparedMetadata = try await commandMetadata.prepareExternalMetadata(metadata, for: name)
+        }
+        try Task.checkCancellation()
+        guard isEnabled else { throw CancellationError() }
+        _ = try ExtensionCatalog.install(from: candidate.directory)
+        storeVersions.record(nil, for: name)
+        updates[name] = nil
+        guard untouched, storage.isUntouched(name), commandMetadata.isUntouched(name) else { return }
+        if let preparedMetadata, !commandMetadata.isCurrent(preparedMetadata) { throw CancellationError() }
+        if let staged { try storage.adoptStagedStore(staged, for: name) }
+        do {
+            if let preparedMetadata { try commandMetadata.adoptPreparedMetadata(preparedMetadata) }
+        } catch {
+            if staged != nil { storage.removeAll(extension: name) }
+            throw error
+        }
+    }
+
+    private func importAll(
+        _ candidates: [InstalledExtension], onProgress: (Int) -> Void
     ) async -> [String] {
         var failed: [String] = []
         for (index, candidate) in candidates.enumerated() {

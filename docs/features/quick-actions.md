@@ -74,10 +74,10 @@ selectable Markdown renderer with AI Chat.
   Summarize opens a sheet prefilled with the exact built-in prompt and the action's model. Saving
   replaces both for only that action; Use Default restores the prompt. Translate has no editor because no model handles translation. The same
   pencil on a custom action opens its editor, which owns the name and glyph too.
-- **A custom action never travels in a backup.** Neither the record, its shortcut nor its route, for
-  the reason `quickActionInstructions` already doesn't: an import must never change what a shortcut
-  does to somebody's documents. Its JSON sits outside `UserDefaults`, so no settings key can sweep it
-  up, and `quickActionModelOverrides` is excluded like `quickActionModel`.
+- **A custom action's content and route never travel in a backup.** Its record stays outside
+  `UserDefaults`, and `quickActionModelOverrides` is excluded like `quickActionModel`: an import must
+  never change what a shortcut does to somebody's documents. Only its hotkey binding travels in
+  `SettingsBackup.HotkeyBackup`; it remains dormant until its target exists and the feature is enabled.
 
 ## The actions
 
@@ -120,8 +120,9 @@ takes the choice with it.
 **`AppEntry.Kind.quickAction` is one section for both halves**, ungated in
 `VisibilityStore.allowsHotKey` because `quickActionsEnabled` is the master switch. The four keep their
 `CommandID`s, so no shortcut or preference key moved. A custom action binds
-`HotKeyAction.quickAction(id:)` under `hotkey.quickAction.<uuid>`, indexed in `boundQuickActionIDs` so
-`HotKeyManager.start` can prune a binding whose action was deleted while Pipcast was off.
+`HotKeyAction.quickAction(id:)` under `hotkey.quickAction.<uuid>`, indexed in `boundQuickActionIDs`.
+`HotKeyManager.start` preserves bindings for missing actions so imported shortcuts stay dormant
+until their targets exist; explicitly deleting an action clears its binding.
 
 **The pane draws its own `AliasField`.** The four are named in `SettingsTab.ownedCommands`, so
 Settings → Commands no longer draws theirs. Without it, `deleteCustomQuickAction` would be clearing an

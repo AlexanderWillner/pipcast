@@ -48,7 +48,7 @@ struct BackupArchiveTest {
         return url
     }
 
-    static func main() {
+    static func main() async {
         let root = scratch()
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -62,6 +62,7 @@ struct BackupArchiveTest {
         refusesSymbolicLinks(in: root)
         categoriesAreComplete()
         staging()
+        await overlappingImports()
 
         print(failures == 0 ? "\nALL PASSED" : "\n\(failures) FAILED")
         exit(failures == 0 ? 0 : 1)
@@ -350,4 +351,62 @@ struct BackupArchiveTest {
         staging.discard()
         check("discard is idempotent", true)
     }
+    @MainActor
+    final class OpenGate {
+        var pending: [String: CheckedContinuation<(BackupStaging, BackupManifest), any Error>] = [:]
+
+        func open(_ file: URL) async throws -> (BackupStaging, BackupManifest) {
+            try await withCheckedThrowingContinuation { pending[file.lastPathComponent] = $0 }
+        }
+
+        func wait(for name: String) async {
+            for _ in 0..<1_000 {
+                if pending[name] != nil { return }
+                await Task.yield()
+            }
+            fatalError("The extraction task did not start")
+        }
+
+        func finish(_ name: String, staging: BackupStaging) {
+            pending.removeValue(forKey: name)?.resume(returning: (
+                staging, BackupManifest(appVersion: name, createdAt: Date(), counts: [:])))
+        }
+    }
+
+    static func overlappingImports() async {
+        let base = scratch()
+        defer { try? FileManager.default.removeItem(at: base) }
+        do {
+            let gate = OpenGate()
+            let session = BackupImportSession()
+            let first = try BackupStaging(base: base)
+            let second = try BackupStaging(base: base)
+            session.open(base.appendingPathComponent("A"), using: gate.open)
+            await gate.wait(for: "A")
+            session.open(base.appendingPathComponent("B"), using: gate.open)
+            await gate.wait(for: "B")
+            gate.finish("B", staging: second)
+            for _ in 0..<1_000 where session.staging == nil { await Task.yield() }
+            gate.finish("A", staging: first)
+            for _ in 0..<1_000 where FileManager.default.fileExists(atPath: first.root.path) {
+                await Task.yield()
+            }
+            check("late extraction cannot replace the selected archive", session.manifest?.appVersion == "B")
+            check("selected filename matches the staged archive", session.file?.lastPathComponent == "B")
+            check("stale extraction discards its files", !FileManager.default.fileExists(atPath: first.root.path))
+            session.discard()
+            check("discard removes the current staging", !FileManager.default.fileExists(atPath: second.root.path))
+            let third = try BackupStaging(base: base)
+            session.open(base.appendingPathComponent("C"), using: gate.open)
+            await gate.wait(for: "C")
+            session.discard()
+            gate.finish("C", staging: third)
+            for _ in 0..<1_000 where FileManager.default.fileExists(atPath: third.root.path) {
+                await Task.yield()
+            }
+            check("leaving during extraction keeps the session empty", session.staging == nil)
+            check("leaving during extraction removes late files", !FileManager.default.fileExists(atPath: third.root.path))
+        } catch { check("overlapping import fixtures: \(error)", false) }
+    }
+
 }
