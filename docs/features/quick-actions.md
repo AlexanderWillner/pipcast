@@ -120,8 +120,9 @@ takes the choice with it.
 **`AppEntry.Kind.quickAction` is one section for both halves**, ungated in
 `VisibilityStore.allowsHotKey` because `quickActionsEnabled` is the master switch. The four keep their
 `CommandID`s, so no shortcut or preference key moved. A custom action binds
-`HotKeyAction.quickAction(id:)` under `hotkey.quickAction.<uuid>`, indexed in `boundQuickActionIDs` so
-`HotKeyManager.start` can prune a binding whose action was deleted while Pipcast was off.
+`HotKeyAction.quickAction(id:)` under `hotkey.quickAction.<uuid>`, indexed in `boundQuickActionIDs`.
+`HotKeyManager.start` preserves bindings for missing actions so imported shortcuts stay dormant
+until their targets exist; explicitly deleting an action clears its binding.
 
 **The pane draws its own `AliasField`.** The four are named in `SettingsTab.ownedCommands`, so
 Settings → Commands no longer draws theirs. Without it, `deleteCustomQuickAction` would be clearing an

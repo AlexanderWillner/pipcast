@@ -91,6 +91,7 @@ enum BackupActions {
     static func applyBackup(
         _ categories: Set<BackupCategory>, from staging: BackupStaging, to core: AppCore
     ) async -> BackupApplier.Summary? {
+        guard !Task.isCancelled else { return nil }
         let bundle = staging.bundle
         if categories.contains(.configuration),
             let data = try? Data(contentsOf: bundle.settingsURL),
@@ -101,6 +102,7 @@ enum BackupActions {
             guard await confirmExecutableImport(core: core, commands: commands, shortcuts: shortcuts)
             else { return nil }
         }
+        guard !Task.isCancelled else { return nil }
         return await BackupApplier.apply(categories, from: bundle, to: core)
     }
 

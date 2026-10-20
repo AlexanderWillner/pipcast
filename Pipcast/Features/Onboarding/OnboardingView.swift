@@ -51,6 +51,7 @@ struct OnboardingView: View {
         .shortcutRecorderPopoverHost()
         .animation(.easeInOut(duration: 0.2), value: step)
         .onAppear { accessibilityTrusted = Permissions.isAccessibilityTrusted() }
+        .onDisappear { model.cancelTinycastImport() }
         .onReceive(refreshTimer) { _ in
             let trusted = Permissions.isAccessibilityTrusted()
             if trusted != accessibilityTrusted { accessibilityTrusted = trusted }
@@ -190,6 +191,7 @@ struct OnboardingView: View {
                 Text("Tinycast").tag(OnboardingModel.Source.tinycast)
             }
             .pickerStyle(.segmented)
+            .disabled(model.isImporting)
             .padding(.horizontal, Theme.Spacing.xs)
             switch model.source {
             case .raycast: raycastCard
@@ -238,7 +240,9 @@ struct OnboardingView: View {
                     subtitle: model.tinycastFileSubtitle,
                     systemImage: "doc.badge.gearshape", tint: .orange
                 ) {
-                    Button("Choose…") { model.chooseTinycastFile() }.controlSize(.small)
+                    Button("Choose…") { model.chooseTinycastFile() }
+                        .controlSize(.small)
+                        .disabled(model.isImporting)
                 }
                 if tinycastRunning || BackupActions.isTinycastInstalled {
                     OnboardingDivider()
@@ -276,6 +280,7 @@ struct OnboardingView: View {
             HStack {
                 if step > 0 {
                     Button {
+                        model.cancelTinycastImport()
                         step -= 1
                     } label: {
                         Label("Back", systemImage: "chevron.left")
@@ -349,6 +354,7 @@ struct OnboardingView: View {
     }
 
     private func advance() {
+        model.cancelTinycastImport()
         step = min(step + 1, Self.lastStep)
     }
 
@@ -431,6 +437,12 @@ final class OnboardingModel {
     var isRaycastExport = false
     var tinycastFile: URL?
     var tinycastImporting = false
+    @ObservationIgnored private var tinycastTask: Task<Void, Never>?
+    @ObservationIgnored private var tinycastOperation: UUID?
+
+    isolated deinit {
+        tinycastTask?.cancel()
+    }
 
     var isImporting: Bool { importing || tinycastImporting }
 
@@ -471,7 +483,7 @@ final class OnboardingModel {
     }
 
     func chooseTinycastFile() {
-        guard let url = BackupActions.chooseTinycastFile() else { return }
+        guard !isImporting, let url = BackupActions.chooseTinycastFile(), !isImporting else { return }
         tinycastFile = url
         status = nil
     }
@@ -483,25 +495,46 @@ final class OnboardingModel {
         return String(localized: "\(name) — Tinycast backup")
     }
 
+    func cancelTinycastImport() {
+        tinycastTask?.cancel()
+        tinycastTask = nil
+        tinycastOperation = nil
+        tinycastImporting = false
+    }
+
     private func runTinycast(core: AppCore) {
         guard let file = tinycastFile, !isImporting else { return }
         tinycastImporting = true
         status = nil
-        Task {
-            defer { tinycastImporting = false }
+        let identity = UUID()
+        tinycastOperation = identity
+        tinycastTask = Task { [weak self] in
+            defer {
+                if let self, self.tinycastOperation == identity {
+                    self.tinycastImporting = false
+                    self.tinycastTask = nil
+                    self.tinycastOperation = nil
+                }
+            }
             do {
                 let (staging, manifest) = try await BackupActions.openBackup(at: file)
                 defer { staging.discard() }
-                guard
-                    let summary = await BackupActions.applyBackup(
-                        manifest.categories, from: staging, to: core)
-                else {
-                    status = .failure(String(localized: "Import cancelled."))
-                    return
+                guard !Task.isCancelled, self?.tinycastOperation == identity,
+                    self?.tinycastFile == file, self?.source == .tinycast
+                else { return }
+                let summary = await BackupActions.applyBackup(
+                    manifest.categories, from: staging, to: core)
+                guard !Task.isCancelled, let self, self.tinycastOperation == identity,
+                    self.tinycastFile == file, self.source == .tinycast
+                else { return }
+                if let summary {
+                    self.status = .success(BackupActions.summaryText(summary))
+                } else {
+                    self.status = .failure(String(localized: "Import cancelled."))
                 }
-                status = .success(BackupActions.summaryText(summary))
             } catch {
-                status = .failure(error.localizedDescription)
+                guard !Task.isCancelled, let self, self.tinycastOperation == identity else { return }
+                self.status = .failure(error.localizedDescription)
             }
         }
     }
