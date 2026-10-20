@@ -12,6 +12,7 @@ struct SnippetsTests {
         // The in-process delivery tier drives a real text view, which needs AppKit awake.
         _ = NSApplication.shared
         testIdentityAndRevision()
+        try await testBackupBindings()
         testEditorSession()
         try await testClipboardDraftLifecycle()
         testRaycastImport()
@@ -2206,6 +2207,41 @@ struct SnippetsTests {
         }
     }
 
+    private static func testBackupBindings() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = SnippetRepository(snippetsDirectory: root)
+        let store = SnippetsStore(repository: repository)
+        let existing = try repository.create(Snippet(name: "Shared", text: "local"))
+        let incoming = Snippet(name: "Shared", text: "imported")
+        let result = try await BackupSnippetImporter.apply([
+            (name: "original.md", snippet: incoming),
+            (name: "duplicate.md", snippet: incoming),
+            (name: "existing.md", snippet: existing.snippet)
+        ], to: store)
+        check("backup import creates only the new content", result.count == 1)
+        check("backup binding follows a renamed collision", result.ids["original.md"] != existing.id)
+        let importedDirectory = result.ids["original.md"].map {
+            URL(fileURLWithPath: $0).deletingLastPathComponent().path
+        }
+        check("backup binding uses the destination directory", importedDirectory == root.path)
+        check("duplicate archive snippets bind to the same record", result.ids["original.md"] == result.ids["duplicate.md"])
+        check("deduplicated snippets bind to the existing record", result.ids["existing.md"] == existing.id)
+        let repeated = try await BackupSnippetImporter.apply([(name: "original.md", snippet: incoming)], to: store)
+        check("repeated import while snippets are disabled remains idempotent", repeated.count == 0)
+        check("repeated import preserves the binding destination", repeated.ids == ["original.md": result.ids["original.md"]!])
+        let beforeFailure = try repository.load().records.map(\.id).sorted()
+        do {
+            _ = try await BackupSnippetImporter.apply([
+                (name: "valid.md", snippet: Snippet(name: "First in failed batch", text: "valid")),
+                (name: "invalid.md", snippet: Snippet(name: String(repeating: "x", count: 300), text: "invalid"))
+            ], to: store)
+            check("a later snippet creation failure is reported", false)
+        } catch { check("a later snippet creation failure is reported", true) }
+        let afterFailure = try repository.load().records.map(\.id).sorted()
+        check("a failed batch leaves no imported files without bindings", beforeFailure == afterFailure)
+    }
+
     private static func check(_ description: String, _ condition: @autoclosure () -> Bool) {
         if condition() {
             print("PASS  \(description)")
@@ -2339,6 +2375,7 @@ private final class FakeSnippetKeywordTapController: SnippetKeywordTapControllin
         tearDownCount += 1
         state = .absent
     }
+
 }
 
 /// Stands in for `NoteTextView`: the conformance is the whole opt-in.

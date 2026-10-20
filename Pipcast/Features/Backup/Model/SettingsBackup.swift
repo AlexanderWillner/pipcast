@@ -252,7 +252,11 @@ extension SettingsBackup {
             })
         hotkeys.snippets = Dictionary(
             uniqueKeysWithValues: hk.boundSnippetIDs.compactMap { id in
-                hk.binding(for: .snippet(id: id)).map { (id, $0) }
+                let file = URL(fileURLWithPath: id).standardizedFileURL
+                guard file.deletingLastPathComponent().path == core.snippetsStore.snippetsDirectory.standardizedFileURL.path,
+                    let binding = hk.binding(for: .snippet(id: id))
+                else { return nil }
+                return (file.lastPathComponent, binding)
             })
         hotkeys.extensionCommands = Dictionary(
             uniqueKeysWithValues: hk.boundExtensionCommandEntryIDs.compactMap { entryID in
@@ -660,8 +664,7 @@ extension SettingsBackup {
             apply(b, .quicklink(id: id))
         }
         for (rawID, b) in hotkeys.quickActions ?? [:] {
-            guard let id = UUID(uuidString: rawID), core.customQuickActions.action(id: id) != nil
-            else { continue }
+            guard let id = UUID(uuidString: rawID) else { continue }
             apply(b, .quickAction(id: id))
         }
         // No existence guard: the library reads lazily, and a dead binding is swept on the next
@@ -670,8 +673,10 @@ extension SettingsBackup {
             guard let id = UUID(uuidString: rawID) else { continue }
             apply(b, .appleShortcut(id: id))
         }
-        // Swept by `removeSnippetBindings` on load; binds to nothing until its snippet exists.
-        for (id, b) in hotkeys.snippets ?? [:] { apply(b, .snippet(id: id)) }
+        for (name, binding) in hotkeys.snippets ?? [:] where BackupBundle.isSafeName(name) {
+            let id = core.snippetsStore.snippetsDirectory.appendingPathComponent(name).standardizedFileURL.path
+            apply(binding, .snippet(id: id))
+        }
         // Never pruned at launch, so a binding outlives the reinstall it waits for.
         for (entryID, b) in hotkeys.extensionCommands ?? [:] {
             apply(b, .extensionCommand(entryID: entryID))

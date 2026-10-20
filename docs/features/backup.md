@@ -95,6 +95,7 @@ and asserts nothing escapes.
 
 **Staging lives in `Caches`, not `temporaryDirectory`.** It has to sit on the same volume as
 Application Support for a clipboard PNG to cross into the bundle as a hardlink rather than a copy.
+The Tinycast picker owns its extraction task and discards superseded or cancelled results.
 Leaving the Settings pane discards a tree the user opened but never imported; `BackupStaging` sweeps
 anything a day old on the next run, since a run killed mid-flight leaves its tree behind.
 
@@ -150,11 +151,17 @@ and Tinycast. Both use the same archive format; import permissions and category 
 The first-launch wizard and Settings › Backup › Switch from Tinycast import a `.tinycast` backup:
 settings (including the restored hotkey bindings for dictation, quick actions, Apple Shortcuts,
 snippets and extension commands), clipboard history, snippets, notes and launcher learning. Bindings
-whose target isn't there yet — an extension not reinstalled, a deleted shortcut — bind to nothing
-until it exists again, and never grant a capability: the feature switches stay off.
+for missing extensions and quick actions remain dormant until their target exists again, including
+across restarts. Apple Shortcut bindings follow the normal successful-library-read cleanup.
+Snippet bindings carry filenames rather than absolute paths and are restored after importing their
+files, including when a name collision renames a file or matching content already exists.
+Imports never grant a capability: the feature switches stay off.
 
 Extensions themselves travel through Settings › Extensions › Import from Tinycast, which copies the
 built extension folders like the Raycast import does, then adopts each installed extension's data
 (preferences, LocalStorage, Cache, accessory picks and command metadata) from Tinycast's support
-folder. Only extensions untouched in Pipcast are adopted, so the migration never clobbers live
-state. Quit Tinycast afterwards so its hotkeys stop clashing.
+folder, using the same Tinycast channel as the selected extension code. Only extensions with neither
+local storage nor command metadata are eligible. Eligibility is checked again after staging, so a
+local edit during import wins. Data is validated and staged off-main; failures are reported instead
+of claiming a complete import. Imported metadata refreshes launcher rows, menu-bar items and
+background schedules immediately. Quit Tinycast afterwards so its hotkeys stop clashing.

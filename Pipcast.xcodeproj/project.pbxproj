@@ -286,6 +286,7 @@
 		4CC5B0B63C4EC67BDAE28547 /* WindowManagementFileFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F65A73AD0292DC4A8CC1F3 /* WindowManagementFileFormat.swift */; };
 		4D04C370823EB0E473529B15 /* AppPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBAA1C03221E2D7B7965043 /* AppPaths.swift */; };
 		4D1DA3DAFBB8F1F4E05EBB52 /* SymbolImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99AC2C202A6F8A93D6D325F5 /* SymbolImage.swift */; };
+		4D64844CFD4AF7EA7EB5B3FE /* BackupSnippetImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4028639C06C3F76B611BCA7A /* BackupSnippetImporter.swift */; };
 		4D75DBB5F39E23A492D56369 /* HyperKeyTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96BCA599F3C37BD3543BC8DC /* HyperKeyTap.swift */; };
 		4DAE3418122ABE3B119D075E /* ExtensionMenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A836ED35FD87030C47117FA /* ExtensionMenuBarController.swift */; };
 		4DE3BDED3BE80D28BB0FE332 /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04755FCC213C70140C199BDB /* SectionHeader.swift */; };
@@ -746,6 +747,7 @@
 		DB3FA7619FF243B9E48A53E2 /* ColorPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E724C8EA2B3730B5349E82 /* ColorPreview.swift */; };
 		DB6618A76A71FF54EE27AA5E /* NoteBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19A28705CE8CA591C1C8899C /* NoteBlockLayoutFragment.swift */; };
 		DB7A7131E22A5A024E460D6C /* FormTextInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24520797C7832995A31A304 /* FormTextInput.swift */; };
+		DBED095BDA9BA661B11BD2A9 /* BackupImportSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483A1B1FCAE2102EFD548279 /* BackupImportSession.swift */; };
 		DC0A9CB704B7E2CC489F21FF /* DictionaryCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A3334514C77B3FF8F61A85 /* DictionaryCoordinator.swift */; };
 		DCCB143D5A83D226851D5367 /* EmojiSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D529BBE1BE0FD04BF5A9FE4 /* EmojiSettingsView.swift */; };
 		DD41EA5C95DD8AF446062E4F /* NoteEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DDA7D0084BC3530940130D /* NoteEditAction.swift */; };
@@ -1120,6 +1122,7 @@
 		3FDD2B9AA9FA270AC96E81C4 /* ExtensionListing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionListing.swift; sourceTree = "<group>"; };
 		3FE5253D290F269376B4581F /* ExtensionCommandMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionCommandMetadata.swift; sourceTree = "<group>"; };
 		4020E86A3A94D1890488650E /* Fallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fallback.swift; sourceTree = "<group>"; };
+		4028639C06C3F76B611BCA7A /* BackupSnippetImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSnippetImporter.swift; sourceTree = "<group>"; };
 		40B54567118DCB565D82E668 /* SystemActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemActionRunner.swift; sourceTree = "<group>"; };
 		40B66528C7DDE0FDF5BE7285 /* ExtensionStorePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionStorePanel.swift; sourceTree = "<group>"; };
 		40D27E4C4401BF2C9E40B1F5 /* FocusRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusRelease.swift; sourceTree = "<group>"; };
@@ -1146,6 +1149,7 @@
 		479DCB447D9F6DB0F428A012 /* ReleaseNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNotes.swift; sourceTree = "<group>"; };
 		47BD0921F79885C9E74BAACC /* FileSearchSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchSettingsView.swift; sourceTree = "<group>"; };
 		482C501EFEF949FD49300856 /* CustomCommandEditorSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomCommandEditorSession.swift; sourceTree = "<group>"; };
+		483A1B1FCAE2102EFD548279 /* BackupImportSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupImportSession.swift; sourceTree = "<group>"; };
 		495BF5BD17462B30A1FEA878 /* FilePreviewThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePreviewThumbnail.swift; sourceTree = "<group>"; };
 		497C98F2913CFB957ABF351A /* DictationTensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationTensor.swift; sourceTree = "<group>"; };
 		49C857391BE2619CCFB9FCF4 /* ExtensionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionDetailView.swift; sourceTree = "<group>"; };
@@ -3513,6 +3517,8 @@
 				D7F795D08A2E4A0E1C20FD6C /* BackupActions.swift */,
 				F6C394C28F612AE40138D07F /* BackupApplier.swift */,
 				8326F4B22F757913556B949A /* BackupComposer.swift */,
+				483A1B1FCAE2102EFD548279 /* BackupImportSession.swift */,
+				4028639C06C3F76B611BCA7A /* BackupSnippetImporter.swift */,
 				AE2C6031C788652CB4288EB5 /* BackupStaging.swift */,
 				CE20ADD2ADD8A8519AB46272 /* RaycastDecoder.swift */,
 				98DC640EBE8F3C577FF32E68 /* RaycastImportReader.swift */,
@@ -4077,8 +4083,10 @@
 				5DE96E721DC8860FB6A2A8D6 /* BackupCategorySelection.swift in Sources */,
 				8E27A8FE3F87FF4D7CFBFF41 /* BackupClipboardItem.swift in Sources */,
 				B00F83B73ECB0B0DEAB37A73 /* BackupComposer.swift in Sources */,
+				DBED095BDA9BA661B11BD2A9 /* BackupImportSession.swift in Sources */,
 				399002DDBD555890F9BCD4A2 /* BackupManifest.swift in Sources */,
 				13C16EA09EC91D486490287B /* BackupSettingsView.swift in Sources */,
+				4D64844CFD4AF7EA7EB5B3FE /* BackupSnippetImporter.swift in Sources */,
 				6EF71D1D3D6B1D94BD8D0D19 /* BackupStaging.swift in Sources */,
 				E29A386603A5C04144AF2084 /* BarButton.swift in Sources */,
 				14F66EC3695F29D446C23B20 /* BuiltInQuickAction.swift in Sources */,

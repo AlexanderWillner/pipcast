@@ -97,7 +97,7 @@ final class HotKeyManager {
 
     func start(
         customCommandIDs: Set<UUID>, quicklinkIDs: Set<UUID>, windowLayoutIDs: Set<UUID>,
-        windowRoomIDs: Set<UUID>, customWindowSizeIDs: Set<UUID>, quickActionIDs: Set<UUID>
+        windowRoomIDs: Set<UUID>, customWindowSizeIDs: Set<UUID>
     ) {
         prune(key: boundCustomCommandKey, live: customCommandIDs) { .customCommand(id: $0) }
         prune(key: boundQuicklinkKey, live: quicklinkIDs) { .quicklink(id: $0) }
@@ -106,7 +106,6 @@ final class HotKeyManager {
         prune(key: boundCustomWindowSizeKey, live: customWindowSizeIDs) {
             .customWindowSize(id: $0)
         }
-        prune(key: boundQuickActionKey, live: quickActionIDs) { .quickAction(id: $0) }
         // After the prunes, so a dropped record can't survive in memory this session.
         for action in candidateActions { bindings[action] = storedBinding(for: action) }
         revision &+= 1

@@ -72,6 +72,8 @@ to re-register from
 and to prune bindings whose record was deleted while Pipcast wasn't running. That prune is why
 `QuicklinkStore` loads at launch even when the feature is off
 (see [quicklinks.md](quicklinks.md#hotkeys)).
+Quick-action bindings remain indexed even when their target is absent, so an imported binding survives
+a restart until its action is restored. Explicit deletion still clears the binding.
 Apple Shortcuts keep the same kind of index in `boundAppleShortcutIDs`, pruned not at launch but after
 the first successful read of the library, since a failed read looks exactly like deletion
 (see [apple-shortcuts.md](apple-shortcuts.md#sweeping-deleted-shortcuts)).
@@ -79,8 +81,9 @@ the first successful read of the library, since a failed read looks exactly like
 Snippets index `StoredSnippet.ID`, the file's path, in `boundSnippetIDs`. The store runs only while
 the feature is on, so they are swept not at launch but on every snapshot, by
 `removeSnippetBindings`; a file that fails to parse still counts, since it is mid-edit rather than
-gone. A rename outside Pipcast or a new Snippets Folder therefore drops the shortcut, and none
-travels in a backup, where an imported snippet lands at a new path
+gone. A rename outside Pipcast or a new Snippets Folder therefore drops the shortcut. Backups carry
+only the snippet filename; importing snippets maps that filename to the created or deduplicated
+record before restoring its binding
 (see [snippets.md](snippets.md#shortcuts)).
 
 `HotKeyBinding` takes the synthesised `Codable`, so a `.combo` writes

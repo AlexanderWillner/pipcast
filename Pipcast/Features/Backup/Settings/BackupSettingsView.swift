@@ -19,10 +19,7 @@ struct BackupSettingsView: View {
     @State private var openedManifest: BackupManifest?
     /// Held between opening the file and applying it, so the extracted tree survives the picker.
     @State private var openedStaging: BackupStaging?
-    @State private var tinycastFile: URL?
-    @State private var tinycastManifest: BackupManifest?
-    /// Held between opening the file and applying it, like the Pipcast backup above.
-    @State private var tinycastStaging: BackupStaging?
+    @State private var tinycastBackup = BackupImportSession()
     @State private var tinycastImportSelection: Set<BackupCategory> = []
     @State private var tinycastImporting = false
     @State private var tinycastStatus: Status?
@@ -99,11 +96,12 @@ struct BackupSettingsView: View {
             Section {
                 LabeledContent {
                     Button("Choose…") { chooseTinycastFile() }
+                        .disabled(tinycastImporting)
                 } label: {
                     SettingsRowTitle(.backupImportFromTinycast, "Tinycast Backup")
                     Text(tinycastFileSubtitle)
                 }
-                if let manifest = tinycastManifest {
+                if let manifest = tinycastBackup.manifest {
                     BackupCategorySelection(
                         selection: $tinycastImportSelection, available: available(in: manifest))
                     LabeledContent {
@@ -135,6 +133,7 @@ struct BackupSettingsView: View {
                         }
                     }
                 }
+                if let error = tinycastBackup.error { statusRow(.failure(error)) }
                 if let tinycastStatus { statusRow(tinycastStatus) }
             } header: {
                 SettingsSectionHeader(.backupImportFromTinycast)
@@ -197,6 +196,9 @@ struct BackupSettingsView: View {
         }
         .formStyle(.grouped)
         .settingsScrollTarget(.backup)
+        .onChange(of: tinycastBackup.manifest) { _, manifest in
+            tinycastImportSelection = manifest?.categories ?? []
+        }
         .onDisappear {
             if !importingBackup { discardStagedBackup() }
             if !tinycastImporting { discardStagedTinycastBackup() }
@@ -244,10 +246,10 @@ struct BackupSettingsView: View {
     }
 
     private var tinycastFileSubtitle: String {
-        guard let name = tinycastFile?.lastPathComponent else {
+        guard let name = tinycastBackup.file?.lastPathComponent else {
             return String(localized: "A .tinycast file exported from Tinycast.")
         }
-        return tinycastManifest == nil ? String(localized: "\(name) — couldn't be read") : name
+        return tinycastBackup.manifest == nil ? String(localized: "\(name) — couldn't be read") : name
     }
 
     private func available(in manifest: BackupManifest) -> [BackupCategory: Int] {
@@ -294,24 +296,13 @@ struct BackupSettingsView: View {
     }
 
     private func chooseTinycastFile() {
-        guard let url = BackupActions.chooseTinycastFile() else { return }
-        discardStagedTinycastBackup()
-        tinycastFile = url
+        guard !tinycastImporting, let url = BackupActions.chooseTinycastFile() else { return }
         tinycastStatus = nil
-        Task {
-            do {
-                let (staging, manifest) = try await BackupActions.openBackup(at: url)
-                tinycastStaging = staging
-                tinycastManifest = manifest
-                tinycastImportSelection = manifest.categories
-            } catch {
-                tinycastStatus = .failure(error.localizedDescription)
-            }
-        }
+        tinycastBackup.open(url, using: BackupActions.openBackup)
     }
 
     private func runTinycastImport() {
-        guard let staging = tinycastStaging, !tinycastImporting, !tinycastImportSelection.isEmpty
+        guard let staging = tinycastBackup.staging, !tinycastImporting, !tinycastImportSelection.isEmpty
         else { return }
         tinycastImporting = true
         let categories = tinycastImportSelection
@@ -320,16 +311,12 @@ struct BackupSettingsView: View {
             let summary = await BackupActions.applyBackup(categories, from: staging, to: core)
             // Staged files are adopted by the stores during apply, so the tree goes either way.
             discardStagedTinycastBackup()
-            tinycastFile = nil
             if let summary { tinycastStatus = .success(BackupActions.summaryText(summary)) }
         }
     }
 
-    /// The extracted tree can run to gigabytes, so leaving the pane must not strand it.
     private func discardStagedTinycastBackup() {
-        tinycastStaging?.discard()
-        tinycastStaging = nil
-        tinycastManifest = nil
+        tinycastBackup.discard()
     }
 
     private func runBackupImport() {

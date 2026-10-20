@@ -276,18 +276,57 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
         await importAll(candidates, onProgress: onProgress)
     }
 
-    /// Like the Raycast import, then adopts Tinycast's data files for what was installed:
-    /// preferences, LocalStorage, Cache, accessory picks and command metadata travel, while
-    /// the code itself is the fresh copy just installed. Only extensions untouched here are
-    /// adopted, so a migration never clobbers live Pipcast state.
     @discardableResult
     func importAllFromTinycast(
         _ candidates: [InstalledExtension], onProgress: (Int) -> Void = { _ in }
     ) async -> [String] {
-        let failed = await importAll(candidates, onProgress: onProgress)
-        migrateTinycastData(
-            for: candidates.filter { !failed.contains($0.title) }.map(\.manifest.name))
+        var failed: [String] = []
+        for (index, candidate) in candidates.enumerated() {
+            do {
+                try Task.checkCancellation()
+                try await importFromTinycast(candidate)
+            } catch {
+                failed.append(candidate.title)
+            }
+            onProgress(index + 1)
+        }
+        await refresh()
+        publishLauncherEntries()
+        menuBars?.synchronize(installed)
+        restartBackgroundLoop()
         return failed
+    }
+
+    private func importFromTinycast(_ candidate: InstalledExtension) async throws {
+        let name = candidate.manifest.name
+        let support = candidate.directory.deletingLastPathComponent().deletingLastPathComponent()
+        let untouched = storage.isUntouched(name) && commandMetadata.isUntouched(name)
+        var staged: URL?
+        defer { if let staged { try? FileManager.default.removeItem(at: staged) } }
+        var preparedMetadata: ExtensionCommandMetadataStore.PreparedImport?
+        defer { if let preparedMetadata { try? FileManager.default.removeItem(at: preparedMetadata.staged) } }
+        if untouched {
+            staged = try await ExtensionStorage.stageExternalStore(
+                from: support.appendingPathComponent("extension-data/\(ExtensionCatalog.safeName(name)).json"),
+                in: ExtensionCatalog.storageDirectory())
+            let metadata = try await ExtensionCommandMetadataStore.readExternal(
+                file: support.appendingPathComponent("extension-commands.json"))[name] ?? [:]
+            preparedMetadata = try await commandMetadata.prepareExternalMetadata(metadata, for: name)
+        }
+        try Task.checkCancellation()
+        guard isEnabled else { throw CancellationError() }
+        _ = try ExtensionCatalog.install(from: candidate.directory)
+        storeVersions.record(nil, for: name)
+        updates[name] = nil
+        guard untouched, storage.isUntouched(name), commandMetadata.isUntouched(name) else { return }
+        if let preparedMetadata, !commandMetadata.isCurrent(preparedMetadata) { throw CancellationError() }
+        if let staged { try storage.adoptStagedStore(staged, for: name) }
+        do {
+            if let preparedMetadata { try commandMetadata.adoptPreparedMetadata(preparedMetadata) }
+        } catch {
+            if staged != nil { storage.removeAll(extension: name) }
+            throw error
+        }
     }
 
     private func importAll(
@@ -306,30 +345,6 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
         }
         await refresh()
         return failed
-    }
-
-    /// Copies Tinycast's per-extension data files for freshly imported extensions.
-    @discardableResult
-    func migrateTinycastData(for names: [String]) -> Int {
-        var adopted = 0
-        for support in ExtensionCatalog.tinycastSupportDirectories() {
-            let dataDir = support.appendingPathComponent("extension-data", isDirectory: true)
-            for name in names {
-                let source = dataDir.appendingPathComponent(
-                    "\(ExtensionCatalog.safeName(name)).json", isDirectory: false)
-                if storage.adoptExternalStore(from: source, for: name) { adopted += 1 }
-            }
-            let metadata = ExtensionCommandMetadataStore.readExternal(file: support.appendingPathComponent(
-                "extension-commands.json", isDirectory: false))
-            for name in names {
-                if let incoming = metadata[name] {
-                    commandMetadata.adoptExternalMetadata(incoming, for: name)
-                }
-            }
-        }
-        storage.flush()
-        commandMetadata.flush()
-        return adopted
     }
 
     // MARK: - Updates

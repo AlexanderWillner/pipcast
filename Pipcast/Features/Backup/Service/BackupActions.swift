@@ -74,17 +74,18 @@ enum BackupActions {
     }
 
     /// Opens the archive and reads its manifest, leaving staging for the caller to apply and discard.
+    @concurrent
     static func openBackup(at file: URL) async throws -> (BackupStaging, BackupManifest) {
-        try await Task.detached(priority: .userInitiated) {
-            let staging = try BackupStaging()
-            do {
-                try BackupArchive.open(file: file, into: staging.root)
-                return (staging, try staging.bundle.readManifest())
-            } catch {
-                staging.discard()
-                throw error
-            }
-        }.value
+        try Task.checkCancellation()
+        let staging = try BackupStaging()
+        do {
+            try BackupArchive.open(file: file, into: staging.root)
+            try Task.checkCancellation()
+            return (staging, try staging.bundle.readManifest())
+        } catch {
+            staging.discard()
+            throw error
+        }
     }
 
     static func applyBackup(
