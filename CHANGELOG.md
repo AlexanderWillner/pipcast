@@ -5,10 +5,11 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ## 0.3.0
 
-2 new features, 1 fix and 1 other change.
+3 new features, 1 fix and 1 other change.
 
 ### New
 
+- **confetti** — Add raycast's confetti command by @mSarheed in #46
 - **tinycast** — Complete switch incl. extensions by @AlexanderWillner in #44
 - **launcher** — Add deeplinks for built-in commands by @mSarheed in #41
 
