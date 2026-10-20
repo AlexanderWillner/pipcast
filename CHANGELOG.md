@@ -5,16 +5,21 @@ section from its commits, and Pipcast shows this file in What's New.
 
 ## 0.3.0
 
-3 new features, 1 fix and 1 other change.
+5 new features, 4 fixes and 1 other change.
 
 ### New
 
+- **launcher** — Recall recent searches with the up arrow by @mSarheed in #48
+- **apple-shortcuts** — Show each shortcut's own icon by @mSarheed in #50
 - **confetti** — Add raycast's confetti command by @mSarheed in #46
 - **tinycast** — Complete switch incl. extensions by @AlexanderWillner in #44
 - **launcher** — Add deeplinks for built-in commands by @mSarheed in #41
 
 ### Fixed
 
+- **extensions** — Show a list's searchText in the search bar and keep icons from stretching by @mSarheed in #51
+- **hotkeys** — Service the hyper key tap off the main run loop by @mSarheed in #47
+- **confetti** — Stack bursts and match raycast's confetti by @mSarheed in #49
 - **updates** — Report a failed check as a check, not a download by @mSarheed in #43
 
 ### Other
