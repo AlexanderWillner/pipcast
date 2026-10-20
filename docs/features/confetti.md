@@ -1,18 +1,26 @@
 # Confetti
 
 **Confetti** fires Raycast's confetti over the display under the pointer: a burst from both bottom
-corners, falling for a few seconds.
+corners that reaches the top, then flutters down and is gone in under three seconds.
 
 ## Invariants
 
 - **Click-through and never key.** `ConfettiPanel` is a borderless, non-activating panel that ignores
   the mouse, so nothing under it stops working while it falls.
-- **One burst at a time.** Firing again replaces the sheet rather than stacking another.
+- **Bursts stack.** Firing again adds a burst to what is still falling on that display, as Raycast's
+  does, and never cuts it short; one sheet per display closes once its last burst has fallen.
 - **Reduce Motion shows a 🎉 pill instead.**
 
-`ConfettiPanel` owns the two `CAEmitterLayer` cannons; their speed and gravity scale with the display's
-height so the burst reaches most of the way up on any screen. `ConfettiCoordinator` stops the cannons
-after a fraction of a second and closes the sheet once the last piece has fallen.
+`ConfettiPanel` adds two `CAEmitterLayer` cannons per burst and removes them once its pieces have
+fallen; their speed and gravity scale with the display's height so the burst reaches the top on any
+screen. Strips, triangles and dots match Raycast's mix. The paper look relies on undocumented Core
+Animation, as Raycast's own does: a `plane` particle type that tumbles each piece through three axes,
+set by key, and `CAEmitterBehavior` drag and wave, looked up at run time. Core Animation objects store
+any key they don't know rather than throwing, so a macOS that drops the particle keys leaves the
+pieces spinning flat; one without `CAEmitterBehavior` gets no drag, and since the launch speed is
+tuned for drag to brake it, the burst shoots past the top in a quick streak. Neither fails.
+`ConfettiCoordinator` keeps one panel per display and closes it when the panel reports its last burst
+done.
 
 Besides its own `pipcast://command/confetti`, Raycast's `raycast://confetti` and
 `raycast://extensions/raycast/raycast/confetti` fire it, from a script or from an extension's
