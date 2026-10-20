@@ -29,7 +29,7 @@ A backup carries five independently selectable categories, ticked on export and 
 - **The file carries a format version and a reader accepts only its own.** That is a guard, not a
   migration: the comparison is `==`, so an older and a newer file fail identically and by the same
   statement. Writing it any other way is the first line of a migration, and the project has none.
-- **Extensions, AI chat history, Keychain material and anything in `Caches` never travel.** An
+- **`.pipcast` backups exclude extensions, AI chat history, Keychain material and `Caches`.** An
   extension is third-party code and third-party data; chat history and API keys stay on the Mac that
   had them; a cache regenerates on its own.
 - **`BackupCategory` names every category, and its `descriptor` switch is exhaustive.** A new case
@@ -155,13 +155,18 @@ for missing extensions and quick actions remain dormant until their target exist
 across restarts. Apple Shortcut bindings follow the normal successful-library-read cleanup.
 Snippet bindings carry filenames rather than absolute paths and are restored after importing their
 files, including when a name collision renames a file or matching content already exists.
-Imports never grant a capability: the feature switches stay off.
+Imports do not enable excluded capability-granting switches such as `snippetsEnabled`. Ordinary
+settings, including backed-up feature switches, may be restored.
 
 Extensions themselves travel through Settings › Extensions › Import from Tinycast, which copies the
 built extension folders like the Raycast import does, then adopts each installed extension's data
-(preferences, LocalStorage, Cache, accessory picks and command metadata) from Tinycast's support
+(preferences, LocalStorage, Cache, accessory picks, stored OAuth tokens and command metadata)
+from Tinycast's support
 folder, using the same Tinycast channel as the selected extension code. Only extensions with neither
 local storage nor command metadata are eligible. Eligibility is checked again after staging, so a
 local edit during import wins. Data is validated and staged off-main; failures are reported instead
-of claiming a complete import. Imported metadata refreshes launcher rows, menu-bar items and
+of claiming a complete import. Code installation precedes data adoption; a data failure can leave
+the extension installed, and retrying can adopt its data if the destination remains untouched.
+This is a separate local migration, not part of the `.pipcast` archive, and never copies Keychain
+items or consent flags. Imported metadata refreshes launcher rows, menu-bar items and
 background schedules immediately. Quit Tinycast afterwards so its hotkeys stop clashing.
