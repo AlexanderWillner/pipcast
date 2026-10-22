@@ -95,6 +95,16 @@ enum ExtensionSocketTests {
         } catch {
             ExtensionTests.check("teardown releases open sockets", true)
         }
+        // The palette reuses one bridge across commands: the next session opens cleanly.
+        let reopened = try? await bridge.perform(
+            method: "open",
+            arguments: [.object(["host": .string("127.0.0.1"), "port": .number(Double(port))])])
+        let reopenedID = (reopened as? [String: Any] ?? [:])["id"] as? Int
+        ExtensionTests.check("a later session opens after teardown", reopenedID != nil, String(describing: reopened))
+        if let reopenedID {
+            _ = try? await bridge.perform(
+                method: "close", arguments: [.object(["id": .number(Double(reopenedID))])])
+        }
     }
 }
 

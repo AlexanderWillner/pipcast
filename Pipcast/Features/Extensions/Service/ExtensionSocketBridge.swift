@@ -37,7 +37,9 @@ final class ExtensionSocketBridge: Sendable {
 
     private let connections = Mutex<[Int: Connection]>([:])
     private let attempts = Mutex<[Int: CheckedContinuation<Void, Error>]>([:])
-    private let shutdown = Mutex(false)
+    // A generation, not a flag: the palette reuses one bridge across commands, so `closeAll`
+    // must abort only its own session's in-flight opens, never every future one.
+    private let generation = Mutex(0)
     private let nextID = Mutex(1)
     private let queue = DispatchQueue(label: "pipcast.socket")
 
@@ -55,7 +57,7 @@ final class ExtensionSocketBridge: Sendable {
 
     /// The context is thrown away between commands, so nothing left open outlives its session.
     func closeAll() {
-        shutdown.withLock { $0 = true }
+        generation.withLock { $0 += 1 }
         let open = connections.withLock { state -> [Connection] in
             let all = Array(state.values)
             state.removeAll()
@@ -89,9 +91,10 @@ final class ExtensionSocketBridge: Sendable {
         // Every resolved address gets a try, like Node's happy-eyeballs fallback in sequence.
         var lastFailure = Failure(
             code: "ECONNREFUSED", syscall: "connect", message: "connect ECONNREFUSED \(host):\(port)")
+        let epoch = generation.withLock { $0 }
         for target in resolved {
-            // `closeAll` ends the session mid-loop: stop trying addresses.
-            if shutdown.withLock({ $0 }) { throw SocketError.cancelled }
+            // A newer session started mid-loop: stop trying addresses for the dead one.
+            if epoch != generation.withLock({ $0 }) { throw SocketError.cancelled }
             do {
                 try await attempt(id: id, address: target.address, port: port)
                 let info = connections.withLock { $0[id] }
